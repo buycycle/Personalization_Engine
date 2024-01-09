@@ -1,0 +1,138 @@
+
+
+import pandas as pd
+
+
+from abc import ABC, abstractmethod
+
+from src.content import get_top_n_recommendations
+from src.content import get_top_n_recommendations_prefiltered
+from src.content import get_top_n_popularity_prefiltered
+from src.content import get_top_n_recommendations_mix
+
+from src.collaborative import get_top_n_collaborative, get_top_n_collaborative_randomized, read_data_model
+
+
+from typing import Union, List, Tuple, Optional
+
+
+class RecommendationStrategy(ABC):
+    @abstractmethod
+    def get_recommendations(self, bike_id: int, n: int) -> Union[str, List, str]:
+        pass
+
+class StrategyFactory:
+    def __init__(self, strategies, **kwargs):
+        self._strategies = strategies
+    def get_strategy(self, strategy_name, fallback_strategy=None, **kwargs):
+        strategy_class = self._strategies.get(strategy_name)
+        if strategy_class:
+            return strategy_class(**kwargs)
+        elif fallback_strategy:
+            return fallback_strategy(**kwargs)
+        raise ValueError(f"Unknown strategy and no fallback defined {strategy_name}")
+
+class FallbackContentMixed(RecommendationStrategy):
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = 'FallbackContentMixed'
+        self.df = data_store_content.df
+        self.df_status_masked = data_store_content.df_status_masked
+        self.df_popularity = data_store_content.df_popularity
+        self.similarity_matrix = data_store_content.similarity_matrix
+        self.prefilter_features = data_store_content.prefilter_features
+        self.logger = logger
+
+    def get_recommendations(self, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int) -> Tuple[str, List, Optional[str]]:
+        recommendations, error = get_top_n_recommendations_mix(
+            bike_id,
+            family_id,
+            price,
+            frame_size_code,
+            self.df,
+            self.df_status_masked,
+            self.df_popularity,
+            self.similarity_matrix,
+            self.prefilter_features,
+            self.logger,
+            n,
+            ratio=0.5,
+            interveave_prefilter_general=False,
+        )
+        return self.strategy, recommendations, error
+
+
+
+class ContentMixed(RecommendationStrategy):
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = 'ContentMixed'
+        self.df = data_store_content.df
+        self.df_status_masked = data_store_content.df_status_masked
+        self.df_popularity = data_store_content.df_popularity
+        self.similarity_matrix = data_store_content.similarity_matrix
+        self.prefilter_features = data_store_content.prefilter_features
+        self.logger = logger
+
+    def get_recommendations(self, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int) -> Tuple[str, List, Optional[str]]:
+        recommendations, error = get_top_n_recommendations_mix(
+            bike_id,
+            family_id,
+            price,
+            frame_size_code,
+            self.df,
+            self.df_status_masked,
+            self.df_popularity,
+            self.similarity_matrix,
+            self.prefilter_features,
+            self.logger,
+            n,
+            ratio=0.5,
+            interveave_prefilter_general=False,
+        )
+        return self.strategy, recommendations, error
+
+
+class Collaborative(RecommendationStrategy):
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = 'Collaborative'
+        self.model = data_store_collaborative.model
+        self.dataset = data_store_collaborative.dataset
+        self.df_status_masked = data_store_content.df_status_masked
+        self.logger = logger
+
+    def get_recommendations(self, user_id: str, n: int) -> Tuple[str, List, Optional[str]]:
+        recommendations, error = get_top_n_collaborative(
+            self.model,
+            user_id,
+            n,
+            self.dataset,
+            self.df_status_masked,
+            self.logger,
+        )
+        return self.strategy, recommendations, error
+
+
+class CollaborativeRandomized(RecommendationStrategy):
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        # this is a legacy name, change to CollaborativeRandomized
+        self.strategy = 'CollaborativeStrategyRandomized'
+        self.model = data_store_collaborative.model
+        self.dataset = data_store_collaborative.dataset
+        self.df_status_masked = data_store_content.df_status_masked
+        self.logger = logger
+
+    def get_recommendations(self, user_id: str, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
+        recommendations, error = get_top_n_collaborative_randomized(
+            self.model,
+            user_id,
+            n,
+            sample,
+            self.dataset,
+            self.df_status_masked,
+            self.logger,
+        )
+        return self.strategy, recommendations, error
+
