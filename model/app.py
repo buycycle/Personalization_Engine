@@ -2,6 +2,7 @@
 # get env variable
 from fastapi import Body
 from pydantic import BaseModel, validator
+from typing import Optional
 import os
 import time
 
@@ -98,7 +99,7 @@ class RecommendationRequest(BaseModel):
     strategy: str = "product_page"
     @validator('user_id', pre=True, always=True)
     def parse_user_id(cls, v):
-        if v == 'N/A'":
+        if v == 'N/A':
             return 0  # Assign default value 0 if "N/A" is received
         try:
             return int(v)
