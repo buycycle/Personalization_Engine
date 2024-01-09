@@ -1,0 +1,17 @@
+
+# emacs
+*~
+
+# compiled
+*.pyc
+
+# IntelliJ
+.idea
+*.iml
+
+# config
+config/config.ini
+
+# data folder
+data/*
+
