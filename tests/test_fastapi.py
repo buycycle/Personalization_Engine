@@ -98,7 +98,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
             # ... (other assertions or checks based on the response)
 
 
-def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=100, n_test=100):
+def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=150, n_test=100):
     """test time and len of return for all strategies and a random bike_ids of the fastapi app"""
     bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategies = inputs_fastapi
 
