@@ -2,7 +2,6 @@
 # get env variable
 from fastapi import Body
 from pydantic import BaseModel, validator
-from typing import Optional
 import os
 import time
 
@@ -89,7 +88,7 @@ def home():
 
 
 class RecommendationRequest(BaseModel):
-    user_id: Optional[int] = None
+    user_id: int = 0
     distinct_id: str = "NA"
     bike_id: int = 0
     family_id: int = 1101
@@ -98,13 +97,16 @@ class RecommendationRequest(BaseModel):
     n: int = 12
     strategy: str = "product_page"
     @validator('user_id', pre=True, always=True)
-    def parse_user_id(cls, v):
-        if v == 'N/A':
-            return 0  # Assign default value 0 if "N/A" is received
-        try:
-            return int(v)
-        except ValueError:
-            return 0  # Assign default value 0 if the value cannot be converted to an integer
+    def validate_user_id(cls, value):
+        if isinstance(value, str):
+            try:
+                # Attempt to convert the string to an integer
+                return int(value)
+            except ValueError:
+                # If conversion fails, return the default value
+                return cls.__fields__['user_id'].default
+        return value
+#
 
 @app.post("/recommendation")
 def recommendation(request_data: RecommendationRequest = Body(...)):
