@@ -49,7 +49,7 @@ logger = KafkaLogger(environment, ab, app_name,
                      app_version, KAFKA_TOPIC, KAFKA_BROKER)
 logger.info("FastAPI app started")
 
-# create data stores
+# create data store
 data_store_content = DataStoreContent(prefilter_features=prefilter_features)
 data_store_collaborative = DataStoreCollaborative()
 
