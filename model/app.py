@@ -22,7 +22,7 @@ from buycycle.logger import KafkaLogger
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
-from src.driver_collaborative import user_id, bike_id, features, item_features, user_features, implicit_feedback
+from src.driver_collaborative import bike_id, features, item_features, user_features, implicit_feedback
 
 # import functions from src folder
 from src.data_content import DataStoreContent
@@ -96,17 +96,20 @@ class RecommendationRequest(BaseModel):
     frame_size_code: str = "56"
     n: int = 12
     strategy: str = "product_page"
-    @validator('user_id', pre=True, always=True)
+
+    @validator('user_id', pre=True)
     def validate_user_id(cls, value):
+        if value is None:
+            return 0
         if isinstance(value, str):
             try:
                 # Attempt to convert the string to an integer
                 return int(value)
             except ValueError:
                 # If conversion fails, return the default value
-                return cls.__fields__['user_id'].default
+                return 0
         return value
-#
+
 
 @app.post("/recommendation")
 def recommendation(request_data: RecommendationRequest = Body(...)):
