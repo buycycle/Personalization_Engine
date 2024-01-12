@@ -11,6 +11,7 @@ COPY model/app.py /app/
 # Copy app dependencies
 RUN mkdir /app/src
 COPY ./src /app/src
+COPY create_data.py /app/
 
 RUN mkdir /app/data
 
@@ -25,6 +26,9 @@ RUN apt-get install -y git
 
 # Copy requirements.txt file to working directory
 COPY requirements.txt .
+
+
+
 
 # Install packages from requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
