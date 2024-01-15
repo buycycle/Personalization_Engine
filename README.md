@@ -4,7 +4,7 @@
 Buycycle's recommendation system is designed to enhance the user experience in the pre-owned bike market by providing personalized bike suggestions. The system uses machine learning to tailor recommendations based on user preferences and behavior, addressing the challenges of information inefficiencies and high transaction costs in the used bike market.
 ## Content Based
 
-Create_data.py implements reads in the DB of bikes periodically and saves the queried data to disc.
+Create_data.py implements reads in the DB of bikes periodically (2sec) and saves the queried data to disc.
 It then applies feature engineering and constructs the m x n (m = bike_ids with status != new, n= bike_ids with status active)
 similarity matrix (default metric is pariwise cosine).
 
@@ -250,13 +250,24 @@ HTTP:
 
 
 Example:
-
-local
- ❯ curl -i -X POST 0.0.0.0:8000/recommendation -H "Content-Type: application/json" -d '{"bike_id": 14394, "user_id": 123, "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692", "n": 8, "family_id": 12}' --header "version: stable"
+```bash
+ab
+curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
+     -H "Content-Type: application/json" \
+     -d '{
+           "strategy": "product_page",
+           "bike_id": 14394,
+           "user_id": 123,
+           "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
+           "n": 8,
+           "family_id": 12
+         }' \
+     --header "version: stable"
 
 deployed
- ❯ curl -i -X POST https://recommendation.buycycle.com/recommendation ...                                                                                                              "user_id": 123,
+curl -i -X POST https://recommendation.buycycle.com/recommendation ...                                                                                                              "user_id": 123,
 
-ab
- ❯ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation ...
+local
+curl -i -X POST 0.0.0.0:8000/recommendation ...
 
+```
