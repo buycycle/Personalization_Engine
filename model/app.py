@@ -130,7 +130,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     strategy_target = strategy_name
 
     # lock the data stores to prevent data from being updated while we are using it
-    with data_store_collaborative.lock and data_store_content.lock:
+    with data_store_collaborative._lock and data_store_content._lock:
 
         strategy_factory = StrategyFactory(strategy_dict)
 
