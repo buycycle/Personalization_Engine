@@ -129,57 +129,60 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # Assuming this is what you meant by 'strategy_traget'
     strategy_target = strategy_name
 
-    strategy_factory = StrategyFactory(strategy_dict)
+    # lock the data stores to prevent data from being updated while we are using it
+    with data_store_collaborative.lock and data_store_content.lock:
 
-    # if strategy_name not in list, use FallbackContentMixed
-    strategy_instance = strategy_factory.get_strategy(
-        strategy_name=strategy_name,
-        fallback_strategy=CollaborativeRandomized,
-        logger=logger,
-        data_store_collaborative=data_store_collaborative,
-        data_store_content=data_store_content,
-    )
-    # raise error if we do not know strategy
-    if strategy_instance is None:
-        accepted_strategies = list(strategy_dict.keys())
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unknown strategy. Accepted strategies are: {accepted_strategies}. "
-            "If the strategy field is empty, it will default to 'product_page'.",
-        )
+        strategy_factory = StrategyFactory(strategy_dict)
 
-    # Recommend
-    # different strategies use different inputs, think about how to clean this up
-    if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
-        strategy, recommendation, error = strategy_instance.get_recommendations(
-            bike_id, family_id, price, frame_size_code, n)
-    elif isinstance(strategy_instance, Collaborative):
-        strategy, recommendation, error = strategy_instance.get_recommendations(
-            distinct_id, n)
-    elif isinstance(strategy_instance, CollaborativeRandomized):
-        strategy, recommendation, error = strategy_instance.get_recommendations(
-            distinct_id, n, sample)
-    else:
-        # Handle unknown strategy
-        accepted_strategies = list(strategy_dict.keys())
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unknown strategy. Accepted strategies are: {accepted_strategies}. "
-            "If the strategy field is empty, it will default to 'product_page'.",
-        )
-
-    # Fall back strategy if not enough recommendations were generated for the product_page
-    if len(recommendation) != n and strategy_name == "product_page":
-        strategy_name = "FallbackContentMixed"
+        # if strategy_name not in list, use FallbackContentMixed
         strategy_instance = strategy_factory.get_strategy(
             strategy_name=strategy_name,
-            fallback_strategy=FallbackContentMixed,
+            fallback_strategy=CollaborativeRandomized,
             logger=logger,
             data_store_collaborative=data_store_collaborative,
             data_store_content=data_store_content,
         )
-        strategy, recommendation, error = strategy_instance.get_recommendations(
-            bike_id, family_id, price, frame_size_code, n)
+        # raise error if we do not know strategy
+        if strategy_instance is None:
+            accepted_strategies = list(strategy_dict.keys())
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown strategy. Accepted strategies are: {accepted_strategies}. "
+                "If the strategy field is empty, it will default to 'product_page'.",
+            )
+
+        # Recommend
+        # different strategies use different inputs, think about how to clean this up
+        if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                bike_id, family_id, price, frame_size_code, n)
+        elif isinstance(strategy_instance, Collaborative):
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                distinct_id, n)
+        elif isinstance(strategy_instance, CollaborativeRandomized):
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                distinct_id, n, sample)
+        else:
+            # Handle unknown strategy
+            accepted_strategies = list(strategy_dict.keys())
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown strategy. Accepted strategies are: {accepted_strategies}. "
+                "If the strategy field is empty, it will default to 'product_page'.",
+            )
+
+        # Fall back strategy if not enough recommendations were generated for the product_page
+        if len(recommendation) != n and strategy_name == "product_page":
+            strategy_name = "FallbackContentMixed"
+            strategy_instance = strategy_factory.get_strategy(
+                strategy_name=strategy_name,
+                fallback_strategy=FallbackContentMixed,
+                logger=logger,
+                data_store_collaborative=data_store_collaborative,
+                data_store_content=data_store_content,
+            )
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                bike_id, family_id, price, frame_size_code, n)
 
     # Convert the recommendation to int
     recommendation = [int(i) for i in recommendation]

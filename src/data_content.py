@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+import threading
+
 # similarity estimation
 from sklearn.metrics import pairwise_distances_chunked
 from scipy.spatial.distance import cdist  # , pdist, squareform
@@ -283,9 +285,11 @@ class DataStoreContent(DataStoreBase):
         self.df_popularity = None
         self.similarity_matrix = None
         self.prefilter_features = prefilter_features
+        self._lock = threading.Lock()
 
     def read_data(self):
-        self.df, self.df_status_masked, self.df_popularity, self.similarity_matrix = read_data_content()
+        with self._lock: # acquire lock
+            self.df, self.df_status_masked, self.df_popularity, self.similarity_matrix = read_data_content()
 
     def get_logging_info(self):
         return {

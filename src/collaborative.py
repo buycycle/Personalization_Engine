@@ -12,6 +12,7 @@ from lightfm import LightFM
 
 
 import pickle
+import threading
 
 from buycycle.data import snowflake_sql_db_read, DataStoreBase
 
@@ -425,9 +426,11 @@ class DataStoreCollaborative(DataStoreBase):
         super().__init__()
         self.model = None
         self.dataset = None
+        self._lock = threading.Lock()
 
     def read_data(self):
-        self.model, self.dataset = read_data_model()
+        with self._lock: #acquire lock
+            self.model, self.dataset = read_data_model()
 
     def get_logging_info(self):
         return {"model_info": str(self.model), "dataset_info": str(self.dataset)}
