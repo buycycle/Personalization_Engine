@@ -20,7 +20,7 @@ if (env.BRANCH_NAME == "main" || env.BRANCH_NAME == "staging") {
     ab = "${map_branch_to_ab[env.BRANCH_NAME]}"
 }
 // Simple switch to control skipping the test execution, default is false
-def skipTests = true
+def skipTests = false
 pipeline {
     agent any
     options {

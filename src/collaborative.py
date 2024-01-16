@@ -429,7 +429,7 @@ class DataStoreCollaborative(DataStoreBase):
         self._lock = threading.Lock()
 
     def read_data(self):
-        with self._lock: #acquire lock
+        with self._lock:  # acquire lock
             self.model, self.dataset = read_data_model()
 
     def get_logging_info(self):

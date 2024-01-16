@@ -45,8 +45,7 @@ app_version = "canary-003"
 KAFKA_TOPIC = config["KAFKA"]["topic"]
 KAFKA_BROKER = config["KAFKA"]["broker"]
 logger = Logger.configure_logger(environment, ab, app_name, app_version)
-logger = KafkaLogger(environment, ab, app_name,
-                     app_version, KAFKA_TOPIC, KAFKA_BROKER)
+logger = KafkaLogger(environment, ab, app_name, app_version, KAFKA_TOPIC, KAFKA_BROKER)
 logger.info("FastAPI app started")
 
 # create data store
@@ -59,8 +58,7 @@ while True:
         data_store_content.read_data()
         break
     except Exception as e:
-        logger.error(
-            f"Content data could not initially be read, error: {e}. Trying again in 60 seconds.")
+        logger.error(f"Content data could not initially be read, error: {e}. Trying again in 60 seconds.")
         time.sleep(60)
 
 while True:
@@ -68,15 +66,12 @@ while True:
         data_store_collaborative.read_data()
         break
     except Exception as e:
-        logger.error(
-            f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
+        logger.error(f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
         time.sleep(60)
 
 # read the data periodically
-data_loader_content = Thread(
-    target=data_store_content.read_data_periodically, args=(20, logger))
-data_loader_collaborative = Thread(
-    target=data_store_collaborative.read_data_periodically, args=(20, logger))
+data_loader_content = Thread(target=data_store_content.read_data_periodically, args=(20, logger))
+data_loader_collaborative = Thread(target=data_store_collaborative.read_data_periodically, args=(20, logger))
 
 data_loader_content.start()
 data_loader_collaborative.start()
@@ -97,7 +92,7 @@ class RecommendationRequest(BaseModel):
     n: int = 12
     strategy: str = "product_page"
 
-    @validator('user_id', pre=True)
+    @validator("user_id", pre=True)
     def validate_user_id(cls, value):
         if value is None:
             return 0
@@ -131,7 +126,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
-
         strategy_factory = StrategyFactory(strategy_dict)
 
         # if strategy_name not in list, use FallbackContentMixed
@@ -154,14 +148,11 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # Recommend
         # different strategies use different inputs, think about how to clean this up
         if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                bike_id, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
         elif isinstance(strategy_instance, Collaborative):
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                distinct_id, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(distinct_id, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                distinct_id, n, sample)
+            strategy, recommendation, error = strategy_instance.get_recommendations(distinct_id, n, sample)
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())
@@ -181,8 +172,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                bike_id, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
 
     # Convert the recommendation to int
     recommendation = [int(i) for i in recommendation]
@@ -205,8 +195,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     if error:
         # Return error response if it exists
         logger.error("Error no recommendation available, exception: " + error)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Error no recommendation available")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error no recommendation available")
     else:
         # Return success response with recommendation data
         return {
@@ -254,6 +243,5 @@ def internal_server_error_handler(request: Request, exc: HTTPException):
     # Return a JSON response with the error details
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"status": "error",
-                 "message": "Internal Server Error: " + str(exc)},
+        content={"status": "error", "message": "Internal Server Error: " + str(exc)},
     )

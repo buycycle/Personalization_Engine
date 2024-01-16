@@ -288,7 +288,7 @@ class DataStoreContent(DataStoreBase):
         self._lock = threading.Lock()
 
     def read_data(self):
-        with self._lock: # acquire lock
+        with self._lock:  # acquire lock
             self.df, self.df_status_masked, self.df_popularity, self.similarity_matrix = read_data_content()
 
     def get_logging_info(self):
