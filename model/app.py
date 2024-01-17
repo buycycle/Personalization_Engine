@@ -117,6 +117,16 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     n = request_data.n
     strategy_name = request_data.strategy
 
+    # the user_id the model is trained on is a mix of user_id and distinct_id
+    # check here if the query containes a user_id
+    # if yes, base the recommendation on the user_id
+    # if not, base the recommendation on the distinct_id
+
+    if user_id == 0:
+        id = distinct_id
+    else:
+        id = str(user_id)
+
     # randomize over the top 100
     sample = 100
 
@@ -150,9 +160,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
         elif isinstance(strategy_instance, Collaborative):
-            strategy, recommendation, error = strategy_instance.get_recommendations(distinct_id, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
-            strategy, recommendation, error = strategy_instance.get_recommendations(distinct_id, n, sample)
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, n, sample)
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())
