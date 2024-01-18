@@ -175,7 +175,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
 
         # Fall back strategy if not enough recommendations were generated for the product_page
-        if len(recommendation) != n and strategy_name == "product_page":
+        if len(recommendation) != n and strategy_name != "homepage":
             strategy_name = "FallbackContentMixed"
             strategy_instance = strategy_factory.get_strategy(
                 strategy_name=strategy_name,
@@ -186,8 +186,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
 
-    # Convert the recommendation to int
-    recommendation = [int(i) for i in recommendation]
+    # Convert the recommendation to int if recommendation is not an empty list
+    if len(recommendation) > 0:
+        recommendation = [int(i) for i in recommendation]
     logger.info(
         "successful recommendation",
         extra={

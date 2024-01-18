@@ -101,6 +101,7 @@ class ContentMixed(RecommendationStrategy):
 
 
 class Collaborative(RecommendationStrategy):
+    """ Try Collaborative filtering, fail silently and return an empty list"""
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "Collaborative"
         self.model = data_store_collaborative.model
@@ -117,8 +118,7 @@ class Collaborative(RecommendationStrategy):
             self.df_status_masked,
             self.logger,
         )
-        return self.strategy, recommendations, error
-
+        return self.strategy, recommendations, None
 
 class CollaborativeRandomized(RecommendationStrategy):
     def __init__(self, logger, data_store_collaborative, data_store_content):
