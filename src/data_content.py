@@ -90,7 +90,7 @@ class SimilarityMatrixSparse:
 
 
 def get_similarity_matrix_cdist(
-    df: pd.DataFrame, df_feature_engineered: pd.DataFrame, metric: str, status_mask: pd.Series, percentile: int = 10
+    df_feature_engineered: pd.DataFrame, metric: str, status_mask: pd.Series, percentile: int = 10
 ) -> SimilarityMatrixSparse:
     """
     Get the similarity matrix for the dataframe, only keeping the lowest percentile for each row.
@@ -109,8 +109,8 @@ def get_similarity_matrix_cdist(
     # Compute the distance matrix using the specified metric or default to 'euclidean' if not provided
     similarity_matrix = pd.DataFrame(
         cdist(df_feature_engineered, df_feature_engineered.loc[status_mask]),
-        columns=status_mask,
-        index=df.index,
+        index=df_feature_engineered.index,
+        columns=df_feature_engineered.loc[status_mask].index,
     )
     similarity_matrix = similarity_matrix.astype("float32")
     # Calculate the threshold for the smallest values for each row based on the given percentile
@@ -182,6 +182,8 @@ def get_data(
     """
 
     df = sql_db_read(query=main_query, DB="DB_BIKES", config_paths=config_paths, dtype=main_query_dtype, index_col=index_col)
+    duplicates = df.index.duplicated(keep='last')
+    df = df[~duplicates]
 
     df.motor.fillna(df.motor.median(), inplace=True)
     df.dropna(inplace=True)
@@ -189,6 +191,10 @@ def get_data(
     df_popularity = snowflake_sql_db_read(
         query=popularity_query, DB="DB_EVENTS", config_paths=config_paths, dtype=popularity_query_dtype, index_col=index_col
     )
+
+    duplicates = df_popularity.index.duplicated(keep='last')
+    df_popularity = df_popularity[~duplicates]
+
     df_popularity = frame_size_code_to_numeric(df_popularity)
     df_popularity.dropna(inplace=True)
 
@@ -238,7 +244,7 @@ def create_data_model_content(
 
     status_mask = get_data_status_mask(df, status)
 
-    similarity_matrix = get_similarity_matrix_cdist(df, df_feature_engineered, metric, status_mask)
+    similarity_matrix = get_similarity_matrix_cdist(df_feature_engineered, metric, status_mask)
 
     # reduce the column dimensionality of the similarity matrix by filtering with the status mask
     # similarity_matrix = similarity_matrix[status_mask]
