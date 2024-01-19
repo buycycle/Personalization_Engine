@@ -122,8 +122,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # if yes, base the recommendation on the user_id
     # if not, base the recommendation on the distinct_id
 
-#   test if this works
-#   test if default values work
     if user_id == 0:
         id = distinct_id
     else:
