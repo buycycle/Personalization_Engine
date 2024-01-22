@@ -379,7 +379,8 @@ def get_top_n_collaborative_randomized(
         top_item_ids = [item_id for item_id in top_item_ids if item_id in df_status_masked.index]
 
         # randomly sample from the top_item_ids to introduce some variance
-        top_item_ids = top_item_ids[:sample].sample(frac=1)
+        top_item_ids = top_item_ids[:sample]
+        random.shuffle(top_item_ids)
         top_n_item_ids = top_item_ids[:n]
 
         return top_n_item_ids, error
