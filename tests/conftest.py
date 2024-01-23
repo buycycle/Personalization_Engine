@@ -151,7 +151,7 @@ def testdata_collaborative():
     if not os.path.exists("./data/"):
         os.makedirs("./data/")
 
-    create_data_model_collaborative(
+    test_auc = create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
         query=query + "LIMIT 10000", # limit to subset for integation testing
