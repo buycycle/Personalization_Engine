@@ -52,17 +52,6 @@ test_auc = create_data_model_collaborative(
     update_model=update_model,
     path=path,
 )
-test_auc = create_data_model_collaborative(
-    DB="DB_EVENTS",
-    driver="snowflake",
-    query=query,
-    user_id=user_id,
-    bike_id=bike_id,
-    user_features=user_features,
-    item_features=item_features,
-    update_model=update_model,
-    path=path,
-)
 
 print(f"created_data_model_collaborative with Test AUC: {test_auc}")
 
