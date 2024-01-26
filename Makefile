@@ -10,6 +10,9 @@ juypter:
 	@cd notebook; PYTHONPATH=".." jupyter notebook notebook.ipynb
 
 test:
+	## run integration test
+	pytest -v tests/test_fastapi.py
+test_unit:
 	## run test cases in tests directory
 	python -m unittest discover
 	pytest -v

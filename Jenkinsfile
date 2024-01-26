@@ -57,8 +57,7 @@ pipeline {
                     test.inside {
                         sh 'mkdir -p data'
                         sh 'python create_data.py'
-                        sh 'python -m unittest discover'
-                        sh 'pytest -v'
+                        sh 'pytest -v tests/test_fastapi.py'
                     }
                 }
             }

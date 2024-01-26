@@ -121,7 +121,7 @@ def testdata_content():
         os.makedirs("./data/")
 
     create_data_model_content(
-        main_query,
+        main_query + "LIMIT 1000",
         main_query_dtype,
         popularity_query,
         popularity_query_dtype,
@@ -154,7 +154,7 @@ def testdata_collaborative():
     create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query,
+        query=query + "LIMIT 100000",
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,

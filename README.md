@@ -168,6 +168,14 @@ Install requirements
 
 - `make install`
 
+Prepare test data
+
+
+```bash
+python create_data.py data/ test
+```
+
+
 ### Lint and formatting
 
 - `make lint`
