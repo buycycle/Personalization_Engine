@@ -16,6 +16,9 @@ test_unit:
 	## run test cases in tests directory
 	python -m unittest discover
 	pytest -v
+integration:
+	## run integration tests
+	pytest tests/test_fastapi.py
 lint:
 	pylint --disable=R,C,W1203,W1202 src/
 	pylint --disable=R,C,W1203,W1202 model/app.py

@@ -43,7 +43,8 @@ create_data_model_content(
     path=path,
 )
 print("created_data_model_content")
-create_data_model_collaborative(
+
+test_auc = create_data_model_collaborative(
     DB="DB_EVENTS",
     driver="snowflake",
     query=query + collaborative_query_limit,
@@ -54,7 +55,9 @@ create_data_model_collaborative(
     update_model=update_model,
     path=path,
 )
-print("created_data_model_collaborative")
-# sleep for 10 seconds to make sure the data saved
+
+print(f"created_data_model_collaborative with Test AUC: {test_auc}")
+
+# sleep to make sure the data saved
 time.sleep(4)
 

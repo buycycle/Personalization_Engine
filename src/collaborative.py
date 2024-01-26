@@ -171,7 +171,7 @@ def get_model(
     item_features,
     feedback="feedback",
     k=4,
-    test_percentage=0.2,
+    test_percentage=0.05,
     epochs=10,
     num_components=30,
     learning_rate=0.05,
@@ -223,29 +223,31 @@ def get_model(
         random_state,
     )
 
-    return model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix
+    test_auc = auc(model, train, test, user_features_matrix, item_features_matrix)
+
+
+    return model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix, test_auc
 
 
 def update_model(df, user_id, bike_id, user_features, item_features, path):
     """retrain and write model to disk"""
-    model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix = get_model(
+    model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix, test_auc = get_model(
         df, user_id, bike_id, user_features, item_features
     )
 
     write_model_data(model, dataset, path)
 
+    return test_auc
+
 
 def auc(model, train, test, user_features_matrix, item_features_matrix, num_threads=4):
     """calculate auc score for train and test data"""
-    train_auc = auc_score(
-        model, train, user_features=user_features_matrix, item_features=item_features_matrix, num_threads=num_threads
-    ).mean()
 
     test_auc = auc_score(
         model, test, user_features=user_features_matrix, item_features=item_features_matrix, num_threads=num_threads
     ).mean()
 
-    return train_auc, test_auc
+    return test_auc
 
 
 def eval_model(model, train, test, user_features_matrix, item_features_matrix, k=4, num_threads=4):
@@ -261,7 +263,7 @@ def eval_model(model, train, test, user_features_matrix, item_features_matrix, k
         check_intersections=False,
     ).mean()
 
-    train_auc, test_auc = auc(
+    test_auc = auc(
         model,
         train,
         test,
@@ -270,7 +272,7 @@ def eval_model(model, train, test, user_features_matrix, item_features_matrix, k
         num_threads=num_threads,
     )
 
-    return precision, train_auc, test_auc
+    return precision, test_auc
 
 
 def write_model_data(model, dataset, path):
@@ -380,7 +382,8 @@ def get_top_n_collaborative_randomized(
 
         # randomly sample from the top_item_ids to introduce some variance
         top_item_ids = top_item_ids[:sample]
-        top_n_item_ids = random.sample(top_item_ids, n)
+        random.shuffle(top_item_ids)
+        top_n_item_ids = top_item_ids[:n]
 
         return top_n_item_ids, error
 
@@ -418,7 +421,9 @@ def create_data_model_collaborative(
     df = df.dropna()
     df = df.reset_index()
 
-    update_model(df, user_id, bike_id, user_features, item_features, path)
+    test_auc = update_model(df, user_id, bike_id, user_features, item_features, path)
+
+    return test_auc
 
 
 class DataStoreCollaborative(DataStoreBase):
