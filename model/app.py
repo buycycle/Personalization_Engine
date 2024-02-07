@@ -42,7 +42,7 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "canary-003"
 
-KAFKA_TOPIC = config["KAFKA"]["topic"]
+KAFKA_TOPIC = config["KAFKA"]["topic_recommendation"]
 KAFKA_BROKER = config["KAFKA"]["broker"]
 logger = Logger.configure_logger(environment, ab, app_name, app_version)
 logger = KafkaLogger(environment, ab, app_name, app_version, KAFKA_TOPIC, KAFKA_BROKER)
