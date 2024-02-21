@@ -198,7 +198,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
 
 # Dictionary of strategies
 strategy_dict = {
-    "product_page": CollaborativeRandomized,
+    "product_page": ContentMixed,
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
     "FallbackContentMixed": FallbackContentMixed,
