@@ -40,58 +40,58 @@ It then updates the local data and saves it to the pvc, again the model reads th
 The data generation condenses all click data of unique user_id (distinct_id in the current case) and calculates the feedback according to the weights below.
 
 Currently, the features used are:
-user_id = 'distinct_id'
-bike_id = 'bike.id'
+    user_id = 'distinct_id'
+    bike_id = 'bike.id'
 
 
-item_features = [
-    # 'bike_type_id',
-    'bike.family_id',
-    'bike.frame_size',
-    'bike_price',
-]
+    item_features = [
+        # 'bike_type_id',
+        'bike.family_id',
+        'bike.frame_size',
+        'bike_price',
+    ]
 
-implicit_feedback = {'Bike_view': 1,
-                     'Choose_service': 5,
-                     'Choose_shipping_method': 5,
-                     'Save_filter': 5,
-                     'add_discount': 10,
-                     'add_payment_info': 20,
-                     'add_shipping_info': 20,
-                     'add_to_compare': 3,
-                     'add_to_favorite': 10,
-                     'ask_question': 10,
-                     'begin_checkout': 12,
-                     'choose_condition': 0,
-                     'click_filter_no_result': 0,
-                     'close_login_page': 0,
-                     'comment_show_original': 3,
-                     'counter_offer': 10,
-                     'delete_from_favourites': -2,
-                     'home_page_open': 0,
-                     'login': 5,
-                     'open_login_page': 2,
-                     'purchase': 50,
-                     'receive_block_comment_pop_up': 0,
-                     'recom_bike_view': 3,
-                     'register': 10,
-                     'remove_bike_from_compare': -1,
-                     'request_leasing': 20,
-                     'sales_ad_created': 0,
-                     'search': 0,
-                     'search_without_result': 0,
-                     'sell_click_family': 0,
-                     'sell_click_template': 0,
-                     'sell_condition': 0,
-                     'sell_details': 0,
-                     'sell_search': 0,
-                     'sell_templates': 0,
-                     'sell_toggle_components_changed': 0,
-                     'sellpage_open': 0,
-                     'share_bike': 10,
-                     'shop_view': 2,
-                     'toggle_language': 2,
-                     }
+    implicit_feedback = {'Bike_view': 1,
+                         'Choose_service': 5,
+                         'Choose_shipping_method': 5,
+                         'Save_filter': 5,
+                         'add_discount': 10,
+                         'add_payment_info': 20,
+                         'add_shipping_info': 20,
+                         'add_to_compare': 3,
+                         'add_to_favorite': 10,
+                         'ask_question': 10,
+                         'begin_checkout': 12,
+                         'choose_condition': 0,
+                         'click_filter_no_result': 0,
+                         'close_login_page': 0,
+                         'comment_show_original': 3,
+                         'counter_offer': 10,
+                         'delete_from_favourites': -2,
+                         'home_page_open': 0,
+                         'login': 5,
+                         'open_login_page': 2,
+                         'purchase': 50,
+                         'receive_block_comment_pop_up': 0,
+                         'recom_bike_view': 3,
+                         'register': 10,
+                         'remove_bike_from_compare': -1,
+                         'request_leasing': 20,
+                         'sales_ad_created': 0,
+                         'search': 0,
+                         'search_without_result': 0,
+                         'sell_click_family': 0,
+                         'sell_click_template': 0,
+                         'sell_condition': 0,
+                         'sell_details': 0,
+                         'sell_search': 0,
+                         'sell_templates': 0,
+                         'sell_toggle_components_changed': 0,
+                         'sellpage_open': 0,
+                         'share_bike': 10,
+                         'shop_view': 2,
+                         'toggle_language': 2,
+                         }
 ## CollaborativeRandomized
 Same as above but draw from a sample of more recommendations and randomize.
 
@@ -145,18 +145,19 @@ If the specified strategy or fallback strategy leads to < n recommendations, use
 
 #### Strategy use-case mapping
 
-strategy_dict = {
-    "product_page": CollaborativeRandomized,
-    "braze": Collaborative,
-    "homepage": CollaborativeRandomized,
-    "FallbackContentMixed": FallbackContentMixed,
-}
+    strategy_dict = {
+        "product_page": CollaborativeRandomized,
+        "braze": Collaborative,
+        "homepage": CollaborativeRandomized,
+        "FallbackContentMixed": FallbackContentMixed,
+    }
 
 
 #### Available stategies
 1. `FallbackContentMixed`:
-   - This strategy is a fallback that mixes content-based recommendations with popularity-based recommendations.
-   - It uses a similarity matrix to find bikes similar to the given bike ID and combines these with popular items.
+   - This strategy is a fallback that uses the content based model.
+   - It uses a similarity matrix to find bikes similar to the given bike ID.
+   - If not enough similar bikes are found, popularity-based recommendations are added.
    - The recommendations are generated by the `get_top_n_recommendations_mix` function, which takes into account various parameters such as family ID, price, and frame size code.
    - The strategy returns a tuple containing the strategy name, a list of recommendations, and an optional error message.
 2. `ContentMixed`:
