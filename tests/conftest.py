@@ -98,7 +98,7 @@ def inputs_fastapi(app_mock, mock_kafka_logger):
 
     app = app_mock
 
-    strategies = list(strategy_dict.keys())
+    strategy = strategy_dict
 
     bike_id = 14394
     distinct_id = "1234"
@@ -111,7 +111,7 @@ def inputs_fastapi(app_mock, mock_kafka_logger):
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategies
+    return bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
 
 
 @pytest.fixture(scope="package")
