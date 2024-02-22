@@ -301,7 +301,7 @@ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
          }' \
      --header "version: stable"
 dev
-curl -i -X POST istio-ingressgateway.istio-system.svc.cluster.local/recommendation \
+curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
      -H "Content-Type: application/json" \
      -d '{
            "strategy": "product_page",
