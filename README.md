@@ -293,13 +293,26 @@ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
      -H "Content-Type: application/json" \
      -d '{
            "strategy": "product_page",
-           "bike_id": 14394,
+           "bike_id": 78041,
            "user_id": 123,
            "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
            "n": 8,
-           "family_id": 12
+           "family_id": 403
          }' \
      --header "version: stable"
+dev
+curl -i -X POST istio-ingressgateway.istio-system.svc.cluster.local/recommendation \
+     -H "Content-Type: application/json" \
+     -d '{
+           "strategy": "product_page",
+           "bike_id": 78041,
+           "user_id": 123,
+           "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
+           "n": 8,
+           "family_id": 403
+         }' \
+     --header "version: stable-001-dev"
+
 
 deployed
 curl -i -X POST https://recommendation.buycycle.com/recommendation ...                                                                                                              "user_id": 123,
