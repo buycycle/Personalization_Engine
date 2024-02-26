@@ -2,9 +2,9 @@
 # Buycycle Pre-Owned Bike Market Recommendation System
 ## Overview
 Buycycle's recommendation system is designed to enhance the user experience in the pre-owned bike market by providing personalized bike suggestions. The system uses machine learning to tailor recommendations based on user preferences and behavior, addressing the challenges of information inefficiencies and high transaction costs in the used bike market.
-## Content Based
 
-Create_data.py implements reads in the DB of bikes periodically (2sec) and saves the queried data to disc.
+## Content Based
+Create_data.py implements reads in the DB of bikes periodically and saves the queried data to disc.
 It then applies feature engineering and constructs the m x n (m = bike_ids with status != new, n= bike_ids with status active)
 similarity matrix (default metric is pariwise cosine).
 
@@ -28,7 +28,27 @@ The model implements three algorithm for content based recommendation.
     Returns the top n recommendations as described above for a bike_id prefiltered by the prefilter_features defined in src/driver_content.py. This enables to prefilter the recommendation by for example model and brand, making the recommendation more specific.
 	Currently we only filter for family_id. Currently only one prefilter_feature is supported, multiple lead to docker container performance issues (300ms).
 
+### Features
 Finally, get_top_n_recommendations_mix implements a mix of prefilters and generic recommendations. If interveav_prefiltered_general these selected these two lists are interwoven, meaning they are mixed alternatevly. Otherwise the generic bikes are appended to the prefiltered one. The ratio between the two can be determined with the ratio argument. If there are not enough recommendations available, populatity is used to append to the recommendation list.
+
+    Currently these features are use to construct the similarity matrix.
+    categorical_features = [
+        "motor",
+        "bike_component_id",
+        "bike_category_id",
+        "bike_type_id",
+        "brake_type_code",
+        "frame_material_code",
+        "shifting_code",
+        "color",
+    ]
+    numerical_features = ["price", "frame_size_code", "year"]
+
+    We overwieight certain features to account for their different relevance.
+    numerical_features_to_overweight = ["price", "frame_size_code"]
+    numerical_features_overweight_factor = 4
+    categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type_id"]
+    categorical_features_overweight_factor = 2
 
 
 ## Collaborative Filtering
@@ -39,16 +59,16 @@ It then updates the local data and saves it to the pvc, again the model reads th
 
 The data generation condenses all click data of unique user_id (distinct_id in the current case) and calculates the feedback according to the weights below.
 
-Currently, the features used are:
-    user_id = 'distinct_id'
-    bike_id = 'bike.id'
-
+### Features
+    Currently, the features used are:
+        user_id = 'distinct_id'
+        bike_id = 'bike.id'
 
     item_features = [
-        # 'bike_type_id',
-        'bike.family_id',
-        'bike.frame_size',
-        'bike_price',
+        "family_id",
+        "rider_height_min",
+        "rider_height_max",
+        "price",
     ]
 
     implicit_feedback = {'Bike_view': 1,
