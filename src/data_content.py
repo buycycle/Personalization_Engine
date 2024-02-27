@@ -92,14 +92,13 @@ class SimilarityMatrixSparse:
 
 def get_similarity_matrix_cdist(
     df_feature_engineered: pd.DataFrame, metric: str, status_mask: pd.Series, percentile: int = 10
-) -> SimilarityMatrixSparse:
-
+):
     # Determine the number of columns to keep based on the percentile
     num_cols_to_keep = max(int(len(df_feature_engineered.loc[status_mask]) * (percentile / 100)), 1)
-
     # Initialize a sparse matrix in 'lil' format for efficient row operations
     similarity_matrix_sparse = lil_matrix((df_feature_engineered.shape[0], sum(status_mask)), dtype='float32')
-
+    # Create a mapping from the filtered DataFrame's indices to the column indices of the sparse matrix
+    col_index_mapping = {idx: col_idx for col_idx, idx in enumerate(df_feature_engineered.loc[status_mask].index)}
     # Compute distances and use a priority queue to keep only the smallest values
     for i, row in df_feature_engineered.iterrows():
         distances = cdist([row], df_feature_engineered.loc[status_mask], metric=metric)[0]
@@ -107,8 +106,9 @@ def get_similarity_matrix_cdist(
         smallest_distances = heapq.nsmallest(num_cols_to_keep, enumerate(distances), key=lambda x: x[1])
         # Update the sparse matrix with the smallest distances
         for col_idx, dist in smallest_distances:
-            similarity_matrix_sparse[i, col_idx] = dist
-
+            # Map the col_idx to the correct column index in the sparse matrix
+            mapped_col_idx = col_index_mapping[df_feature_engineered.loc[status_mask].index[col_idx]]
+            similarity_matrix_sparse[i, mapped_col_idx] = dist
     # Convert the 'lil' matrix to 'csr' format after all insertions are done
     similarity_matrix_sparse = similarity_matrix_sparse.tocsr()
     # Return an instance of SimilarityMatrixSparse with the sparse matrix and indices
