@@ -10,17 +10,17 @@ juypter:
 	@cd notebook; PYTHONPATH=".." jupyter notebook notebook.ipynb
 
 test:
+	## run integration test
+	pytest -v tests/test_fastapi.py
+test_unit:
 	## run test cases in tests directory
 	python -m unittest discover
-	# cycle through all test files in tests directory that start with test_
-	# and run pytest on them
-	for file in tests/test_*.py; do \
-	  if echo ${file} | grep -q 'test_fixtures.py'; then continue; fi; \
-	  pytest -v ${file}; \
-	done
+	pytest -v
+integration:
+	## run integration tests
+	pytest tests/test_fastapi.py
 lint:
-	pylint --disable=R,C,W1203,W1202 src/data.py
-	pylint --disable=R,C,W1203,W1202 src/content.py
+	pylint --disable=R,C,W1203,W1202 src/
 	pylint --disable=R,C,W1203,W1202 model/app.py
 
 

@@ -1,5 +1,9 @@
-# Content Based
 
+# Buycycle Pre-Owned Bike Market Recommendation System
+## Overview
+Buycycle's recommendation system is designed to enhance the user experience in the pre-owned bike market by providing personalized bike suggestions. The system uses machine learning to tailor recommendations based on user preferences and behavior, addressing the challenges of information inefficiencies and high transaction costs in the used bike market.
+
+## Content Based
 Create_data.py implements reads in the DB of bikes periodically and saves the queried data to disc.
 It then applies feature engineering and constructs the m x n (m = bike_ids with status != new, n= bike_ids with status active)
 similarity matrix (default metric is pariwise cosine).
@@ -24,10 +28,30 @@ The model implements three algorithm for content based recommendation.
     Returns the top n recommendations as described above for a bike_id prefiltered by the prefilter_features defined in src/driver_content.py. This enables to prefilter the recommendation by for example model and brand, making the recommendation more specific.
 	Currently we only filter for family_id. Currently only one prefilter_feature is supported, multiple lead to docker container performance issues (300ms).
 
+### Features
 Finally, get_top_n_recommendations_mix implements a mix of prefilters and generic recommendations. If interveav_prefiltered_general these selected these two lists are interwoven, meaning they are mixed alternatevly. Otherwise the generic bikes are appended to the prefiltered one. The ratio between the two can be determined with the ratio argument. If there are not enough recommendations available, populatity is used to append to the recommendation list.
 
+    Currently these features are use to construct the similarity matrix.
+    categorical_features = [
+        "motor",
+        "bike_component_id",
+        "bike_category_id",
+        "bike_type_id",
+        "brake_type_code",
+        "frame_material_code",
+        "shifting_code",
+        "color",
+    ]
+    numerical_features = ["price", "frame_size_code", "year"]
 
-# Collaborative Filtering
+    We overwieight certain features to account for their different relevance.
+    numerical_features_to_overweight = ["price", "frame_size_code"]
+    numerical_features_overweight_factor = 4
+    categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type_id"]
+    categorical_features_overweight_factor = 2
+
+
+## Collaborative Filtering
 
 The data generation is implemented periodicaly in create_data.py.
 The script checks which data is available on the pod's pvc and compares to the mixpanel based click date on S3.
@@ -35,66 +59,67 @@ It then updates the local data and saves it to the pvc, again the model reads th
 
 The data generation condenses all click data of unique user_id (distinct_id in the current case) and calculates the feedback according to the weights below.
 
-Currently, the features used are:
-user_id = 'distinct_id'
-bike_id = 'bike.id'
+### Features
+    Currently, the features used are:
+        user_id = 'distinct_id'
+        bike_id = 'bike.id'
 
+    item_features = [
+        "family_id",
+        "rider_height_min",
+        "rider_height_max",
+        "price",
+    ]
 
-item_features = [
-    # 'bike_type_id',
-    'bike.family_id',
-    'bike.frame_size',
-    'bike_price',
-]
-
-implicit_feedback = {'Bike_view': 1,
-                     'Choose_service': 5,
-                     'Choose_shipping_method': 5,
-                     'Save_filter': 5,
-                     'add_discount': 10,
-                     'add_payment_info': 20,
-                     'add_shipping_info': 20,
-                     'add_to_compare': 3,
-                     'add_to_favorite': 10,
-                     'ask_question': 10,
-                     'begin_checkout': 12,
-                     'choose_condition': 0,
-                     'click_filter_no_result': 0,
-                     'close_login_page': 0,
-                     'comment_show_original': 3,
-                     'counter_offer': 10,
-                     'delete_from_favourites': -2,
-                     'home_page_open': 0,
-                     'login': 5,
-                     'open_login_page': 2,
-                     'purchase': 50,
-                     'receive_block_comment_pop_up': 0,
-                     'recom_bike_view': 3,
-                     'register': 10,
-                     'remove_bike_from_compare': -1,
-                     'request_leasing': 20,
-                     'sales_ad_created': 0,
-                     'search': 0,
-                     'search_without_result': 0,
-                     'sell_click_family': 0,
-                     'sell_click_template': 0,
-                     'sell_condition': 0,
-                     'sell_details': 0,
-                     'sell_search': 0,
-                     'sell_templates': 0,
-                     'sell_toggle_components_changed': 0,
-                     'sellpage_open': 0,
-                     'share_bike': 10,
-                     'shop_view': 2,
-                     'toggle_language': 2,
-                     }
-# CollaborativeRandomized
+    implicit_feedback = {'Bike_view': 1,
+                         'Choose_service': 5,
+                         'Choose_shipping_method': 5,
+                         'Save_filter': 5,
+                         'add_discount': 10,
+                         'add_payment_info': 20,
+                         'add_shipping_info': 20,
+                         'add_to_compare': 3,
+                         'add_to_favorite': 10,
+                         'ask_question': 10,
+                         'begin_checkout': 12,
+                         'choose_condition': 0,
+                         'click_filter_no_result': 0,
+                         'close_login_page': 0,
+                         'comment_show_original': 3,
+                         'counter_offer': 10,
+                         'delete_from_favourites': -2,
+                         'home_page_open': 0,
+                         'login': 5,
+                         'open_login_page': 2,
+                         'purchase': 50,
+                         'receive_block_comment_pop_up': 0,
+                         'recom_bike_view': 3,
+                         'register': 10,
+                         'remove_bike_from_compare': -1,
+                         'request_leasing': 20,
+                         'sales_ad_created': 0,
+                         'search': 0,
+                         'search_without_result': 0,
+                         'sell_click_family': 0,
+                         'sell_click_template': 0,
+                         'sell_condition': 0,
+                         'sell_details': 0,
+                         'sell_search': 0,
+                         'sell_templates': 0,
+                         'sell_toggle_components_changed': 0,
+                         'sellpage_open': 0,
+                         'share_bike': 10,
+                         'shop_view': 2,
+                         'toggle_language': 2,
+                         }
+## CollaborativeRandomized
 Same as above but draw from a sample of more recommendations and randomize.
 
-# AB test
+## AB test
 
 The AB test is implemented with istio on Kubernetes.
 Istio ensures a weighted assignment of users by browser. Istio returns a 'version', if no or unknown --header "version: xx" is sent, that is then saved in local storage of the browser.
+Make sure the app_version in the model matches the Kubernetes version.
 There are three scenarios:
 
 If traffic should be routed to the dev environment, name them -dev for the version name.
@@ -124,22 +149,51 @@ This allows the Load Balancer to route to the dev environment.
     Start a new ab test:
 
     same as 'test two versions'
-    The PVCs and cronjobs for the data creation are kept and assigned through meta_name.
+    The PVCs and cronjobs for the data creation are kept and assigned through meta_name, so change the metaname.
     If data requirements are chaning for the model version first start version with
     0 value and wait until the old data from the pvc is delete and new one created.
     Then set to desired weight.
 
 
-# Model Logic
+## Model Logic
 
-## Strategies
+### Strategies
 Try to apply the specified strategy in the request to get recommendations.
 If no stategy is passed, use the default strategy (product page).
 If an unknow strategy is passed use the fallback strategy (product_page).
 If the specified strategy or fallback strategy leads to < n recommendations, use a ContentMixed to ensure that always enough recommendations are generated.
 
+#### Strategy use-case mapping
 
-## Usage
+    strategy_dict = {
+        "product_page": CollaborativeRandomized,
+        "braze": Collaborative,
+        "homepage": CollaborativeRandomized,
+        "FallbackContentMixed": FallbackContentMixed,
+    }
+
+
+#### Available stategies
+1. `FallbackContentMixed`:
+   - This strategy is a fallback that uses the content based model.
+   - It uses a similarity matrix to find bikes similar to the given bike ID.
+   - If not enough similar bikes are found, popularity-based recommendations are added.
+   - The recommendations are generated by the `get_top_n_recommendations_mix` function, which takes into account various parameters such as family ID, price, and frame size code.
+   - The strategy returns a tuple containing the strategy name, a list of recommendations, and an optional error message.
+2. `ContentMixed`:
+   - Similar to `FallbackContentMixed`, this strategy also mixes content-based recommendations with popularity-based recommendations.
+   - It uses the same `get_top_n_recommendations_mix` function and parameters.
+   - The strategy is designed to return popularity-based recommendations if there are too few specific recommendations available.
+3. `Collaborative`:
+   - This strategy attempts to use collaborative filtering to generate recommendations.
+   - It uses the `get_top_n_collaborative` function, which leverages a pre-trained model and a dataset to predict items that a user might like.
+   - The strategy returns a tuple with the strategy name, a list of recommendations, and a placeholder for an error message (which is always `None` in this case).
+4. `CollaborativeRandomized`:
+   - This strategy is a variation of collaborative filtering that includes randomized sampling.
+   - It uses the `get_top_n_collaborative_randomized` function to generate recommendations, which introduces randomness to potentially increase the diversity of recommendations.
+   - The strategy returns a tuple with the strategy name, a list of recommendations, and an optional error message.
+
+### Usage
 
 Most parameters are determined in the driver_.py files, such as numerical and categorical features to consider and which feature to prefilter for.
 The function create_data_model_content allows the overweighing num and cat feature, chose in the driver.
@@ -149,11 +203,11 @@ The DB parameters are read-in from a config.ini, this should be moved to a vault
 
 Currently, the status to recommend bike is active and the similarity metric is eucledian.
 
-## Requirements
+### Requirements
 
 * [Docker version 20 or later](https://docs.docker.com/install/#support)
 
-## Setup development environment
+### Setup development environment
 
 We setup the conda development environment with the following command.
 
@@ -163,14 +217,22 @@ Install requirements
 
 - `make install`
 
-## Lint and formatting
+Prepare test data
+
+
+```bash
+python create_data.py data/ test
+```
+
+
+### Lint and formatting
 
 - `make lint`
 
 - `make format`
 
 
-## Docker
+### Docker
 
 when creating an docker image the data is downloaded and prepared. Build test and production stages and runs tests.
 
@@ -181,18 +243,18 @@ Run app.
 - `docker compose up app`
 
 
-## Driver and Config
+### Driver and Config
 
 src/driver_content.py defines the SQL queries, categorical and numerical features as well as the prefilter_features.
 config/config.ini holdes DB credentials.
 src/driver_collaborative.py defines the bike and user column, which item and user features to use and the implicit feedback weights.
 
 
-## Endpoint
+### Endpoint
 
 REST API
 
-### Get recommendation
+#### Get recommendation
 
 	Path: /recommendation
 	HTTP Verb: POST
@@ -245,78 +307,37 @@ HTTP:
 
 
 Example:
+```bash
+ab
+curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
+     -H "Content-Type: application/json" \
+     -d '{
+           "strategy": "product_page",
+           "bike_id": 78041,
+           "user_id": 123,
+           "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
+           "n": 8,
+           "family_id": 403
+         }' \
+     --header "version: stable"
+dev
+curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
+     -H "Content-Type: application/json" \
+     -d '{
+           "strategy": "product_page",
+           "bike_id": 78041,
+           "user_id": 123,
+           "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
+           "n": 8,
+           "family_id": 403
+         }' \
+     --header "version: stable-001-dev"
 
-local
- ❯ curl -i -X POST 0.0.0.0:8000/recommendation -H "Content-Type: application/json" -d '{"bike_id": 14394, "user_id": 123, "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692", "n": 8, "family_id": 12}' --header "version: stable"
 
 deployed
- ❯ curl -i -X POST https://recommendation.buycycle.com/recommendation ...                                                                                                              "user_id": 123,
+curl -i -X POST https://recommendation.buycycle.com/recommendation ...                                                                                                              "user_id": 123,
 
-ab
- ❯ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation ...
+local
+curl -i -X POST 0.0.0.0:8000/recommendation ...
 
-
-## known issues
-
-### content
-
-* we based the prefiltering on family_id, some have NAs
-* frame_size not harmonized for populatity
-
-### model
-
-* Config on S3 with DB credentials. Secret should be injected from vault
-	* discreapancie to the local config file read-in
-
-
-## To-does
-
-
-### model
-
-migrate popularity recommendation to the new MongoDB data
-
-
-### To production
-
-
-### helm charts
-two versions, one deploy and one ab test
-* check ab testing
-	* it pulls the latest instead of going back to stable
-		* seems to not be possible to define a specific canary version
-	* alternatively we can assign a mixpanel_id a header?
-	* alternatevly we can create a random assigned cookie
-		* we can then check which user is assigned to which version and join with the S3 info of transactions
-		* might be worthwihile to optimize this
-
-	* harmonize names
-	* needs clean up first
-
-
-
-### Dev
-
-* use ML API as an example for deployment
-gitlab.com:Arsen-Muradyan/buycycle-helm.git
-
-
-https://www.opsmx.com/blog/how-to-enable-ci-cd-with-argo-cd-and-jenkins/
-
-
-
-* Jenkins
-	* poll github
-	* on change, build docker container
-	* ETL currently done on container creation
-
-	* register container with aws ECR
-
-
-
-* ArgoCD
-	* manifest repo
-	* Image updater to poll container registry
-	* argo CD to deploy on Kubernets
-
-
+```

@@ -26,8 +26,7 @@ numerical_features = ["price", "frame_size_code", "year"]
 # features to overweight
 numerical_features_to_overweight = ["price", "frame_size_code"]
 numerical_features_overweight_factor = 4
-categorical_features_to_overweight = [
-    "bike_component_id", "bike_category_id", "bike_type_id"]
+categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type_id"]
 categorical_features_overweight_factor = 2
 
 # main query, needs to include at least the id and the features defined above
@@ -120,5 +119,3 @@ popularity_query_dtype = {
     "frame_size_code": pd.StringDtype(),
     "count_of_visits": pd.Int64Dtype(),
 }
-
-

@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy source code to working directory
 COPY model/app.py /app/
-
+COPY create_data.py /app/
 
 # Copy app dependencies
 RUN mkdir /app/src
@@ -53,6 +53,4 @@ ENV AB=${AB}
 
 
 # gunicron for production
-CMD ["gunicorn", "-w 4", "-b", "0.0.0.0:80", "app:app"]
-
-
+CMD ["gunicorn", "-w 4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:80", "app:app"]

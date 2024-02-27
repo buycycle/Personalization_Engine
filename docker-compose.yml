@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: ./docker/test.dockerfile
     command: sh -c 'mkdir -p data && python -m unittest discover &&
-      for file in tests/test_*.py; do if echo ${file} | grep -q 'test_fixtures.py'; then continue; fi; pytest -v ${file}; done'
+      pytest -v'
 
   app:
     build:
@@ -23,9 +23,8 @@ services:
     #volumes:
     #  - ./data:/app/data
     environment:
-      - FLASK_ENV=production
-    command: sh -c 'python src/create_data.py && flask run --host=0.0.0.0 --port=80'
-
+      - ENVIRONMENT=production
+    command: sh -c 'python create_data.py && uvicorn app:app --host 0.0.0.0 --port 80'
 
 
 
