@@ -115,10 +115,14 @@ FROM (
                 ELSE 0
             END *
             CASE
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 2
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 1.5
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 10
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '3 days' THEN 7
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 5
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 4
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 3
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 2
                 ELSE 1
-            END) AS feedback,
+            END AS feedback
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
     FROM (
         SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed
