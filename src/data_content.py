@@ -1,9 +1,11 @@
+import os
 import pandas as pd
 import numpy as np
 
-import threading
 
 # similarity estimation
+from concurrent.futures import ProcessPoolExecutor
+from typing import NamedTuple
 import heapq
 from sklearn.metrics import pairwise_distances_chunked
 from scipy.spatial.distance import cdist  # , pdist, squareform
@@ -97,7 +99,35 @@ def get_similarity_matrix_cdist(
     # return an instance of SimilarityMatrixSparse with the sparse matrix and indices
     return SimilarityMatrixSparse(matrix=similarity_matrix_sparse, rows=similarity_matrix.index, cols=similarity_matrix.columns)
 
+def compute_distances_chunk(chunk, df_feature_engineered, status_mask, metric, num_cols_to_keep):
+    col_index_mapping = {idx: col_idx for col_idx, idx in enumerate(df_feature_engineered.loc[status_mask].index)}
+    partial_similarity_matrix = lil_matrix((len(chunk), df_feature_engineered.loc[status_mask].shape[0]), dtype='float32')
+    for i, row in enumerate(chunk.itertuples(index=False)):
+        distances = cdist([row], df_feature_engineered.loc[status_mask], metric=metric)[0]
+        smallest_distances = heapq.nsmallest(num_cols_to_keep, enumerate(distances), key=lambda x: x[1])
+        for col_idx, dist in smallest_distances:
+            mapped_col_idx = col_index_mapping[df_feature_engineered.loc[status_mask].index[col_idx]]
+            partial_similarity_matrix[i, mapped_col_idx] = dist
+    return partial_similarity_matrix
 
+def get_similarity_matrix_cdist_queue_parallel(df_feature_engineered, metric, status_mask, percentile=10):
+    num_cpus = os.cpu_count()  # Get the number of CPUs available
+    num_cols_to_keep = max(int(np.sum(status_mask) * (percentile / 100)), 1)
+    similarity_matrix_sparse = lil_matrix((df_feature_engineered.shape[0], df_feature_engineered.loc[status_mask].shape[0]), dtype='float32')
+    # Split the DataFrame into chunks for parallel processing
+    chunks = np.array_split(df_feature_engineered, num_cpus)
+    with ProcessPoolExecutor(max_workers=num_cpus) as executor:
+        futures = [executor.submit(compute_distances_chunk, chunk, df_feature_engineered, status_mask, metric, num_cols_to_keep) for chunk in chunks]
+        # Merge the results from each worker into the final similarity matrix
+        for future in concurrent.futures.as_completed(futures):
+            partial_similarity_matrix = future.result()
+            similarity_matrix_sparse += partial_similarity_matrix
+    similarity_matrix_sparse = similarity_matrix_sparse.tocsr()
+    return SimilarityMatrixSparse(
+        matrix=similarity_matrix_sparse,
+        rows=df_feature_engineered.index,
+        cols=df_feature_engineered.loc[status_mask].index
+    )
 
 
 def get_similarity_matrix_cdist_queue(
@@ -266,7 +296,7 @@ def create_data_model_content(
 
     status_mask = get_data_status_mask(df, status)
 
-    similarity_matrix = get_similarity_matrix_cdist_queue(df_feature_engineered, metric, status_mask)
+    similarity_matrix = get_similarity_matrix_cdist_queue_parallel(df_feature_engineered, metric, status_mask)
 
     # reduce the column dimensionality of the similarity matrix by filtering with the status mask
     # similarity_matrix = similarity_matrix[status_mask]
