@@ -30,9 +30,10 @@ categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "
 categorical_features_overweight_factor = 2
 
 # main query, needs to include at least the id and the features defined above
+
 main_query = """SELECT bikes.id as id,
 
-                       status,
+                       bikes.status as status,
                        -- categorizing
                        bike_type_id,
                        bike_category_id,
@@ -68,7 +69,7 @@ main_query = """SELECT bikes.id as id,
 
 
                 -- for non active bikes we set a one year cap for updated_at
-                WHERE bikes.status = 'active' or bikes.status != 'new' and bike.status != 'deleted' and TIMESTAMPDIFF(MONTH, bikes.updated_at, NOW()) < 2
+                WHERE status = 'active' or status != 'new' and status != 'deleted' and TIMESTAMPDIFF(MONTH, bikes.updated_at, NOW()) < 2
 
 
              """
