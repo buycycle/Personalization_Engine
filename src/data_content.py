@@ -25,34 +25,6 @@ from buycycle.data import (
 )
 
 
-def get_similarity_matrix_memory(
-    df: pd.DataFrame, df_feature_engineered: pd.DataFrame, metric: str, working_memory: int = 4001
-) -> pd.DataFrame:
-    """
-    get the similarity matrix for the dataframe
-    only chunck size optimal, with 4gb not good results, we might need to randomly shuffle similarity_matrix matrix to avoid clustering in chunks
-    Args:
-        df (pandas.DataFrame): feature engineered dataframe of bikes to get cosine similarity matrix for
-        df_feature_engineered (pandas.DataFrame): feature engineered dataframe of bikes to get cosine similarity matrix for
-        mertric (str): similarity metric
-        working_memory (int)
-    Returns:
-        similarity_matrix (pd.DataFrame): similarity matrix for the dataframe
-    """
-    # calculate pairwise distances using pairwise_distances_chunked
-    n_samples = df_feature_engineered.shape[0]
-    similarity_matrix = np.zeros((n_samples, n_samples))
-
-    for chunk in pairwise_distances_chunked(
-        df_feature_engineered, df_feature_engineered, metric=metric, working_memory=working_memory
-    ):
-        for i, row in enumerate(chunk):
-            similarity_matrix[i, :] = row
-
-    # convert the pairwise distances to a similarity matrix
-    similarity_matrix = pd.DataFrame(similarity_matrix, columns=df.index, index=df.index)
-
-    return similarity_matrix
 
 
 class SimilarityMatrixSparse:
@@ -148,7 +120,7 @@ def get_similarity_matrix_cdist_queue(
     similarity_matrix_sparse = lil_matrix((df_feature_engineered.shape[0], df_feature_engineered.loc[status_mask].shape[0]), dtype='float32')
     # Create a mapping from the filtered DataFrame's indices to the column indices of the sparse matrix
     col_index_mapping = {idx: col_idx for col_idx, idx in enumerate(df_feature_engineered.loc[status_mask].index)}
-    # Compute distances and use a priority queue to keep only the smallest values
+    # Compute distances for each row to the df_feature_engineered[status_mask] and use a priority queue to keep only the smallest values
     for i, row in enumerate(df_feature_engineered.itertuples(index=False)):
         distances = cdist([row], df_feature_engineered.loc[status_mask], metric=metric)[0]
         smallest_distances = heapq.nsmallest(num_cols_to_keep, enumerate(distances), key=lambda x: x[1])
