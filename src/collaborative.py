@@ -225,15 +225,22 @@ def get_model(
 
     test_auc = auc(model, train, test, user_features_matrix, item_features_matrix)
 
-
     return model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix, test_auc
 
 
 def update_model(df, user_id, bike_id, user_features, item_features, path):
     """retrain and write model to disk"""
-    model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix, test_auc = get_model(
-        df, user_id, bike_id, user_features, item_features
-    )
+    (
+        model,
+        train,
+        test,
+        dataset,
+        interactions,
+        interactions_weights,
+        user_features_matrix,
+        item_features_matrix,
+        test_auc,
+    ) = get_model(df, user_id, bike_id, user_features, item_features)
 
     write_model_data(model, dataset, path)
 

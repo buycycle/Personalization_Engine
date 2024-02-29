@@ -21,7 +21,7 @@ from src.collaborative import create_data_model_collaborative, update_model
 path = sys.argv[1] if len(sys.argv) > 1 else "./data/"
 
 # Check if the second command line argument is 'test' and set a flag accordingly
-is_test_mode = len(sys.argv) > 2 and sys.argv[2] == 'test'
+is_test_mode = len(sys.argv) > 2 and sys.argv[2] == "test"
 # Add limits to the queries if in test mode
 main_query_limit = " LIMIT 200" if is_test_mode else ""
 collaborative_query_limit = " LIMIT 200000" if is_test_mode else ""
@@ -60,4 +60,3 @@ print(f"created_data_model_collaborative with Test AUC: {test_auc}")
 
 # sleep to make sure the data saved
 time.sleep(4)
-

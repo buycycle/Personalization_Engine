@@ -121,7 +121,7 @@ def testdata_content():
         os.makedirs("./data/")
 
     create_data_model_content(
-        main_query + "LIMIT 1000", # limit to subset for integation testing
+        main_query + "LIMIT 1000",  # limit to subset for integation testing
         main_query_dtype,
         popularity_query,
         popularity_query_dtype,
@@ -154,7 +154,7 @@ def testdata_collaborative():
     test_auc = create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query + "LIMIT 10000", # limit to subset for integation testing
+        query=query + "LIMIT 10000",  # limit to subset for integation testing
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,
