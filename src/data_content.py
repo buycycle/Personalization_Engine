@@ -4,7 +4,7 @@ import numpy as np
 
 
 # similarity estimation
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed  # Import as_completed here
 from typing import NamedTuple
 import heapq
 from sklearn.metrics import pairwise_distances_chunked
@@ -119,7 +119,7 @@ def get_similarity_matrix_cdist_queue_parallel(df_feature_engineered, metric, st
     with ProcessPoolExecutor(max_workers=num_cpus) as executor:
         futures = [executor.submit(compute_distances_chunk, chunk, df_feature_engineered, status_mask, metric, num_cols_to_keep) for chunk in chunks]
         # Merge the results from each worker into the final similarity matrix
-        for future in concurrent.futures.as_completed(futures):
+        for future in as_completed(futures):  # Use as_completed directly
             partial_similarity_matrix = future.result()
             similarity_matrix_sparse += partial_similarity_matrix
     similarity_matrix_sparse = similarity_matrix_sparse.tocsr()
