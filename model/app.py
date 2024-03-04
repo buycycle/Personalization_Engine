@@ -40,6 +40,7 @@ config_paths = "config/config.ini"
 config = configparser.ConfigParser()
 config.read(config_paths)
 path = "data/"
+
 app = FastAPI()
 
 # read the environment from the docker environment variable
