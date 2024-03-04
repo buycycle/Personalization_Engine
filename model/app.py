@@ -1,5 +1,4 @@
 """recommender system"""
-# get env variable
 from fastapi import Body
 from pydantic import BaseModel, validator
 import os
