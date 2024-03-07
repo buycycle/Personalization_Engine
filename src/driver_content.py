@@ -3,7 +3,6 @@ import pandas as pd
 # features for which to prefilter for the specific recommendations.
 # currently only once feature is supported, check .all or .any for supporting multiple features
 # however not sure if that makes sense, maybe .any for family and family_model
-# needs some thought
 
 # prefilter_features = ["family_model_id", "family_id", "brand_id"]
 prefilter_features = ["family_id"]
