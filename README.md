@@ -321,7 +321,7 @@ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
          }' \
      --header "version: stable"
 dev
-curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
+curl -i -X POST https://dev.recommendation.buycycle.com/recommendation \
      -H "Content-Type: application/json" \
      -d '{
            "strategy": "product_page",

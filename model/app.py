@@ -1,5 +1,4 @@
 """recommender system"""
-# get env variable
 from fastapi import Body
 from pydantic import BaseModel, validator
 import os
@@ -27,13 +26,21 @@ from src.driver_collaborative import bike_id, features, item_features, user_feat
 # import functions from src folder
 from src.data_content import DataStoreContent
 from src.collaborative import DataStoreCollaborative
-from src.strategies import StrategyFactory, FallbackContentMixed, ContentMixed, Collaborative, CollaborativeRandomized, CollaborativeRandomizedContentInterveaved
+from src.strategies import (
+    StrategyFactory,
+    FallbackContentMixed,
+    ContentMixed,
+    Collaborative,
+    CollaborativeRandomized,
+    CollaborativeRandomizedContentInterveaved,
+)
 from src.strategies import strategy_dict
 
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
 config.read(config_paths)
 path = "data/"
+
 app = FastAPI()
 
 # read the environment from the docker environment variable
@@ -165,7 +172,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, n, sample)
         elif isinstance(strategy_instance, CollaborativeRandomizedContentInterveaved):
             # Ensure that the additional parameters required for this strategy are available
-            strategy, recommendation, error = strategy_instance.get_recommendations(id, bike_id, family_id, price, frame_size_code, n, sample)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                id, bike_id, family_id, price, frame_size_code, n, sample
+            )
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())

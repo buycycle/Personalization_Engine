@@ -56,7 +56,7 @@ pipeline {
                 script {
                     test.inside {
                         sh 'mkdir -p data'
-                        sh 'python create_data.py'
+                        sh 'python create_data.py ./data/ test'
                         sh 'pytest -v tests/test_fastapi.py'
                     }
                 }

@@ -68,8 +68,9 @@ class FallbackContentMixed(RecommendationStrategy):
 
 
 class ContentMixed(RecommendationStrategy):
-    """ Content based according to prefiltered mix with generic, returns popularity if too little specific
+    """Content based according to prefiltered mix with generic, returns popularity if too little specific
     recommendations are available"""
+
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "ContentMixed"
         self.df = data_store_content.df
@@ -103,7 +104,8 @@ class ContentMixed(RecommendationStrategy):
 
 
 class Collaborative(RecommendationStrategy):
-    """ Try Collaborative filtering, fail silently and return an empty list"""
+    """Try Collaborative filtering, fail silently and return an empty list"""
+
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "Collaborative"
         self.model = data_store_collaborative.model
@@ -122,8 +124,10 @@ class Collaborative(RecommendationStrategy):
         )
         return self.strategy, recommendations, None
 
+
 class CollaborativeRandomized(RecommendationStrategy):
-    """ Collaborative filtering with randomized sampling"""
+    """Collaborative filtering with randomized sampling"""
+
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "CollaborativeStrategyRandomized"
         self.model = data_store_collaborative.model
@@ -142,9 +146,12 @@ class CollaborativeRandomized(RecommendationStrategy):
             self.logger,
         )
         return self.strategy, recommendations, error
+
+
 # untested
 class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
-    """ Collaborative filtering with randomized sampling interweaved with content-based recommendations."""
+    """Collaborative filtering with randomized sampling interweaved with content-based recommendations."""
+
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "CollaborativeRandomizedContentInterveaved"
         self.collaborative_model = data_store_collaborative.model
@@ -156,7 +163,9 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
         self.content_prefilter_features = data_store_content.prefilter_features
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(
+        self, user_id: str, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int
+    ) -> Tuple[str, List, Optional[str]]:
         # Get collaborative recommendations with randomized sampling
         collaborative_recommendations, collaborative_error = get_top_n_collaborative_randomized(
             self.collaborative_model,
@@ -195,6 +204,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
         # Combine errors if any
         error = collaborative_error or content_error
         return self.strategy, interveaved_recommendation, error
+
 
 # Dictionary of strategies
 strategy_dict = {

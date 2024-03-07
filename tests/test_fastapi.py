@@ -94,9 +94,11 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
             recommendation = data.get("recommendation")
             strategy_used = data.get("strategy")
             # Check if the strategy is 'homepage' and verify the corresponding strategy
-            if strategy == 'homepage':
+            if strategy == "homepage":
                 expected_strategy = strategy_dict[strategy].__name__  # Get the class name as a string
-                assert strategy_used == expected_strategy, f"expected strategy {expected_strategy}, got {strategy_used} for 'product_page'"
+                assert (
+                    strategy_used == expected_strategy
+                ), f"expected strategy {expected_strategy}, got {strategy_used} for 'product_page'"
             # check the time taken for the recommendation
             assert end_time - start_time < limit, f"{strategy} took {(end_time - start_time)*1000} ms, limit is {limit*1000} ms"
             # assert that the response has the expected length n
@@ -140,9 +142,11 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=150, n_tes
             recommendation = data.get("recommendation")
             strategy_used = data.get("strategy")
             # Check if the strategy is 'product_page' and verify the corresponding strategy
-            if strategy == 'product_page':
+            if strategy == "product_page":
                 expected_strategy = strategy_dict[strategy].__name__  # Get the class name as a string
-                assert strategy_used == expected_strategy, f"expected strategy {expected_strategy}, got {strategy_used} for 'product_page'"
+                assert (
+                    strategy_used == expected_strategy
+                ), f"expected strategy {expected_strategy}, got {strategy_used} for 'product_page'"
             # check the time taken for the recommendation
             assert end_time - start_time < limit, f"{strategy} took {(end_time - start_time)*1000} ms, limit is {limit*1000} ms"
             # assert that the response has the expected length n
