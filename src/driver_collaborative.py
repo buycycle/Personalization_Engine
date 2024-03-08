@@ -115,13 +115,8 @@ FROM (
                 ELSE 0
             END *
             CASE
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 20
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '3 days' THEN 15 -- This applies to 2-3 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 12 -- This applies to 4-7 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 9 -- This applies to 8-14 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 6 -- This applies to 15-21 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 4 -- This applies to 22 days to 1 month old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 2 -- This applies to 1 month to 2 months old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 2
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 1.5
                 ELSE 1
             END) AS feedback,
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
