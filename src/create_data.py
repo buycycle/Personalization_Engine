@@ -17,7 +17,7 @@ from collaborative import create_data_model_collaborative, update_model
 path = sys.argv[1] if len(sys.argv) > 1 else "./data/"
 
 create_data_model_content(
-    main_query=main_query,
+    main_query=main_query+"LIMIT 1000",
     main_query_dtype=main_query_dtype,
     popularity_query=popularity_query,
     popularity_query_dtype=popularity_query_dtype,
@@ -36,7 +36,7 @@ print('created_data_model_content')
 
 create_data_model_collaborative(DB="DB_EVENTS",
                                 driver="snowflake",
-                                query=query,
+                                query=query+"LIMIT 5000",
                                 user_id=user_id,
                                 bike_id=bike_id,
                                 user_features=user_features,
