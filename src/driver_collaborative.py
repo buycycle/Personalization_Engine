@@ -27,7 +27,7 @@ implicit_feedback = {
     "comment_show_original": 3,
     "counter_offer": 10,
     "delete_from_favourites": -5,
-    "order_completed": 50,  # booking_bike_id
+    "order_completed": 500,  # booking_bike_id
     "recom_bike_view": 3,  # recommended_bike_id
     "request_leasing": 20,
     "share_bike": 10,
