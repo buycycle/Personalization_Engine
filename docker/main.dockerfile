@@ -53,4 +53,4 @@ ENV AB=${AB}
 
 
 # gunicron for production
-CMD ["gunicorn", "-w 4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:80", "app:app"]
+CMD ["gunicorn", "-w 3", "-k", "uvicorn.workers.UvicornWorker", "--preload", "--max-requests", "5000", "-b", "0.0.0.0:80", "app:app"]
