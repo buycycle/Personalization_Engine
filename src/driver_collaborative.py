@@ -115,45 +115,50 @@ FROM (
                 ELSE 0
             END *
             CASE
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 2
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 1.5
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 20
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '3 days' THEN 15 -- This applies to 2-3 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 12 -- This applies to 4-7 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 9 -- This applies to 8-14 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 6 -- This applies to 15-21 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 4 -- This applies to 22 days to 1 month old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 2 -- This applies to 1 month to 2 months old
                 ELSE 1
             END) AS feedback,
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
     FROM (
-        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed
+        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
         UNION ALL
-        SELECT 'product_added', anonymous_id, bike_id, timestamp FROM product_added
+        SELECT 'product_added', anonymous_id, bike_id, timestamp FROM product_added WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'choose_service', anonymous_id, bike_id, timestamp FROM choose_service
+        SELECT 'choose_service', anonymous_id, bike_id, timestamp FROM choose_service WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'add_discount', anonymous_id, bike_id, timestamp FROM add_discount
+        SELECT 'add_discount', anonymous_id, bike_id, timestamp FROM add_discount WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'payment_info_entered', anonymous_id, booking_bike_id AS bike_id, timestamp FROM payment_info_entered
+        SELECT 'payment_info_entered', anonymous_id, booking_bike_id AS bike_id, timestamp FROM payment_info_entered WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'choose_shipping_method', anonymous_id, bike_id, timestamp FROM choose_shipping_method
+        SELECT 'choose_shipping_method', anonymous_id, bike_id, timestamp FROM choose_shipping_method WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'add_to_favorite', anonymous_id, bike_id, timestamp FROM add_to_favorite
+        SELECT 'add_to_favorite', anonymous_id, bike_id, timestamp FROM add_to_favorite WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'ask_question', anonymous_id, bike_id, timestamp FROM ask_question
+        SELECT 'ask_question', anonymous_id, bike_id, timestamp FROM ask_question WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'checkout_step_completed', anonymous_id, bike_id, timestamp FROM checkout_step_completed
+        SELECT 'checkout_step_completed', anonymous_id, bike_id, timestamp FROM checkout_step_completed WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'comment_show_original', anonymous_id, bike_id, timestamp FROM comment_show_original
+        SELECT 'comment_show_original', anonymous_id, bike_id, timestamp FROM comment_show_original WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'counter_offer', anonymous_id, bike_id, timestamp FROM counter_offer
+        SELECT 'counter_offer', anonymous_id, bike_id, timestamp FROM counter_offer WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'delete_from_favourites', anonymous_id, bike_id, timestamp FROM delete_from_favourites
+        SELECT 'delete_from_favourites', anonymous_id, bike_id, timestamp FROM delete_from_favourites WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'order_completed', anonymous_id, booking_bike_id AS bike_id, timestamp FROM order_completed
+        SELECT 'order_completed', anonymous_id, booking_bike_id AS bike_id, timestamp FROM order_completed WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'recom_bike_view', anonymous_id, recommended_bike_id AS bike_id, timestamp FROM recom_bike_view
+        SELECT 'recom_bike_view', anonymous_id, recommended_bike_id AS bike_id, timestamp FROM recom_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
         UNION ALL
-        SELECT 'request_leasing', anonymous_id, bike_id, timestamp FROM request_leasing
+        SELECT 'request_leasing', anonymous_id, bike_id, timestamp FROM request_leasing WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
-        SELECT 'share_bike', anonymous_id, bike_id, timestamp FROM share_bike
+        SELECT 'share_bike', anonymous_id, bike_id, timestamp FROM share_bike WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
     ) AS subquery
-    GROUP BY anonymous_id, bike_id
+    GROUP BY anonymous_id, bike_id HAVING feedback > 1
 ) AS implicit_feedback
 LEFT JOIN user_mapping ON implicit_feedback.anonymous_id = user_mapping.anonymous_id -- Join with the mapping
 JOIN BUYCYCLE.PUBLIC.BIKES ON implicit_feedback.bike_id = BIKES.id
