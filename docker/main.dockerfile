@@ -20,9 +20,9 @@ COPY ./config/config.ini /app/config
 
 RUN pip install --upgrade cython
 # Install the C compiler (gcc)
-RUN apt-get update && apt-get install -y gcc
-
-RUN apt-get install -y git
+RUN apk update && apk add --no-cache gcc musl-dev python3-dev libffi-dev
+# Install git
+RUN apk add --no-cache git
 
 # Copy requirements.txt file to working directory
 COPY requirements.txt .
