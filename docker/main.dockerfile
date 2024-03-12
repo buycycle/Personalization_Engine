@@ -52,5 +52,5 @@ ENV AB=${AB}
 #USER appuser
 
 
-# gunicron for production
-CMD ["gunicorn", "-w 3", "-k", "uvicorn.workers.UvicornWorker", "--preload", "--max-requests", "5000", "-b", "0.0.0.0:80", "app:app"]
+# gunicron for production, specified in deployment template
+#CMD ["gunicorn", "-w 3", "-k", "uvicorn.workers.UvicornWorker", "--preload", "--max-requests", "5000", "-b", "0.0.0.0:80", "app:app"]
