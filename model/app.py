@@ -200,38 +200,38 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
 
-    # Convert the recommendation to int if recommendation is not an empty list
-    if len(recommendation) > 0:
-        recommendation = [int(i) for i in recommendation]
-    logger.info(
-        "successful recommendation",
-        extra={
-            "strategy_target": strategy_target,
-            "strategy_used": strategy,
-            "user_id": user_id,
-            "distinct_id": distinct_id,
-            "bike_id": bike_id,
-            "family_id": family_id,
-            "price": price,
-            "frame_size_code": frame_size_code,
-            "n": n,
-            "recommendation": recommendation,
-        },
-    )
+        # Convert the recommendation to int if recommendation is not an empty list
+        if len(recommendation) > 0:
+            recommendation = [int(i) for i in recommendation]
+        logger.info(
+            "successful recommendation",
+            extra={
+                "strategy_target": strategy_target,
+                "strategy_used": strategy,
+                "user_id": user_id,
+                "distinct_id": distinct_id,
+                "bike_id": bike_id,
+                "family_id": family_id,
+                "price": price,
+                "frame_size_code": frame_size_code,
+                "n": n,
+                "recommendation": recommendation,
+            },
+        )
 
-    if error:
-        # Return error response if it exists
-        logger.error("Error no recommendation available, exception: " + error)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error no recommendation available")
-    else:
-        # Return success response with recommendation data
-        return {
-            "status": "success",
-            "strategy": strategy,
-            "recommendation": recommendation,
-            "app_name": app_name,
-            "app_version": app_version,
-        }
+        if error:
+            # Return error response if it exists
+            logger.error("Error no recommendation available, exception: " + error)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error no recommendation available")
+        else:
+            # Return success response with recommendation data
+            return {
+                "status": "success",
+                "strategy": strategy,
+                "recommendation": recommendation,
+                "app_name": app_name,
+                "app_version": app_version,
+            }
 
 
 @app.exception_handler(RequestValidationError)
