@@ -18,15 +18,9 @@ RUN mkdir /app/data
 RUN mkdir /app/config
 COPY ./config/config.ini /app/config
 
-# Upgrade Cython
 RUN pip install --upgrade cython
-# Update the package list and install build dependencies
-RUN apk update && apk add --no-cache \
-    gcc \
-    g++ \ # Add this line to install the GNU C++ compiler
-    musl-dev \
-    python3-dev \
-    libffi-dev
+# Install the C compiler (gcc)
+RUN apk update && apk add --no-cache gcc g++ musl-dev python3-dev libffi-dev
 # Install git
 RUN apk add --no-cache git
 
