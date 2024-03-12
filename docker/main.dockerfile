@@ -20,7 +20,7 @@ COPY ./config/config.ini /app/config
 
 RUN pip install --upgrade cython
 # Install the C compiler (gcc)
-RUN apk update && apk add --no-cache gcc g++ musl-dev python3-dev libffi-dev
+RUN apk update && apk add --no-cache gcc g++ gfortran musl-dev python3-dev libffi-dev
 # Install git
 RUN apk add --no-cache git
 
