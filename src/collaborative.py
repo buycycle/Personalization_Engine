@@ -316,6 +316,8 @@ def get_top_n_collaborative(model, user_id: str, n: int, dataset, df_status_mask
     error = None
     top_n_item_ids = []
     try:
+        if user_id not in dataset.mapping()[0]:
+            return top_n_item_ids, error  # Return immediately with an empty list and error message
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
 
@@ -368,6 +370,8 @@ def get_top_n_collaborative_randomized(
     error = None
     top_n_item_ids = []
     try:
+        if user_id not in dataset.mapping()[0]:
+            return top_n_item_ids, error  # Return immediately with an empty list and error message
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
 

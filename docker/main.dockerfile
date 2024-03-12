@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.9-alpine
+FROM python:3.9-slim
 
 # Create a working directory
 WORKDIR /app
@@ -20,9 +20,9 @@ COPY ./config/config.ini /app/config
 
 RUN pip install --upgrade cython
 # Install the C compiler (gcc)
-RUN apk update && apk add --no-cache gcc g++ gfortran musl-dev python3-dev libffi-dev
-# Install git
-RUN apk add --no-cache git
+RUN apt-get update && apt-get install -y gcc
+
+RUN apt-get install -y git
 
 # Copy requirements.txt file to working directory
 COPY requirements.txt .
