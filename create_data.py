@@ -4,8 +4,8 @@ from src.data_content import create_data_model_content
 from src.driver_content import (
     main_query,
     main_query_dtype,
-    popularity_query,
-    popularity_query_dtype,
+    quality_query,
+    quality_query_dtype,
     categorical_features,
     numerical_features,
     prefilter_features,
@@ -29,8 +29,8 @@ collaborative_query_limit = " LIMIT 200000" if is_test_mode else ""
 create_data_model_content(
     main_query=main_query + main_query_limit,
     main_query_dtype=main_query_dtype,
-    popularity_query=popularity_query,
-    popularity_query_dtype=popularity_query_dtype,
+    quality_query=quality_query,
+    quality_query_dtype=quality_query_dtype,
     categorical_features=categorical_features,
     numerical_features=numerical_features,
     prefilter_features=prefilter_features,

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
-from src.content import get_top_n_popularity_prefiltered
+from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import get_top_n_collaborative, get_top_n_collaborative_randomized, read_data_model
@@ -68,7 +68,7 @@ class FallbackContentMixed(RecommendationStrategy):
 
 
 class ContentMixed(RecommendationStrategy):
-    """Content based according to prefiltered mix with generic, returns popularity if too little specific
+    """Content based according to prefiltered mix with generic, returns quality if too little specific
     recommendations are available"""
 
     def __init__(self, logger, data_store_collaborative, data_store_content):

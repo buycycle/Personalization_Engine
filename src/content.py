@@ -6,19 +6,19 @@ from typing import Tuple, List, Optional
 from src.helper import interveave
 
 
-def get_top_n_popularity_prefiltered(
+def get_top_n_quality_prefiltered(
     df_quality: pd.DataFrame, family_id: int, price: int, frame_size_code: str, n: int = 16
 ) -> list:
     """
-    Returns the top n recommendations based on popularity, progressively filtering for price, frame_size_code, and family_id
+    Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
-        df_quality (pd.DataFrame): DataFrame with sorted bike ids by popularity
+        df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
         family_id (int): family_id of the bike
         price (int): price of the bike
         frame_size_code (str): frame_size_code of the bike
         n (int): number of recommendations to return
     Returns:
-        list: list of top n bike ids by popularity
+        list: list of top n bike ids by quality
     """
     # Filter for 20% higher and lower price
     df_filtered_price = df_quality[(df_quality["price"] >= price * 0.8) & (df_quality["price"] <= price * 1.2)]
@@ -114,25 +114,25 @@ def get_top_n_recommendations_mix(
     interveave_prefilter_general: bool = True,
 ) -> Tuple[List[int], Optional[str]]:
     """
-    Mix of popularity and content-based recommendations.
+    Mix of quality and content-based recommendations.
     Logic:
-        1. Get the top n recommendations based on popularity; return if bike_id not in the df.
+        1. Get the top n recommendations based on quality; return if bike_id not in the df.
         2. Get the top n recommendations prefiltered by the prefilter_features for n * ratio.
         3. Get the top n recommendations for the bike_id for n.
         4. Intervene or append the lists in the order of 2, 3, and append 1; ensuring that enough recommendations are returned.
     Args:
         bike_id (int): Bike ID to get recommendations for.
-        family_id (int): Family ID used for filtering popularity recommendations.
-        price (int): Price used for filtering popularity recommendations.
-        frame_size_code (str): Frame size code used for filtering popularity recommendations.
+        family_id (int): Family ID used for filtering quality recommendations.
+        price (int): Price used for filtering quality recommendations.
+        frame_size_code (str): Frame size code used for filtering quality recommendations.
         df (pd.DataFrame): Dataframe of bikes.
         df_status_masked (pd.DataFrame): Dataframe of bikes with the given status.
-        df_quality (pd.DataFrame): Dataframe of bikes sorted by popularity.
+        df_quality (pd.DataFrame): Dataframe of bikes sorted by quality.
         bike_similarity_df (pd.DataFrame): Bike similarity dataframe.
         prefilter_features (List[str]): List of features to prefilter by.
         logger (logging.Logger): Logger for logging warnings and errors.
         n (int, optional): Number of recommendations to return. Defaults to 16.
-        sample (int, optional): Number of top_n_popularity recommendations to randomly sample from. Defaults to 100.
+        sample (int, optional): Number of top_n_quality recommendations to randomly sample from. Defaults to 100.
         ratio (float, optional): Ratio of prefiltered recommendations to generic recommendations. Defaults to 0.75.
         interveave_prefilter_general (bool, optional): If True, interweave prefiltered and generic recommendations, else append. Defaults to True.
     Returns:
@@ -145,15 +145,15 @@ def get_top_n_recommendations_mix(
     try:
         if bike_id not in df.index:
             logger.warning(
-                "bike_id not in df, using popularity recommendations",
+                "bike_id not in df, using quality recommendations",
                 extra={
                     "bike_id": bike_id,
                 },
             )
 
-            top_n_popularity = get_top_n_popularity_prefiltered(df_quality, family_id, price, frame_size_code, sample)
+            top_n_quality = get_top_n_quality_prefiltered(df_quality, family_id, price, frame_size_code, sample)
 
-            return random.sample(top_n_popularity, n), error
+            return random.sample(top_n_quality, n), error
 
         else:
             # prefiltered recommendations

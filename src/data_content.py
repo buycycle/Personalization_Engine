@@ -200,20 +200,20 @@ def construct_dense_similarity_row(similarity_data: SimilarityMatrixSparse, bike
 def get_data(
     main_query: str,
     main_query_dtype: str,
-    popularity_query: str,
-    popularity_query_dtype: str,
+    quality_query: str,
+    quality_query_dtype: str,
     index_col: str = "id",
     config_paths: str = "config/config.ini",
 ) -> pd.DataFrame:
     """
-    Get main and popularity data, dropna and fillna for motor column
+    Get main and quality data, dropna and fillna for motor column
     Args:
         main_query: query to get main data
-        popularity_query: query to get popularity data
+        quality_query: query to get quality data
         config_paths: path to config file
     Returns:
         df: main data
-        df_quality: popularity data
+        df_quality: quality data
     """
 
     df = sql_db_read(query=main_query, DB="DB_BIKES", config_paths=config_paths, dtype=main_query_dtype, index_col=index_col)
@@ -224,7 +224,7 @@ def get_data(
     df.dropna(inplace=True)
 
     df_quality = sql_db_read(
-        query=popularity_query, DB="DB_BIKES", config_paths=config_paths, dtype=popularity_query_dtype, index_col=index_col
+        query=quality_query, DB="DB_BIKES", config_paths=config_paths, dtype=quality_query_dtype, index_col=index_col
     )
 
     duplicates = df_quality.index.duplicated(keep="last")
@@ -239,8 +239,8 @@ def get_data(
 def create_data_model_content(
     main_query,
     main_query_dtype,
-    popularity_query,
-    popularity_query_dtype,
+    quality_query,
+    quality_query_dtype,
     categorical_features,
     numerical_features,
     prefilter_features,
@@ -263,7 +263,7 @@ def create_data_model_content(
 
     """
 
-    df, df_quality = get_data(main_query, main_query_dtype, popularity_query, popularity_query_dtype)
+    df, df_quality = get_data(main_query, main_query_dtype, quality_query, quality_query_dtype)
 
     df = frame_size_code_to_numeric(df)
 
@@ -302,7 +302,7 @@ def read_data_content(path: str = "data/"):
     Returns:
         df: main data
         df_status_masked: main data with status mask applied
-        df_quality: popularity data
+        df_quality: quality data
         similarity_matrix: similarity matrix
     """
 

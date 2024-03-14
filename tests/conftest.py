@@ -19,8 +19,8 @@ from src.collaborative import DataStoreCollaborative
 from src.driver_content import (
     main_query,
     main_query_dtype,
-    popularity_query,
-    popularity_query_dtype,
+    quality_query,
+    quality_query_dtype,
     categorical_features,
     numerical_features,
     prefilter_features,
@@ -123,8 +123,8 @@ def testdata_content():
     create_data_model_content(
         main_query + "LIMIT 1000",  # limit to subset for integation testing
         main_query_dtype,
-        popularity_query,
-        popularity_query_dtype,
+        quality_query,
+        quality_query_dtype,
         categorical_features,
         numerical_features,
         prefilter_features,

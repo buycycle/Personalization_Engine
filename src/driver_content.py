@@ -88,7 +88,7 @@ main_query_dtype = {
     "frame_size_code": pd.StringDtype(),
 }
 
-popularity_query = """SELECT
+quality_query = """SELECT
     bikes.id as id,
     price,
     bike_additional_infos.frame_size as frame_size_code,
@@ -112,7 +112,7 @@ ORDER BY
 
 """
 
-popularity_query_dtype = {
+quality_query_dtype = {
     "id": pd.Int64Dtype(),
     "bike_type_id": pd.Int64Dtype(),
     "price": pd.Float64Dtype(),
