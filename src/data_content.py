@@ -213,7 +213,7 @@ def get_data(
         config_paths: path to config file
     Returns:
         df: main data
-        df_popularity: popularity data
+        df_quality: popularity data
     """
 
     df = sql_db_read(query=main_query, DB="DB_BIKES", config_paths=config_paths, dtype=main_query_dtype, index_col=index_col)
@@ -223,17 +223,17 @@ def get_data(
     df.motor.fillna(df.motor.median(), inplace=True)
     df.dropna(inplace=True)
 
-    df_popularity = snowflake_sql_db_read(
-        query=popularity_query, DB="DB_EVENTS", config_paths=config_paths, dtype=popularity_query_dtype, index_col=index_col
+    df_quality = sql_db_read(
+        query=popularity_query, DB="DB_BIKES", config_paths=config_paths, dtype=popularity_query_dtype, index_col=index_col
     )
 
-    duplicates = df_popularity.index.duplicated(keep="last")
-    df_popularity = df_popularity[~duplicates]
+    duplicates = df_quality.index.duplicated(keep="last")
+    df_quality = df_quality[~duplicates]
 
-    df_popularity = frame_size_code_to_numeric(df_popularity)
-    df_popularity.dropna(inplace=True)
+    df_quality = frame_size_code_to_numeric(df_quality)
+    df_quality.dropna(inplace=True)
 
-    return df, df_popularity
+    return df, df_quality
 
 
 def create_data_model_content(
@@ -263,7 +263,7 @@ def create_data_model_content(
 
     """
 
-    df, df_popularity = get_data(main_query, main_query_dtype, popularity_query, popularity_query_dtype)
+    df, df_quality = get_data(main_query, main_query_dtype, popularity_query, popularity_query_dtype)
 
     df = frame_size_code_to_numeric(df)
 
@@ -285,11 +285,11 @@ def create_data_model_content(
     df = df[prefilter_features]
     df_status_masked = df_status_masked[prefilter_features]
 
-    # write df, df_popularity, similarity_matrix to disk
+    # write df, df_quality, similarity_matrix to disk
 
     df.to_pickle(path + "df.pkl")  # where to save it, usually as a .pkl
     df_status_masked.to_pickle(path + "df_status_masked.pkl")
-    df_popularity.to_pickle(path + "df_popularity.pkl")
+    df_quality.to_pickle(path + "df_quality.pkl")
     similarity_matrix.to_pickle(path + "similarity_matrix.pkl")
 
 
@@ -302,17 +302,17 @@ def read_data_content(path: str = "data/"):
     Returns:
         df: main data
         df_status_masked: main data with status mask applied
-        df_popularity: popularity data
+        df_quality: popularity data
         similarity_matrix: similarity matrix
     """
 
     df = pd.read_pickle(path + "df.pkl")
     df_status_masked = pd.read_pickle(path + "df_status_masked.pkl")
-    df_popularity = pd.read_pickle(path + "df_popularity.pkl")
+    df_quality = pd.read_pickle(path + "df_quality.pkl")
 
     similarity_matrix = SimilarityMatrixSparse.read_pickle(path + "similarity_matrix.pkl")
 
-    return df, df_status_masked, df_popularity, similarity_matrix
+    return df, df_status_masked, df_quality, similarity_matrix
 
 
 class DataStoreContent(DataStoreBase):
@@ -320,18 +320,18 @@ class DataStoreContent(DataStoreBase):
         super().__init__()
         self.df = None
         self.df_status_masked = None
-        self.df_popularity = None
+        self.df_quality = None
         self.similarity_matrix = None
         self.prefilter_features = prefilter_features
         self._lock = threading.Lock()
 
     def read_data(self):
         with self._lock:  # acquire lock
-            self.df, self.df_status_masked, self.df_popularity, self.similarity_matrix = read_data_content()
+            self.df, self.df_status_masked, self.df_quality, self.similarity_matrix = read_data_content()
 
     def get_logging_info(self):
         return {
             "df_shape": self.df.shape,
             "df_status_masked_shape": self.df_status_masked.shape,
-            "df_popularity_shape": self.df_popularity.shape,
+            "df_quality_shape": self.df_quality.shape,
         }

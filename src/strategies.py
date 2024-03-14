@@ -39,7 +39,7 @@ class FallbackContentMixed(RecommendationStrategy):
         self.strategy = "FallbackContentMixed"
         self.df = data_store_content.df
         self.df_status_masked = data_store_content.df_status_masked
-        self.df_popularity = data_store_content.df_popularity
+        self.df_quality = data_store_content.df_quality
         self.similarity_matrix = data_store_content.similarity_matrix
         self.prefilter_features = data_store_content.prefilter_features
         self.logger = logger
@@ -56,7 +56,7 @@ class FallbackContentMixed(RecommendationStrategy):
             frame_size_code,
             self.df,
             self.df_status_masked,
-            self.df_popularity,
+            self.df_quality,
             bike_similarity_df,
             self.prefilter_features,
             self.logger,
@@ -75,7 +75,7 @@ class ContentMixed(RecommendationStrategy):
         self.strategy = "ContentMixed"
         self.df = data_store_content.df
         self.df_status_masked = data_store_content.df_status_masked
-        self.df_popularity = data_store_content.df_popularity
+        self.df_quality = data_store_content.df_quality
         self.similarity_matrix = data_store_content.similarity_matrix
         self.prefilter_features = data_store_content.prefilter_features
         self.logger = logger
@@ -92,7 +92,7 @@ class ContentMixed(RecommendationStrategy):
             frame_size_code,
             self.df,
             self.df_status_masked,
-            self.df_popularity,
+            self.df_quality,
             bike_similarity_df,
             self.prefilter_features,
             self.logger,
@@ -158,7 +158,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
         self.collaborative_dataset = data_store_collaborative.dataset
         self.content_df = data_store_content.df
         self.content_df_status_masked = data_store_content.df_status_masked
-        self.content_df_popularity = data_store_content.df_popularity
+        self.content_df_quality = data_store_content.df_quality
         self.content_similarity_matrix = data_store_content.similarity_matrix
         self.content_prefilter_features = data_store_content.prefilter_features
         self.logger = logger
@@ -186,7 +186,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
             frame_size_code,
             self.content_df,
             self.content_df_status_masked,
-            self.content_df_popularity,
+            self.content_df_quality,
             bike_similarity_df,
             self.content_prefilter_features,
             self.logger,

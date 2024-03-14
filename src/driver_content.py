@@ -89,26 +89,27 @@ main_query_dtype = {
 }
 
 popularity_query = """SELECT
-    bike_id AS id,
-    bike_price AS price,
-    bike_frame_size AS frame_size_code,
-    bike_family_id AS family_id,
-    bike_type_id,
-    COUNT(*) AS count_of_visits
-FROM
-    product_viewed
-WHERE
-    bike_status = 'active'
-GROUP BY
-    bike_id,
-    bike_price,
-    bike_frame_size,
-    bike_family_id,
+    bikes.id as id,
+    price,
+    bike_additional_infos.frame_size as frame_size_code,
+    quality_scores.score as quality_score,
+    family_id,
     bike_type_id
-HAVING
-    COUNT(*) > 10
+FROM
+    bikes
+    join quality_scores on bikes.id = quality_scores.bike_id
+    join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
+WHERE
+    status = 'active'
+GROUP BY
+    id,
+    price,
+    frame_size_code,
+    family_id,
+    bike_type_id
 ORDER BY
-    count_of_visits DESC
+    quality_score DESC
+
 """
 
 popularity_query_dtype = {
@@ -118,5 +119,5 @@ popularity_query_dtype = {
     "family_id": pd.Int64Dtype(),
     # frame_size_code as string, we convert it in frame_size_code_to_numeric
     "frame_size_code": pd.StringDtype(),
-    "count_of_visits": pd.Int64Dtype(),
+    "quality_score": pd.Int64Dtype(),
 }

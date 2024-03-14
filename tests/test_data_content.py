@@ -32,7 +32,7 @@ class TestData(unittest.TestCase):
         self.prefilter_features = prefilter_features
         self.categorical_features = categorical_features
         self.numerical_features = numerical_features
-        self.df, self.df_popularity = get_data(
+        self.df, self.df_quality = get_data(
             main_query=self.main_query,
             main_query_dtype=self.main_query_dtype,
             popularity_query=self.popularity_query,
@@ -57,7 +57,7 @@ def test_get_data_length(testdata_content):
     data_store_content = testdata_content
 
     assert len(data_store_content.df) >= 10000, f"df has {len(data_store_content.df)} rows, which is less than 10000 rows"
-    assert len(data_store_content.df_popularity) >= 7000, f"df_popularity has {len(data_store_content.df_popularity)} rows, which is less than 7000 rows"
+    assert len(data_store_content.df_quality) >= 7000, f"df_quality has {len(data_store_content.df_quality)} rows, which is less than 7000 rows"
 
 
 def test_columns_in_get_data(testdata_content):
@@ -126,7 +126,7 @@ class TestData(unittest.TestCase):
         self.prefilter_features = prefilter_features
         self.categorical_features = categorical_features
         self.numerical_features = numerical_features
-        self.df, self.df_popularity = get_data(
+        self.df, self.df_quality = get_data(
             main_query=self.main_query,
             main_query_dtype=self.main_query_dtype,
             popularity_query=self.popularity_query,
@@ -152,8 +152,8 @@ def test_get_data_length(testdata_content):
 
     assert len(data_store_content.df) >= 10000, f"df has {len(data_store_content.df)} rows, which is less than 10000 rows"
     assert (
-        len(data_store_content.df_popularity) >= 7000
-    ), f"df_popularity has {len(data_store_content.df_popularity)} rows, which is less than 7000 rows"
+        len(data_store_content.df_quality) >= 7000
+    ), f"df_quality has {len(data_store_content.df_quality)} rows, which is less than 7000 rows"
 
 
 def test_columns_in_get_data(testdata_content):
