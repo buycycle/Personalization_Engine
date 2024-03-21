@@ -254,6 +254,11 @@ src/driver_collaborative.py defines the bike and user column, which item and use
 
 REST API
 
+#### Health
+
+	Path: /health
+	HTTP Verb: GET
+
 #### Get recommendation
 
 	Path: /recommendation
