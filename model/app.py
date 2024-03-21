@@ -47,7 +47,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "stable-005"
+app_version = "stable-006"
 
 KAFKA_TOPIC = config["KAFKA"]["topic_recommendation"]
 KAFKA_BROKER = config["KAFKA"]["broker"]
@@ -88,6 +88,9 @@ data_loader_collaborative.start()
 def home():
     return {"message": "Recommender system"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 class RecommendationRequest(BaseModel):
     user_id: int = 0
