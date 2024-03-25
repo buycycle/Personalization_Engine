@@ -11,7 +11,7 @@ data_template='{
   "n": 12
 }'
 # Total number of requests to send
-total_requests=100
+total_requests=10
 # Initialize an associative array to hold the count of HTTP status codes and versions
 declare -A status_code_count
 declare -A version_count
@@ -24,12 +24,15 @@ echo "Total requests to be sent: $total_requests"
 # Loop total_requests times
 for i in $(seq 1 $total_requests); do
   # Execute the curl command and capture the headers and body
-  response=$(curl -s -i -X POST "$url" -H "Content-Type: application/json" -d "$data_template")
-
+  response=$(curl -s -i -X POST "$url" \
+    -H "Content-Type: application/json" \
+    -H "strategy: Generic" \
+    -H "model: price-dev" \
+    -H "version: canary-001" \
+    -d "$data_template")
   # Extract the HTTP status code and version from the response
   http_code=$(echo "$response" | grep HTTP | tail -1 | awk '{print $2}')
-  version=$(echo "$response" | grep -oP 'version: \K.*')
-
+  version=$(echo "$response" | grep -i "^version:" | awk '{print $2}' | tr -d '\r')
   # Increment the count for this HTTP status code and version
   ((status_code_count[$http_code]++))
   ((version_count[$version]++))
@@ -46,3 +49,5 @@ for ver in "${!version_count[@]}"; do
 done
 # Print completion information
 echo "Total requests sent: $total_requests"
+
+
