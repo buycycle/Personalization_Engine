@@ -4,6 +4,7 @@ bike_id = "bike_id"
 
 item_features = [
     "family_id",
+    "bike_category_id",
     "rider_height_min",
     "rider_height_max",
     "price",
@@ -38,53 +39,56 @@ SELECT * from "main"."rudder"."product_viewed" LIMIT 100;
 """
 query = """
 
-select user_id,
+WITH feedback_query AS (select user_id,
 bike_id,
 min(price) as price, -- min to avoid duplicates
+min(bike_category_id) as bike_category_id,
 min(family_id) as family_id,
 min(rider_height_min) as rider_height_min,
 min(rider_height_max) as rider_height_max,
 sum(feedback) as feedback
 from(
 
+--- backfill user_id from all interactions
 WITH user_mapping AS (
-    SELECT DISTINCT anonymous_id, user_id FROM product_viewed WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) AS user_id FROM product_viewed
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM product_added WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM product_added
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM choose_service WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM choose_service
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM add_discount WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM add_discount
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM payment_info_entered WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM payment_info_entered
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM choose_shipping_method WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM choose_shipping_method
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM add_to_favorite WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM add_to_favorite
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM ask_question WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM ask_question
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM checkout_step_completed WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM checkout_step_completed
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM comment_show_original WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM comment_show_original
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM counter_offer WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM counter_offer
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM delete_from_favourites WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM delete_from_favourites
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM order_completed WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM order_completed
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM recom_bike_view WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM recom_bike_view
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM request_leasing WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM request_leasing
     UNION
-    SELECT DISTINCT anonymous_id, user_id FROM share_bike WHERE user_id IS NOT NULL
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM share_bike
 )
 SELECT
-    COALESCE(user_mapping.user_id, implicit_feedback.anonymous_id) AS user_id, -- Use COALESCE to fill in user_id
+    user_mapping.user_id,
     implicit_feedback.anonymous_id,
     implicit_feedback.bike_id,
     bikes.price,
+    bikes.bike_category_id,
     bikes.family_id,
     bike_additional_infos.rider_height_min,
     bike_additional_infos.rider_height_max,
@@ -109,22 +113,24 @@ FROM (
                 WHEN event_type = 'counter_offer' THEN 10
                 WHEN event_type = 'delete_from_favourites' THEN -5
                 WHEN event_type = 'order_completed' THEN 50
-                WHEN event_type = 'recom_bike_view' THEN 3
+                WHEN event_type = 'recom_bike_view' THEN 5
                 WHEN event_type = 'request_leasing' THEN 20
                 WHEN event_type = 'share_bike' THEN 10
                 ELSE 0
             END *
             CASE
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 20
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '3 days' THEN 15 -- This applies to 2-3 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 12 -- This applies to 4-7 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 9 -- This applies to 8-14 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 6 -- This applies to 15-21 days old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 4 -- This applies to 22 days to 1 month old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 2 -- This applies to 1 month to 2 months old
-                ELSE 1
+            -- phase out multiplication factor over time
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 day' THEN 2
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '3 days' THEN 1.5 -- This applies to 2-3 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '7 days' THEN 1.25 -- This applies to 4-7 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 1 -- This applies to 8-14 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 0.75 -- This applies to 15-21 days old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 0.5 -- This applies to 22 days to 1 month old
+                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 0.25 -- This applies to 1 month to 2 months old
+                ELSE 0.1
             END) AS feedback,
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
+    --- restrict the data we look at for product viewed and recom_bike_viewed to 4 month, rest 12 month
     FROM (
         SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
         UNION ALL
@@ -158,13 +164,57 @@ FROM (
         UNION ALL
         SELECT 'share_bike', anonymous_id, bike_id, timestamp FROM share_bike WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
     ) AS subquery
-    GROUP BY anonymous_id, bike_id HAVING feedback > 1
+    GROUP BY anonymous_id, bike_id HAVING feedback > 0.2
 ) AS implicit_feedback
 LEFT JOIN user_mapping ON implicit_feedback.anonymous_id = user_mapping.anonymous_id -- Join with the mapping
 JOIN BUYCYCLE.PUBLIC.BIKES ON implicit_feedback.bike_id = BIKES.id
 JOIN BUYCYCLE.PUBLIC.BIKE_ADDITIONAL_INFOS ON implicit_feedback.bike_id = BIKE_ADDITIONAL_INFOS.BIKE_ID
-WHERE implicit_feedback.anonymous_id_cnt >= 3 AND implicit_feedback.anonymous_id_cnt <= 2000)
+--- user must have interacted with at least 3 and max 4000 bikes
+WHERE implicit_feedback.anonymous_id_cnt >= 3 AND implicit_feedback.anonymous_id_cnt <= 4000)
 
-group by user_id, bike_id
+group by user_id, bike_id),
+
+--- preference table, extract budget_min and _max as well as bike_category_id from stated preference per user
+user_preference AS (
+    SELECT
+      users.id as user_id,
+      BUYCYCLE.PUBLIC.bike_categories.id as bike_category_id,
+        CASE
+        WHEN budget IS NULL THEN NULL
+        WHEN budget LIKE 'More than%' THEN CAST(REPLACE(REPLACE(budget, '€', ''), 'More than ', '') AS DECIMAL)
+        ELSE CAST(REPLACE(REPLACE(SUBSTRING(budget, 1, CHARINDEX('-', budget) - 1), '€', ''), '.', '') AS DECIMAL)
+      END AS budget_min,
+      CASE
+        WHEN budget IS NULL THEN NULL
+        WHEN budget LIKE 'More than%' THEN 20000
+        ELSE CAST(REPLACE(REPLACE(SUBSTRING(budget, CHARINDEX('-', budget) + 1, LEN(budget)), '€', ''), '.', '') AS DECIMAL)
+      END AS budget_max
+    FROM users
+    left join BUYCYCLE.PUBLIC.bike_categories ON context_traits_what_kind_of_rider_style = bike_categories.name
+
+)
+--- join feedback with preference table
+SELECT
+    fq.user_id,
+    fq.bike_id,
+    min(fq.price) as price,
+    min(fq.bike_category_id) as bike_category_id,
+    min(fq.family_id) as family_id,
+    min(fq.rider_height_min) as rider_height_min,
+    min(fq.rider_height_max) as rider_height_max,
+CASE
+    WHEN (min(fq.price) > up.budget_min AND min(fq.price) < up.budget_max) OR min(fq.bike_category_id) = up.bike_category_id THEN sum(fq.feedback) * 2
+    ELSE sum(fq.feedback)
+END AS feedback
+
+FROM feedback_query fq
+left JOIN user_preference up ON fq.user_id = up.user_id
+GROUP BY
+    fq.user_id,
+    fq.bike_id,
+    up.budget_min,
+    up.budget_max,
+    up.bike_category_id
+
 
 """
