@@ -15,22 +15,22 @@ features = [user_id] + [bike_id] + user_features + item_features
 
 
 implicit_feedback = {
-    "product_viewed": 0,
-    "product_added": 0,
-    "choose_service": 0,
-    "add_discount": 0,
-    "payment_info_entered": 0,  # booking_bike_id
-    "choose_shipping_method": 0,
-    "add_to_favorite": 0,
-    "ask_question": 0,
-    "checkout_step_completed": 0,
-    "comment_show_original": 0,
-    "counter_offer": 0,
+    "product_viewed": 1,
+    "product_added": 2,
+    "choose_service": 5,
+    "add_discount": 10,
+    "payment_info_entered": 20,  # booking_bike_id
+    "choose_shipping_method": 20,
+    "add_to_favorite": 10,
+    "ask_question": 10,
+    "checkout_step_completed": 12,
+    "comment_show_original": 3,
+    "counter_offer": 10,
     "delete_from_favourites": -5,
     "order_completed": 50,  # booking_bike_id
-    "recom_bike_view": 0,  # recommended_bike_id
-    "request_leasing": 0,
-    "share_bike": 0,
+    "recom_bike_view": 3,  # recommended_bike_id
+    "request_leasing": 20,
+    "share_bike": 10,
 }
 
 test_query = """

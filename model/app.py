@@ -47,7 +47,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "canary-007-ordering"
+app_version = "canary-007"
 
 KAFKA_TOPIC = config["KAFKA"]["topic_recommendation"]
 KAFKA_BROKER = config["KAFKA"]["broker"]
