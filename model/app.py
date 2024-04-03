@@ -46,7 +46,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "stable-006"
+app_version = "stable-007"
 
 logger = Logger.configure_logger(environment, ab, app_name, app_version)
 logger.info("FastAPI app started")
