@@ -39,32 +39,35 @@ from src.strategies import strategy_dict
 # get loggers
 from buycycle.logger import Logger
 
-from model.app import app
+
+@pytest.fixture(scope="package")
+def mock_logger():
+    "mock the KafkaLogger"
+    # Create a mock KafkaLogger instance
+    mock_logger = Mock(spec=Logger)
+
+    return mock_logger
 
 
 @pytest.fixture(scope="package")
-def app_mock():
-    "patch the model to prevent threads from starting"
+def app_mock(mock_logger):
+    "patch the model with the logger mock version and prevent threads from starting"
 
-    # The patches will replace the actual methods with mocks that do nothing
-    with patch(
+    with patch("buycycle.logger.Logger", return_value=mock_logger), patch(
         "src.data_content.DataStoreContent.read_data_periodically"
     ), patch("src.collaborative.DataStoreCollaborative.read_data_periodically"):
+        # The above patches will replace the actual methods with mocks that do nothing
         from model.app import app  # Import inside the patch context to apply the mock
 
         yield app  # Use yield to make it a fixture
 
+
 @pytest.fixture(scope="package")
-def inputs(app_mock):
+def inputs(app_mock, mock_logger):
     "inputs for the function unit tests"
 
+    logger = mock_logger
     app = app_mock
-
-    environment = "test"
-    ab = "test"
-    app_name = "recommender-system"
-    app_version = "test"
-    logger = Logger.configure_logger(environment, ab, app_name, app_version)
 
     bike_id = 22187
     distinct_id = "1234"
@@ -81,16 +84,12 @@ def inputs(app_mock):
 
 
 @pytest.fixture(scope="package")
-def inputs_fastapi(app_mock):
+def inputs_fastapi(app_mock, mock_logger):
     "inputs for the fastapi function test"
 
-    app = app_mock
+    logger = mock_logger
 
-    environment = "test"
-    ab = "test"
-    app_name = "recommender-system"
-    app_version = "test"
-    logger = Logger.configure_logger(environment, ab, app_name, app_version)
+    app = app_mock
 
     strategy = strategy_dict
 
