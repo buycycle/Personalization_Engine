@@ -11,7 +11,7 @@ data_template='{
   "n": 12
 }'
 # Total number of requests to send
-total_requests=10
+total_requests=100
 # Initialize an associative array to hold the count of HTTP status codes and versions
 declare -A status_code_count
 declare -A version_count
