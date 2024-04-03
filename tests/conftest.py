@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from buycycle.logger import KafkaLogger
 from src.data_content import read_data_content
 
 # for create_data
@@ -40,41 +39,19 @@ from src.strategies import strategy_dict
 # get loggers
 from buycycle.logger import Logger
 
+from model.app import app
 
-@pytest.fixture(scope="package")
-def mock_kafka_logger():
-    "mock the KafkaLogger"
-    # Create a mock KafkaLogger instance
-    mock_logger = Mock(spec=KafkaLogger)
-
-    # Configure the mock to behave as you expect
-    # For example, you can set return values for methods or assert that methods are called
-    mock_logger.info.return_value = None
-    mock_logger.error.return_value = None
-    mock_logger.warning.return_value = None
-    mock_logger.debug.return_value = None
-    return mock_logger
 
 
 @pytest.fixture(scope="package")
-def app_mock(mock_kafka_logger):
-    "patch the model KafkaLogger with the mock version and prevent threads from starting"
-
-    with patch("buycycle.logger.KafkaLogger", return_value=mock_kafka_logger), patch("kafka.KafkaProducer"), patch(
-        "src.data_content.DataStoreContent.read_data_periodically"
-    ), patch("src.collaborative.DataStoreCollaborative.read_data_periodically"):
-        # The above patches will replace the actual methods with mocks that do nothing
-        from model.app import app  # Import inside the patch context to apply the mock
-
-        yield app  # Use yield to make it a fixture
-
-
-@pytest.fixture(scope="package")
-def inputs(app_mock, mock_kafka_logger):
+def inputs():
     "inputs for the function unit tests"
 
-    logger = mock_kafka_logger
-    app = app_mock
+    environment = "test"
+    ab = "test"
+    app_name = "recommender-system"
+    app_version = "test"
+    logger = Logger.configure_logger(environment, ab, app_name, app_version)
 
     bike_id = 22187
     distinct_id = "1234"
@@ -91,12 +68,14 @@ def inputs(app_mock, mock_kafka_logger):
 
 
 @pytest.fixture(scope="package")
-def inputs_fastapi(app_mock, mock_kafka_logger):
+def inputs_fastapi():
     "inputs for the fastapi function test"
 
-    logger = mock_kafka_logger
-
-    app = app_mock
+    environment = "test"
+    ab = "test"
+    app_name = "recommender-system"
+    app_version = "test"
+    logger = Logger.configure_logger(environment, ab, app_name, app_version)
 
     strategy = strategy_dict
 
