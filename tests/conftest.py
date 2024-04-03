@@ -42,10 +42,23 @@ from buycycle.logger import Logger
 from model.app import app
 
 
+@pytest.fixture(scope="package")
+def app_mock():
+    "patch the model to prevent threads from starting"
+
+    # The patches will replace the actual methods with mocks that do nothing
+    with patch(
+        "src.data_content.DataStoreContent.read_data_periodically"
+    ), patch("src.collaborative.DataStoreCollaborative.read_data_periodically"):
+        from model.app import app  # Import inside the patch context to apply the mock
+
+        yield app  # Use yield to make it a fixture
 
 @pytest.fixture(scope="package")
-def inputs():
+def inputs(app_mock):
     "inputs for the function unit tests"
+
+    app = app_mock
 
     environment = "test"
     ab = "test"
@@ -68,8 +81,10 @@ def inputs():
 
 
 @pytest.fixture(scope="package")
-def inputs_fastapi():
+def inputs_fastapi(app_mock):
     "inputs for the fastapi function test"
+
+    app = app_mock
 
     environment = "test"
     ab = "test"
