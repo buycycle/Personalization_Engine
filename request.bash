@@ -1,7 +1,7 @@
 #!/bin/bash
 url="https://ab.recommendation.buycycle.com/recommendation"
 data_template='{
-  "strategy": "prodcut",
+  "strategy": "product",
   "bike_id": 21091,
   "user_id": 18742,
   "device_id": "bccd547b-6736-41a2-8543-677b724fb2a1",
@@ -42,9 +42,9 @@ for i in $(seq 1 $total_requests); do
 
   # Extract the HTTP status code from the response
   http_code=$(echo "$response" | grep HTTP | tail -1 | awk '{print $2}')
-
-  # Increment the count for this HTTP status code
+  version=$(echo "$response" | grep -i "^version:" | awk '{print $2}' | tr -d '\r')
   ((status_code_count[$http_code]++))
+  ((version_count[$version]++))
 done
 # Calculate the mean response time in milliseconds
 mean_response_time_ms=$(bc <<< "scale=2; $total_time / $total_requests / 1000000")
@@ -53,7 +53,13 @@ echo "HTTP Status Code Counts:"
 for code in "${!status_code_count[@]}"; do
   echo "Status Code $code: ${status_code_count[$code]}"
 done
+echo "Version Counts:"
+for version in "${!version_count[@]}"; do
+  echo "Version $version: ${version_count[$version]}"
+done
 # Print the mean response time
 echo "Mean Response Time: $mean_response_time_ms ms"
 # Print completion information
 echo "Total requests sent: $total_requests"
+
+

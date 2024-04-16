@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from buycycle.logger import KafkaLogger
 from src.data_content import read_data_content
 
 # for create_data
@@ -42,25 +41,19 @@ from buycycle.logger import Logger
 
 
 @pytest.fixture(scope="package")
-def mock_kafka_logger():
+def mock_logger():
     "mock the KafkaLogger"
     # Create a mock KafkaLogger instance
-    mock_logger = Mock(spec=KafkaLogger)
+    mock_logger = Mock(spec=Logger)
 
-    # Configure the mock to behave as you expect
-    # For example, you can set return values for methods or assert that methods are called
-    mock_logger.info.return_value = None
-    mock_logger.error.return_value = None
-    mock_logger.warning.return_value = None
-    mock_logger.debug.return_value = None
     return mock_logger
 
 
 @pytest.fixture(scope="package")
-def app_mock(mock_kafka_logger):
-    "patch the model KafkaLogger with the mock version and prevent threads from starting"
+def app_mock(mock_logger):
+    "patch the model with the logger mock version and prevent threads from starting"
 
-    with patch("buycycle.logger.KafkaLogger", return_value=mock_kafka_logger), patch("kafka.KafkaProducer"), patch(
+    with patch("buycycle.logger.Logger", return_value=mock_logger), patch(
         "src.data_content.DataStoreContent.read_data_periodically"
     ), patch("src.collaborative.DataStoreCollaborative.read_data_periodically"):
         # The above patches will replace the actual methods with mocks that do nothing
@@ -70,10 +63,10 @@ def app_mock(mock_kafka_logger):
 
 
 @pytest.fixture(scope="package")
-def inputs(app_mock, mock_kafka_logger):
+def inputs(app_mock, mock_logger):
     "inputs for the function unit tests"
 
-    logger = mock_kafka_logger
+    logger = mock_logger
     app = app_mock
 
     bike_id = 22187
@@ -91,10 +84,10 @@ def inputs(app_mock, mock_kafka_logger):
 
 
 @pytest.fixture(scope="package")
-def inputs_fastapi(app_mock, mock_kafka_logger):
+def inputs_fastapi(app_mock, mock_logger):
     "inputs for the fastapi function test"
 
-    logger = mock_kafka_logger
+    logger = mock_logger
 
     app = app_mock
 

@@ -17,7 +17,6 @@ import configparser
 
 # get loggers
 from buycycle.logger import Logger
-from buycycle.logger import KafkaLogger
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -49,10 +48,7 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "canary-007"
 
-KAFKA_TOPIC = config["KAFKA"]["topic_recommendation"]
-KAFKA_BROKER = config["KAFKA"]["broker"]
 logger = Logger.configure_logger(environment, ab, app_name, app_version)
-logger = KafkaLogger(environment, ab, app_name, app_version, KAFKA_TOPIC, KAFKA_BROKER)
 logger.info("FastAPI app started")
 
 # create data store
