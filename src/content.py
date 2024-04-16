@@ -167,6 +167,9 @@ def get_top_n_recommendations_mix(
             # remove bike_id from recommendations, we do not want to recommend the same bike
             try:
                 top_n_recommendations_generic.remove(bike_id)
+            except:
+                pass
+            try:
                 top_n_recommendations_prefiltered.remove(bike_id)
             except:
                 pass
