@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import subprocess
 
 from unittest.mock import Mock, patch
 
@@ -86,6 +87,11 @@ def inputs(app_mock, mock_logger):
 @pytest.fixture(scope="package")
 def inputs_fastapi(app_mock, mock_logger):
     "inputs for the fastapi function test"
+
+    # Run the create_data.py script to generate test data
+    subprocess.run(["python", "create_data.py", "./data/", "test"], check=True)
+
+
 
     logger = mock_logger
 
