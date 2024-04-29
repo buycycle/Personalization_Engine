@@ -68,7 +68,7 @@ main_query = """SELECT bikes.id as id,
 
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
-                join bike_template_additional_infos on bikes.template_id = bike_template_additional_infos.id
+                join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
