@@ -19,6 +19,7 @@ categorical_features = [
     "frame_material_code",
     "shifting_code",
     "color",
+    "suspension_configuration",
 ]
 numerical_features = ["price", "frame_size_code", "year"]
 
@@ -60,11 +61,14 @@ main_query = """SELECT bikes.id as id,
                        -- find similarity between hex codes
                        color,
 
+                       bike_template_additional_infos.suspension_configuration as suspension_configuration,
+
                        -- quite specific
                        family_id
 
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
+                join bike_template_additional_infos on bikes.template_id = bike_template_additional_infos.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
@@ -80,12 +84,18 @@ main_query_dtype = {
     "bike_type_id": pd.Int64Dtype(),
     "bike_category_id": pd.Int64Dtype(),
     "motor": pd.Int64Dtype(),
+    "frame_size_code": pd.StringDtype(),
     "price": pd.Float64Dtype(),
+    "brake_type_code": pd.StringDtype(),
+    "frame_material_code": pd.StringDtype(),
+    "shifting_code": pd.StringDtype(),
     "year": pd.Int64Dtype(),
     "bike_component_id": pd.Int64Dtype(),
+    "color": pd.StringDtype(),
+    "suspension_configuration": pd.StringDtype(),
     "family_id": pd.Int64Dtype(),
     # frame_size_code as string, we convert it in frame_size_code_to_numeric
-    "frame_size_code": pd.StringDtype(),
+
 }
 
 quality_query = """SELECT
