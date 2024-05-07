@@ -92,6 +92,7 @@ class RecommendationRequest(BaseModel):
     user_id: int = 0
     distinct_id: str = "NA"
     bike_id: int = 0
+    bike_type: int = 0
     family_id: int = 1101
     price: int = 1200
     frame_size_code: str = "56"
@@ -117,6 +118,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     user_id = request_data.user_id
     distinct_id = request_data.distinct_id
     bike_id = request_data.bike_id
+    bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
     frame_size_code = request_data.frame_size_code
@@ -210,6 +212,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 "user_id": user_id,
                 "distinct_id": distinct_id,
                 "bike_id": bike_id,
+                "bike_type": bike_type,
                 "family_id": family_id,
                 "price": price,
                 "frame_size_code": frame_size_code,
