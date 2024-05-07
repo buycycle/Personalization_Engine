@@ -14,7 +14,7 @@ categorical_features = [
     "motor",
     "bike_component_id",
     "bike_category_id",
-    "bike_type_id",
+    "bike_type",
     "brake_type_code",
     "frame_material_code",
     "shifting_code",
@@ -26,7 +26,7 @@ numerical_features = ["price", "frame_size_code", "year"]
 # features to overweight
 numerical_features_to_overweight = ["price", "frame_size_code"]
 numerical_features_overweight_factor = 4
-categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type_id"]
+categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type"]
 categorical_features_overweight_factor = 8
 
 # main query, needs to include at least the id and the features defined above
@@ -35,7 +35,7 @@ main_query = """SELECT bikes.id as id,
 
                        bikes.status as status,
                        -- categorizing
-                       bike_type_id,
+                       bike_type_id as bike_type,
                        bike_category_id,
                        motor,
 
@@ -81,7 +81,7 @@ main_query = """SELECT bikes.id as id,
 main_query_dtype = {
     "id": pd.Int64Dtype(),
     "status": pd.StringDtype(),
-    "bike_type_id": pd.Int64Dtype(),
+    "bike_type": pd.Int64Dtype(),
     "bike_category_id": pd.Int64Dtype(),
     "motor": pd.Int64Dtype(),
     "frame_size_code": pd.StringDtype(),
@@ -103,7 +103,7 @@ quality_query = """SELECT
     bike_additional_infos.frame_size as frame_size_code,
     quality_scores.score as quality_score,
     family_id,
-    bike_type_id
+    bike_type_id as bike_type
 FROM
     bikes
     join quality_scores on bikes.id = quality_scores.bike_id
@@ -115,7 +115,7 @@ GROUP BY
     price,
     frame_size_code,
     family_id,
-    bike_type_id
+    bike_type
 ORDER BY
     quality_score DESC
 
@@ -123,7 +123,7 @@ ORDER BY
 
 quality_query_dtype = {
     "id": pd.Int64Dtype(),
-    "bike_type_id": pd.Int64Dtype(),
+    "bike_type": pd.Int64Dtype(),
     "price": pd.Float64Dtype(),
     "family_id": pd.Int64Dtype(),
     # frame_size_code as string, we convert it in frame_size_code_to_numeric

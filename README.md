@@ -36,7 +36,7 @@ Finally, get_top_n_recommendations_mix implements a mix of prefilters and generi
         "motor",
         "bike_component_id",
         "bike_category_id",
-        "bike_type_id",
+        "bike_type",
         "brake_type_code",
         "frame_material_code",
         "shifting_code",
@@ -47,7 +47,7 @@ Finally, get_top_n_recommendations_mix implements a mix of prefilters and generi
     We overwieight certain features to account for their different relevance.
     numerical_features_to_overweight = ["price", "frame_size_code"]
     numerical_features_overweight_factor = 4
-    categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type_id"]
+    categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type"]
     categorical_features_overweight_factor = 2
 
 
@@ -277,6 +277,7 @@ Parameters:
     frame_size_code, str, frame size
 
 	{   "strategy": "CollaborativeRandomized",
+		"bike_type": 1234,
 		"bike_id": 1234,
 		"user_id": 123,
         "distinct_id": "abc",

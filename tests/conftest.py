@@ -71,6 +71,7 @@ def inputs(app_mock, mock_logger):
     app = app_mock
 
     bike_id = 22187
+    bike_type = 1
     distinct_id = "1234"
     family_id = 1101
     price = 1200
@@ -81,7 +82,7 @@ def inputs(app_mock, mock_logger):
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
+    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
 
 
 @pytest.fixture(scope="package")
@@ -100,6 +101,7 @@ def inputs_fastapi(app_mock, mock_logger):
     strategy = strategy_dict
 
     bike_id = 14394
+    bike_type = 1
     distinct_id = "1234"
     family_id = 1101
     price = 1200
@@ -110,7 +112,7 @@ def inputs_fastapi(app_mock, mock_logger):
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
+    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
 
 
 @pytest.fixture(scope="package")

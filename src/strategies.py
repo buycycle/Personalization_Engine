@@ -45,12 +45,13 @@ class FallbackContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int
+        self, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
     ) -> Tuple[str, List, Optional[str]]:
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
+            bike_type,
             family_id,
             price,
             frame_size_code,
@@ -81,12 +82,13 @@ class ContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int
+            self, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
     ) -> Tuple[str, List, Optional[str]]:
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
+            bike_type,
             family_id,
             price,
             frame_size_code,
@@ -164,7 +166,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, user_id: str, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int
+            self, user_id: str, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int
     ) -> Tuple[str, List, Optional[str]]:
         # Get collaborative recommendations with randomized sampling
         collaborative_recommendations, collaborative_error = get_top_n_collaborative_randomized(
@@ -181,6 +183,7 @@ class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
         bike_similarity_df, content_error = construct_dense_similarity_row(self.content_similarity_matrix, bike_id)
         content_recommendations, content_error = get_top_n_recommendations_mix(
             bike_id,
+            bike_type,
             family_id,
             price,
             frame_size_code,

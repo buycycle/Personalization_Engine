@@ -92,7 +92,7 @@ class RecommendationRequest(BaseModel):
     user_id: int = 0
     distinct_id: str = "NA"
     bike_id: int = 0
-    bike_type: int = 0
+    bike_type: int = 1
     family_id: int = 1101
     price: int = 1200
     frame_size_code: str = "56"
@@ -166,7 +166,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # Recommend
         # different strategies use different inputs, think about how to clean this up
         if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, bike_type, family_id, price, frame_size_code, n)
         elif isinstance(strategy_instance, Collaborative):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
@@ -174,7 +174,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         elif isinstance(strategy_instance, CollaborativeRandomizedContentInterveaved):
             # Ensure that the additional parameters required for this strategy are available
             strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, bike_id, family_id, price, frame_size_code, n, sample
+                id, bike_id, bike_type, family_id, price, frame_size_code, n, sample
             )
         else:
             # Handle unknown strategy
@@ -199,7 +199,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, bike_type, family_id, price, frame_size_code, n)
 
         # Convert the recommendation to int if recommendation is not an empty list
         if len(recommendation) > 0:
