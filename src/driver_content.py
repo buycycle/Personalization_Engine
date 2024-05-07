@@ -65,13 +65,12 @@ main_query = """SELECT bikes.id as id,
 
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
-                join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
                 WHERE
                     (status = 'active') OR
-                    (status NOT IN ('new', 'deleted', 'deleted_by_admin') AND TIMESTAMPDIFF(MONTH, bikes.updated_at, NOW()) < 1)
+                    (status NOT IN ('new', 'deleted', 'deleted_by_admin') AND TIMESTAMPDIFF(MONTH, bikes.updated_at, NOW()) < 2)
 
              """
 
