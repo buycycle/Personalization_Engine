@@ -61,14 +61,14 @@ main_query = """SELECT bikes.id as id,
                        -- find similarity between hex codes
                        color,
 
-                       bike_template_additional_infos.suspension_configuration as suspension_configuration,
+                       COALESCE(bike_template_additional_infos.suspension_configuration, 'NULL') as suspension_configuration,
 
                        -- quite specific
                        family_id
 
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
-                join bike_template_additional_infos on bikes.template_id = bike_template_additional_infos.id
+                left join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
@@ -94,7 +94,6 @@ main_query_dtype = {
     "color": pd.StringDtype(),
     "suspension_configuration": pd.StringDtype(),
     "family_id": pd.Int64Dtype(),
-    # frame_size_code as string, we convert it in frame_size_code_to_numeric
 
 }
 
