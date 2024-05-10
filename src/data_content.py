@@ -230,7 +230,7 @@ def get_data(
     duplicates = df_quality.index.duplicated(keep="last")
     df_quality = df_quality[~duplicates]
 
-    df_quality = frame_size_code_to_numeric(df_quality)
+    df_quality = frame_size_code_to_numeric(df_quality, bike_type_id_column="bike_type")
     df_quality.dropna(inplace=True)
 
     return df, df_quality
@@ -265,7 +265,7 @@ def create_data_model_content(
 
     df, df_quality = get_data(main_query, main_query_dtype, quality_query, quality_query_dtype)
 
-    df = frame_size_code_to_numeric(df)
+    df = frame_size_code_to_numeric(df, bike_type_id_column="bike_type")
 
     df_feature_engineered = feature_engineering(
         df,

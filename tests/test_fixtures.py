@@ -37,6 +37,7 @@ from src.data_collaborative import write_data, read_data_collaborative
 @pytest.fixture(scope="package")
 def inputs():
     bike_id = 14394
+    bike_type = 1
     distinct_id = "1234"
     family_id = 1101
     price = 1200
@@ -47,7 +48,7 @@ def inputs():
     app = Flask(__name__)
     logger = create_logger(app)
 
-    return bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger
+    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger
 
 
 @pytest.fixture(scope="package")

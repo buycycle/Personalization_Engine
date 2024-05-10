@@ -7,12 +7,13 @@ from src.helper import interveave
 
 
 def get_top_n_quality_prefiltered(
-    df_quality: pd.DataFrame, family_id: int, price: int, frame_size_code: str, n: int = 16
+        df_quality: pd.DataFrame, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16
 ) -> list:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
         df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
+        bike_type (int): bike_type of the bike
         family_id (int): family_id of the bike
         price (int): price of the bike
         frame_size_code (str): frame_size_code of the bike
@@ -21,7 +22,9 @@ def get_top_n_quality_prefiltered(
         list: list of top n bike ids by quality
     """
     # Filter for 20% higher and lower price
-    df_filtered_price = df_quality[(df_quality["price"] >= price * 0.8) & (df_quality["price"] <= price * 1.2)]
+    df_filtered_bike_type= df_quality[df_quality["bike_type"] == bike_type]
+    # Filter for 20% higher and lower price
+    df_filtered_price = df_filtered_bike_type[(df_filtered_bike_type["price"] >= price * 0.8) & (df_filtered_bike_type["price"] <= price * 1.2)]
     # Filter for same frame_size_code
     df_filtered_size = df_filtered_price[df_filtered_price["frame_size_code"] == frame_size_code]
     # Filter for same family_id
@@ -33,6 +36,8 @@ def get_top_n_quality_prefiltered(
         return df_filtered_size.head(n).index.tolist()
     elif len(df_filtered_price) >= n:
         return df_filtered_price.head(n).index.tolist()
+    elif len(df_filtered_bike_type) >= n:
+        return df_filtered_bike_type.head(n).index.tolist()
     else:
         return df_quality.head(n).index.tolist()
 
@@ -99,6 +104,7 @@ def get_top_n_recommendations_prefiltered(
 
 def get_top_n_recommendations_mix(
     bike_id: int,
+    bike_type: int,
     family_id: int,
     price: int,
     frame_size_code: str,
@@ -122,6 +128,7 @@ def get_top_n_recommendations_mix(
         4. Intervene or append the lists in the order of 2, 3, and append 1; ensuring that enough recommendations are returned.
     Args:
         bike_id (int): Bike ID to get recommendations for.
+        bike_type (int): Bike type used for filtering quality recommendations.
         family_id (int): Family ID used for filtering quality recommendations.
         price (int): Price used for filtering quality recommendations.
         frame_size_code (str): Frame size code used for filtering quality recommendations.
@@ -151,7 +158,7 @@ def get_top_n_recommendations_mix(
                 },
             )
 
-            top_n_quality = get_top_n_quality_prefiltered(df_quality, family_id, price, frame_size_code, sample)
+            top_n_quality = get_top_n_quality_prefiltered(df_quality, bike_type, family_id, price, frame_size_code, sample)
 
             return random.sample(top_n_quality, n), error
 

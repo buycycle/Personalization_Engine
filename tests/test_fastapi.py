@@ -14,7 +14,7 @@ from src.strategies import ContentMixed
 
 def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
     """test time and len of return for all strategies of the fastapi app"""
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
 
     # s to ms
@@ -28,6 +28,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
         # prepare the request payload with the current strategy
         payload = {
             "bike_id": bike_id,
+            "bike_type": bike_type,
             "distinct_id": distinct_id,
             "family_id": family_id,
             "price": price,
@@ -55,7 +56,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
 
 def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_collaborative, limit=100, n_test=10):
     """test time and len of return for all strategies and a random subsample of collaborative users of the fastapi app"""
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
     data_store_collaborative = testdata_collaborative
 
@@ -75,6 +76,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
             # prepare the request payload with the current strategy
             payload = {
                 "bike_id": bike_id,
+                "bike_type": bike_type,
                 "distinct_id": distinct_id,
                 "family_id": family_id,
                 "price": price,
@@ -108,7 +110,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
 
 def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=150, n_test=100):
     """test time and len of return for all strategies and a random bike_ids of the fastapi app"""
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
 
     # exclude braze and homepage since they do not ensure returning n
@@ -123,6 +125,7 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=150, n_tes
             # prepare the request payload with the current strategy
             payload = {
                 "bike_id": bike_id,
+                "bike_type": bike_type,
                 "distinct_id": distinct_id,
                 "family_id": family_id,
                 "price": price,

@@ -15,7 +15,7 @@ from src.strategies import ContentMixed
 
 def test_time_ContentMixed(inputs, testdata_collaborative, testdata_content, limit=100):
     """test time of recommendation for a predifined bike_id with DB read-in"""
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
 
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
@@ -37,7 +37,7 @@ def test_len_sample_(inputs, testdata_collaborative, testdata_content, n_test=10
     similarity_matrix rows are bike_ids with all statuses
     """
 
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
 
@@ -57,7 +57,7 @@ def test_len_random_ContentMixed(inputs, testdata_collaborative, testdata_conten
     similarity_matrix rows are bike_ids with all statuses
     """
 
-    bike_id, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
 
