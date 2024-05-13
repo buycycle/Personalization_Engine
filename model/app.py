@@ -1,4 +1,5 @@
 """recommender system"""
+import random
 from fastapi import Body
 from pydantic import BaseModel, validator
 import os
@@ -72,9 +73,10 @@ while True:
         logger.error(f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
         time.sleep(60)
 
+read_interval=60 + random.uniform(-5, 5)
 # read the data periodically
-data_loader_content = Thread(target=data_store_content.read_data_periodically, args=(20, logger))
-data_loader_collaborative = Thread(target=data_store_collaborative.read_data_periodically, args=(20, logger))
+data_loader_content = Thread(target=data_store_content.read_data_periodically, args=(read_interval, logger))
+data_loader_collaborative = Thread(target=data_store_collaborative.read_data_periodically, args=(read_interval, logger))
 
 data_loader_content.start()
 data_loader_collaborative.start()
