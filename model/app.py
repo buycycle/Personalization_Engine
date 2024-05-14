@@ -1,4 +1,4 @@
-"""Personalization Engine API"""
+"""Personalization Engine"""
 import random
 from fastapi import Body
 from pydantic import BaseModel, validator
