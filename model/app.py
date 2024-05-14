@@ -18,6 +18,7 @@ import configparser
 
 # get loggers
 from buycycle.logger import Logger
+from buycycle.data import get_numeric_frame_size
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -123,7 +124,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
-    frame_size_code = request_data.frame_size_code
+    frame_size_code = get_numeric_frame_size(request_data.frame_size_code, bike_type, default=56)
     n = request_data.n
     strategy_name = request_data.strategy
 
