@@ -19,7 +19,7 @@ categorical_features = [
     "frame_material_code",
     "shifting_code",
     "color",
-    "suspension_configuration",
+    "suspension",
 ]
 numerical_features = ["price", "frame_size_code", "year"]
 
@@ -61,7 +61,7 @@ main_query = """SELECT bikes.id as id,
                        -- find similarity between hex codes
                        color,
 
-                       COALESCE(bike_template_additional_infos.suspension_configuration, 'NULL') as suspension_configuration,
+                       COALESCE(bike_template_additional_infos.suspension, 'NULL') as suspension,
 
                        -- quite specific
                        family_id
@@ -92,7 +92,7 @@ main_query_dtype = {
     "year": pd.Int64Dtype(),
     "bike_component_id": pd.Int64Dtype(),
     "color": pd.StringDtype(),
-    "suspension_configuration": pd.StringDtype(),
+    "suspension": pd.StringDtype(),
     "family_id": pd.Int64Dtype(),
 }
 
