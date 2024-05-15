@@ -6,8 +6,7 @@ item_features = [
     "family_id",
     "bike_type_id",
     "bike_category_id",
-    "rider_height_min",
-    "rider_height_max",
+    "frame_size_in_string",
     "price",
 ]
 
@@ -46,8 +45,7 @@ min(price) as price, -- min to avoid duplicates
 min(bike_type_id) as bike_type_id,
 min(bike_category_id) as bike_category_id,
 min(family_id) as family_id,
-min(rider_height_min) as rider_height_min,
-min(rider_height_max) as rider_height_max,
+min(frame_size_in_string) as frame_size_in_string,
 sum(feedback) as feedback
 from(
 
@@ -89,12 +87,11 @@ SELECT
     user_mapping.user_id,
     implicit_feedback.anonymous_id,
     implicit_feedback.bike_id,
-    bikes.price,
+    FLOOR(bikes.price / 200) * 200 price,
     bikes.bike_type_id,
     bikes.bike_category_id,
     bikes.family_id,
-    FLOOR(bike_additional_infos.rider_height_min / 5) * 5 AS rider_height_min,
-    FLOOR(bike_additional_infos.rider_height_max / 5) * 5 AS rider_height_max,
+    bike_additional_infos.frame_size_in_string,
     implicit_feedback.feedback,
     implicit_feedback.anonymous_id_cnt
 FROM (
@@ -204,8 +201,7 @@ SELECT
     min(fq.bike_type_id) as bike_type_id,
     min(fq.bike_category_id) as bike_category_id,
     min(fq.family_id) as family_id,
-    min(fq.rider_height_min) as rider_height_min,
-    min(fq.rider_height_max) as rider_height_max,
+    min(fq.frame_size_in_string) as frame_size_in_string,
 CASE
     WHEN (min(fq.price) > up.budget_min AND min(fq.price) < up.budget_max) OR min(fq.bike_category_id) = up.bike_category_id THEN sum(fq.feedback) * 2
     ELSE sum(fq.feedback)
