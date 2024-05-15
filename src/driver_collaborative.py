@@ -4,9 +4,9 @@ bike_id = "bike_id"
 
 item_features = [
     "family_id",
+    "bike_type_id",
     "bike_category_id",
-    "rider_height_min",
-    "rider_height_max",
+    "frame_size_in_string",
     "price",
 ]
 
@@ -42,6 +42,7 @@ query = """
 WITH feedback_query AS (select user_id,
 bike_id,
 min(price) as price, -- min to avoid duplicates
+min(bike_type_id) as bike_type_id,
 min(bike_category_id) as bike_category_id,
 min(family_id) as family_id,
 min(rider_height_min) as rider_height_min,
@@ -87,11 +88,12 @@ SELECT
     user_mapping.user_id,
     implicit_feedback.anonymous_id,
     implicit_feedback.bike_id,
-    bikes.price,
+    FLOOR(bikes.price / 100) * 100 AS price,
+    bikes.bike_type_id,
     bikes.bike_category_id,
     bikes.family_id,
-    bike_additional_infos.rider_height_min,
-    bike_additional_infos.rider_height_max,
+    FLOOR(bike_additional_infos.rider_height_min / 10) * 10 AS rider_height_min,
+    FLOOR(bike_additional_infos.rider_height_max / 10) * 10 AS rider_height_max,
     implicit_feedback.feedback,
     implicit_feedback.anonymous_id_cnt
 FROM (
@@ -198,6 +200,7 @@ SELECT
     fq.user_id,
     fq.bike_id,
     min(fq.price) as price,
+    min(fq.bike_type_id) as bike_type_id,
     min(fq.bike_category_id) as bike_category_id,
     min(fq.family_id) as family_id,
     min(fq.rider_height_min) as rider_height_min,
@@ -214,7 +217,6 @@ GROUP BY
     fq.bike_id,
     up.budget_min,
     up.budget_max,
+    fq.bike_type_id,
     up.bike_category_id
-
-
 """
