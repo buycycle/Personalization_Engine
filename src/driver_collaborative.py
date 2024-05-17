@@ -6,7 +6,8 @@ item_features = [
     "family_id",
     "bike_type_id",
     "bike_category_id",
-    "frame_size_in_string",
+    "rider_height_min",
+    "rider_height_max",
     "price",
 ]
 
@@ -88,7 +89,7 @@ SELECT
     user_mapping.user_id,
     implicit_feedback.anonymous_id,
     implicit_feedback.bike_id,
-    FLOOR(bikes.price / 100) * 100 AS price,
+    FLOOR(bikes.price / 200) * 200 price,
     bikes.bike_type_id,
     bikes.bike_category_id,
     bikes.family_id,
