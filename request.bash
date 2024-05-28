@@ -8,7 +8,7 @@ else
   exit 1
 fi
 data_template='{
-  "strategy": "product",
+  "strategy": "product_page",
   "bike_id": 21091,
   "user_id": 18742,
   "device_id": "bccd547b-6736-41a2-8543-677b724fb2a1",
