@@ -87,17 +87,10 @@ def get_top_n_recommendations_prefiltered(
 
     # get nsmallest bike_similarity_df index for the bike_ids that match prefilter_values
     # return empty list if prefilter is only returning the bike_id itself
+    # if there are multiple prefilter_features
+    # bike_similarity_df.loc[bike_id, (df[prefilter_features] == prefilter_values).all(axis=1)]
+    # bike_similarity_df.loc[bike_id, (df[prefilter_features] == prefilter_values).any(axis=1)]
 
-    # Create a boolean mask for rows where all prefiltering conditions are met
-    mask = (df_status_masked[prefilter_features].values == prefilter_values).all(axis=1)
-    # Use the mask to filter the bike_similarity_df
-    if len(bike_similarity_df.loc[bike_id, mask]) > 1:
-        return (
-            bike_similarity_df.loc[bike_id, mask]
-            .squeeze()
-            .nsmallest(n)
-            .index.tolist()
-        )
     if len(bike_similarity_df.loc[bike_id, (df_status_masked[prefilter_features] == prefilter_values).values]) > 1:
         return (
             bike_similarity_df.loc[bike_id, (df_status_masked[prefilter_features] == prefilter_values).values]
