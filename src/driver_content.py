@@ -5,7 +5,7 @@ import pandas as pd
 # however not sure if that makes sense, maybe .any for family and family_model
 
 # prefilter_features = ["family_model_id", "family_id", "brand_id"]
-prefilter_features = ["family_id"]
+prefilter_features = ["family_id", "bike_type"]
 
 # for the content based recommendation we disregard prefilter_features and use generic features that represent the qualities of the bike
 # categorical_features and numerical_features features to consider in the generic recommendations
