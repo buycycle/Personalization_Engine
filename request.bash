@@ -1,5 +1,12 @@
 #!/bin/bash
-url="https://ab.recommendation.buycycle.com/recommendation"
+if [ "$1" == "live" ]; then
+  url="https://ab.recommendation.buycycle.com/recommendation"
+elif [ "$1" == "test" ]; then
+  url="https://dev.recommendation.buycycle.com/recommendation"
+else
+  echo "Error: Please specify 'live' or 'test' as the first argument."
+  exit 1
+fi
 data_template='{
   "strategy": "product",
   "bike_id": 21091,
