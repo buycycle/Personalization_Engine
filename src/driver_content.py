@@ -4,7 +4,9 @@ import pandas as pd
 # currently only once feature is supported, check .all or .any for supporting multiple features
 # however not sure if that makes sense, maybe .any for family and family_model
 
-# prefilter_features = ["family_model_id", "family_id", "brand_id"]
+# filter at each request
+preference_features = ["continent_id"]
+# for content based
 prefilter_features = ["family_id", "bike_type"]
 
 # for the content based recommendation we disregard prefilter_features and use generic features that represent the qualities of the bike
@@ -38,6 +40,7 @@ main_query = """SELECT bikes.id as id,
                        bike_type_id as bike_type,
                        bike_category_id,
                        motor,
+                       countries.continent_id as continent_id,
 
                        -- cetegorizing fuzzy
 
@@ -69,6 +72,7 @@ main_query = """SELECT bikes.id as id,
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
                 left join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
+                left join countries on bikes.country_id = countries.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
@@ -84,6 +88,7 @@ main_query_dtype = {
     "bike_type": pd.Int64Dtype(),
     "bike_category_id": pd.Int64Dtype(),
     "motor": pd.Int64Dtype(),
+    "continent_id": pd.Int64Dtype(),
     "frame_size_code": pd.StringDtype(),
     "price": pd.Float64Dtype(),
     "brake_type_code": pd.StringDtype(),

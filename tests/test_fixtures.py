@@ -21,6 +21,7 @@ from src.driver_content import (
     quality_query_dtype,
     categorical_features,
     numerical_features,
+    preference_features,
     prefilter_features,
     numerical_features_to_overweight,
     numerical_features_overweight_factor,
@@ -37,6 +38,7 @@ from src.data_collaborative import write_data, read_data_collaborative
 @pytest.fixture(scope="package")
 def inputs():
     bike_id = 14394
+    continent_id = 1
     bike_type = 1
     distinct_id = "1234"
     family_id = 1101
@@ -48,7 +50,10 @@ def inputs():
     app = Flask(__name__)
     logger = create_logger(app)
 
-    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger
+    preferences = {"continent_id": continent_id,
+                       }
+
+    return bike_id, preferences , bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger
 
 
 @pytest.fixture(scope="package")
@@ -58,12 +63,13 @@ def testdata_content():
         os.makedirs("./data/")
 
     create_data_model_content(
-        main_query,
+        main_query + "LIMIT 1000",
         main_query_dtype,
         quality_query,
         quality_query_dtype,
         categorical_features,
         numerical_features,
+        preference_features,
         prefilter_features,
         numerical_features_to_overweight,
         numerical_features_overweight_factor,
@@ -91,7 +97,7 @@ def testdata_collaborative():
     create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query,
+        query=query + "LIMIT 10000",
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,

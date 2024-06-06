@@ -13,7 +13,7 @@ from src.strategies import CollaborativeRandomized
 
 def test_time_CollaborativeRandomized(inputs, testdata_collaborative, testdata_content, limit=100):
     """test time of recommendation, limit in ms"""
-    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    bike_id, preferences, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
 
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
@@ -25,7 +25,7 @@ def test_time_CollaborativeRandomized(inputs, testdata_collaborative, testdata_c
 
     collaborative_strategy = CollaborativeRandomized(logger, data_store_collaborative, data_store_content)
 
-    strategy, recommendation, error = collaborative_strategy.get_recommendations(distinct_id, n, sample)
+    strategy, recommendation, error = collaborative_strategy.get_recommendations(distinct_id, preferences, n, sample)
 
     end_time = time.time()
     assert (
@@ -35,7 +35,7 @@ def test_time_CollaborativeRandomized(inputs, testdata_collaborative, testdata_c
 
 def test_len_CollaborativeRandomized(inputs, testdata_collaborative, testdata_content, n_test=100):
     """test length of recommendation list for a random subset of user in dataset"""
-    bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    bike_id, preferences, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
 
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
@@ -49,7 +49,7 @@ def test_len_CollaborativeRandomized(inputs, testdata_collaborative, testdata_co
     for i in random.sample(users, n_test):
         distinct_id = i
 
-        strategy, recommendation, error = collaborative_strategy.get_recommendations(distinct_id, n, sample)
+        strategy, recommendation, error = collaborative_strategy.get_recommendations(distinct_id, preferences, n, sample)
 
         assert (
             len(recommendation) == n

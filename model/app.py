@@ -18,7 +18,7 @@ import configparser
 
 # get loggers
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size
+from buycycle.data import get_numeric_frame_size, get_preference_mask
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -94,6 +94,7 @@ def health_check():
 class RecommendationRequest(BaseModel):
     user_id: int = 0
     distinct_id: str = "NA"
+    continent_id: int = 1
     bike_id: int = 0
     bike_type: int = 1
     family_id: int = 1101
@@ -120,6 +121,7 @@ class RecommendationRequest(BaseModel):
 def recommendation(request_data: RecommendationRequest = Body(...)):
     user_id = request_data.user_id
     distinct_id = request_data.distinct_id
+    continent_id = request_data.continent_id
     bike_id = request_data.bike_id
     bike_type = request_data.bike_type
     family_id = request_data.family_id
@@ -145,8 +147,16 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # Assuming this is what you meant by 'strategy_traget'
     strategy_target = strategy_name
 
+
+
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
+        # contruct preference dict
+        preferences = {"continent_id": continent_id,
+                       }
+
+        preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
+
         strategy_factory = StrategyFactory(strategy_dict)
 
         # if strategy_name not in list, use FallbackContentMixed
@@ -169,15 +179,15 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # Recommend
         # different strategies use different inputs, think about how to clean this up
         if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, bike_type, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
         elif isinstance(strategy_instance, Collaborative):
-            strategy, recommendation, error = strategy_instance.get_recommendations(id, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
-            strategy, recommendation, error = strategy_instance.get_recommendations(id, n, sample)
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
         elif isinstance(strategy_instance, CollaborativeRandomizedContentInterveaved):
             # Ensure that the additional parameters required for this strategy are available
             strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, bike_id, bike_type, family_id, price, frame_size_code, n, sample
+                id, preference_mask, bike_id, bike_type, family_id, price, frame_size_code, n, sample
             )
         else:
             # Handle unknown strategy
@@ -202,7 +212,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, bike_type, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
 
         # Convert the recommendation to int if recommendation is not an empty list
         if len(recommendation) > 0:
@@ -214,6 +224,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 "strategy_used": strategy,
                 "user_id": user_id,
                 "distinct_id": distinct_id,
+                "continent_id": continent_id,
                 "bike_id": bike_id,
                 "bike_type": bike_type,
                 "family_id": family_id,

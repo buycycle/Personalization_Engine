@@ -7,12 +7,13 @@ from src.helper import interveave
 
 
 def get_top_n_quality_prefiltered(
-        df_quality: pd.DataFrame, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16
+        df_quality: pd.DataFrame, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16
 ) -> list:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
         df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
+        preference_mask (list): bike indicies matching preferences
         bike_type (int): bike_type of the bike
         family_id (int): family_id of the bike
         price (int): price of the bike
@@ -21,8 +22,9 @@ def get_top_n_quality_prefiltered(
     Returns:
         list: list of top n bike ids by quality
     """
+    df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
     # Filter for 20% higher and lower price
-    df_filtered_bike_type= df_quality[df_quality["bike_type"] == bike_type]
+    df_filtered_bike_type= df_quality_preference[df_quality_preference["bike_type"] == bike_type]
     # Filter for 20% higher and lower price
     df_filtered_price = df_filtered_bike_type[(df_filtered_bike_type["price"] >= price * 0.8) & (df_filtered_bike_type["price"] <= price * 1.2)]
     # Filter for same frame_size_code
@@ -62,6 +64,7 @@ def get_top_n_recommendations(bike_similarity_df: pd.DataFrame, bike_id: int, n:
 
 def get_top_n_recommendations_prefiltered(
     bike_similarity_df: pd.DataFrame,
+    preference_mask: list,
     df: pd.DataFrame,
     df_status_masked: pd.DataFrame,
     bike_id: int,
@@ -74,6 +77,7 @@ def get_top_n_recommendations_prefiltered(
     empty list if only the bike_id itself or less match the prefilter
     Args:
         bike_similarity_df (pd.DataFrame): cosine bike similarity df
+        preference_mask (list): bike indicies matching preferences
         df (pd.DataFrame): dataframe of bikes
         df_status_masked (pd.DataFrame): dataframe of bikes with the given status
         bike_id (int): bike_id to get recommendations for
@@ -83,6 +87,8 @@ def get_top_n_recommendations_prefiltered(
     """
 
     # get the values of the prefilter_features for the bike_id
+    df_status_masked = df_status_masked[df_status_masked.index.isin(preference_mask)]
+
     prefilter_values = df.loc[bike_id, prefilter_features]
 
     # get nsmallest bike_similarity_df index for the bike_ids that match prefilter_values
@@ -104,6 +110,7 @@ def get_top_n_recommendations_prefiltered(
 
 def get_top_n_recommendations_mix(
     bike_id: int,
+    preference_mask: list,
     bike_type: int,
     family_id: int,
     price: int,
@@ -128,6 +135,7 @@ def get_top_n_recommendations_mix(
         4. Intervene or append the lists in the order of 2, 3, and append 1; ensuring that enough recommendations are returned.
     Args:
         bike_id (int): Bike ID to get recommendations for.
+        preference_mask (list): bike indicies matching preferences
         bike_type (int): Bike type used for filtering quality recommendations.
         family_id (int): Family ID used for filtering quality recommendations.
         price (int): Price used for filtering quality recommendations.
@@ -158,14 +166,15 @@ def get_top_n_recommendations_mix(
                 },
             )
 
-            top_n_quality = get_top_n_quality_prefiltered(df_quality, bike_type, family_id, price, frame_size_code, sample)
+            top_n_quality = get_top_n_quality_prefiltered(df_quality, preference_mask, bike_type, family_id, price, frame_size_code, sample)
+
 
             return random.sample(top_n_quality, n), error
 
         else:
             # prefiltered recommendations
             top_n_recommendations_prefiltered = get_top_n_recommendations_prefiltered(
-                bike_similarity_df, df, df_status_masked, bike_id, prefilter_features, logger, int(n * ratio)
+                bike_similarity_df, preference_mask, df, df_status_masked, bike_id, prefilter_features, logger, int(n * ratio)
             )
 
             # get the top n recommendations for the bike_id

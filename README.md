@@ -115,6 +115,9 @@ The data generation condenses all click data of unique user_id (distinct_id in t
 ## CollaborativeRandomized
 Same as above but draw from a sample of more recommendations and randomize.
 
+## Preference filter
+To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id.
+
 ## AB test
 
 The AB test is implemented with istio on Kubernetes.

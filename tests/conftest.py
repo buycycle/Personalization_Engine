@@ -23,6 +23,7 @@ from src.driver_content import (
     quality_query_dtype,
     categorical_features,
     numerical_features,
+    preference_features,
     prefilter_features,
     numerical_features_to_overweight,
     numerical_features_overweight_factor,
@@ -70,10 +71,11 @@ def inputs(app_mock, mock_logger):
     logger = mock_logger
     app = app_mock
 
-    bike_id = 22187
+    bike_id = 18894
+    continent_id = 1
     bike_type = 1
     distinct_id = "1234"
-    family_id = 1101
+    family_id = 2502
     price = 1200
     frame_size_code = "56"
     n = 12
@@ -82,7 +84,7 @@ def inputs(app_mock, mock_logger):
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
+    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
 
 
 @pytest.fixture(scope="package")
@@ -101,6 +103,7 @@ def inputs_fastapi(app_mock, mock_logger):
     strategy = strategy_dict
 
     bike_id = 14394
+    continent_id = 1
     bike_type = 1
     distinct_id = "1234"
     family_id = 1101
@@ -112,7 +115,7 @@ def inputs_fastapi(app_mock, mock_logger):
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
+    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
 
 
 @pytest.fixture(scope="package")
@@ -122,12 +125,13 @@ def testdata_content():
         os.makedirs("./data/")
 
     create_data_model_content(
-        main_query + "LIMIT 1000",  # limit to subset for integation testing
+        main_query + "LIMIT 2000",  # limit to subset for integation testing
         main_query_dtype,
         quality_query,
         quality_query_dtype,
         categorical_features,
         numerical_features,
+        preference_features,
         prefilter_features,
         numerical_features_to_overweight,
         numerical_features_overweight_factor,

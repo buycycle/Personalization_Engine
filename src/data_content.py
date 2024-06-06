@@ -243,6 +243,7 @@ def create_data_model_content(
     quality_query_dtype,
     categorical_features,
     numerical_features,
+    preference_features,
     prefilter_features,
     numerical_features_to_overweight: list,
     numerical_features_overweight_factor: float,
@@ -267,6 +268,8 @@ def create_data_model_content(
 
     df = frame_size_code_to_numeric(df, bike_type_id_column="bike_type")
 
+    df_preference = df[preference_features]
+
     df_feature_engineered = feature_engineering(
         df,
         categorical_features,
@@ -287,7 +290,8 @@ def create_data_model_content(
 
     # write df, df_quality, similarity_matrix to disk
 
-    df.to_pickle(path + "df.pkl")  # where to save it, usually as a .pkl
+    df.to_pickle(path + "df.pkl")
+    df_preference.to_pickle(path + "df_preference.pkl")
     df_status_masked.to_pickle(path + "df_status_masked.pkl")
     df_quality.to_pickle(path + "df_quality.pkl")
     similarity_matrix.to_pickle(path + "similarity_matrix.pkl")
@@ -301,24 +305,27 @@ def read_data_content(path: str = "data/"):
 
     Returns:
         df: main data
+        df_preference: df with preference_feature values
         df_status_masked: main data with status mask applied
         df_quality: quality data
         similarity_matrix: similarity matrix
     """
 
     df = pd.read_pickle(path + "df.pkl")
+    df_preference = pd.read_pickle(path + "df_preference.pkl")
     df_status_masked = pd.read_pickle(path + "df_status_masked.pkl")
     df_quality = pd.read_pickle(path + "df_quality.pkl")
 
     similarity_matrix = SimilarityMatrixSparse.read_pickle(path + "similarity_matrix.pkl")
 
-    return df, df_status_masked, df_quality, similarity_matrix
+    return df, df_preference, df_status_masked, df_quality, similarity_matrix
 
 
 class DataStoreContent(DataStoreBase):
     def __init__(self, prefilter_features):
         super().__init__()
         self.df = None
+        self.df_preference = None
         self.df_status_masked = None
         self.df_quality = None
         self.similarity_matrix = None
@@ -327,11 +334,12 @@ class DataStoreContent(DataStoreBase):
 
     def read_data(self):
         with self._lock:  # acquire lock
-            self.df, self.df_status_masked, self.df_quality, self.similarity_matrix = read_data_content()
+            self.df, self.df_preference, self.df_status_masked, self.df_quality, self.similarity_matrix = read_data_content()
 
     def get_logging_info(self):
         return {
             "df_shape": self.df.shape,
+            "df_preference": self.df_preference.shape,
             "df_status_masked_shape": self.df_status_masked.shape,
             "df_quality_shape": self.df_quality.shape,
         }

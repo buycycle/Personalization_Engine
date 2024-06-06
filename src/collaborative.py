@@ -297,13 +297,14 @@ def read_data_model(path="data/"):
     return model, dataset
 
 
-def get_top_n_collaborative(model, user_id: str, n: int, dataset, df_status_masked, logger) -> Tuple[List, Optional[str]]:
+def get_top_n_collaborative(model, user_id: str, preference_mask: list, n: int, dataset, df_status_masked, logger) -> Tuple[List, Optional[str]]:
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
 
     Args:
         model (LightFM): Trained LightFM model.
         user_id (str): user_id for which to retrieve top k items.
+        preference_mask (list): bike indicies matching preferences
         n (int): Number of top items to retrieve.
         dataset (Dataset): LightFM dataset object containing mapping between internal and external ids.
         df_status_masked (pd.DataFrame): status masked dataframe
@@ -337,6 +338,9 @@ def get_top_n_collaborative(model, user_id: str, n: int, dataset, df_status_mask
         # filter out items that are not in df_status_masked.index
         top_item_ids = [item_id for item_id in top_item_ids if item_id in df_status_masked.index]
 
+        # filter for items in preference_mask
+        top_item_ids = [item_id for item_id in top_item_ids if item_id in preference_mask]
+
         # only return the top n items from top_item_ids
         top_n_item_ids = top_item_ids[:n]
 
@@ -348,7 +352,7 @@ def get_top_n_collaborative(model, user_id: str, n: int, dataset, df_status_mask
 
 
 def get_top_n_collaborative_randomized(
-    model, user_id: str, n: int, sample: int, dataset, df_status_masked, logger
+        model, user_id: str, preference_mask: list, n: int, sample: int, dataset, df_status_masked, logger
 ) -> Tuple[List, Optional[str]]:
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
@@ -357,6 +361,7 @@ def get_top_n_collaborative_randomized(
     Args:
         model (LightFM): Trained LightFM model.
         user_id (str): user_id for which to retrieve top k items.
+        preference_mask (list): bike indicies matching preferences
         n (int): Number of top items to retrieve.
         sample (int): number of samples to randomize on
         dataset (Dataset): LightFM dataset object containing mapping between internal and external ids.
@@ -390,6 +395,9 @@ def get_top_n_collaborative_randomized(
 
         # filter out items that are not in df_status_masked.index
         top_item_ids = [item_id for item_id in top_item_ids if item_id in df_status_masked.index]
+
+        # filter for items in preference_mask
+        top_item_ids = [item_id for item_id in top_item_ids if item_id in preference_mask]
 
         # randomly sample from the top_item_ids to introduce some variance
         top_item_ids = top_item_ids[:sample]
