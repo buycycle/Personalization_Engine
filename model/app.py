@@ -140,8 +140,8 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     else:
         id = str(user_id)
 
-    # randomize over the top 100
-    sample = 100
+    # randomize over the top n * x
+    sample = n * 5
 
     # Instantiate strategy
     # Assuming this is what you meant by 'strategy_traget'

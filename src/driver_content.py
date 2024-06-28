@@ -79,6 +79,7 @@ main_query = """SELECT bikes.id as id,
                 WHERE
                     (status = 'active') OR
                     (status NOT IN ('new', 'deleted', 'deleted_by_admin') AND TIMESTAMPDIFF(MONTH, bikes.updated_at, NOW()) < 2)
+                LIMIT 3000
 
              """
 

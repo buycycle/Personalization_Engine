@@ -220,4 +220,5 @@ GROUP BY
     up.budget_max,
     fq.bike_type_id,
     up.bike_category_id
+LIMIT 1000
 """
