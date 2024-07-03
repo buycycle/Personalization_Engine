@@ -55,11 +55,14 @@ logger.info("FastAPI app started")
 # create data store
 data_store_content = DataStoreContent(prefilter_features=prefilter_features)
 data_store_collaborative = DataStoreCollaborative()
+data_store_content_available = False
+data_store_collaborative_available= False
 
 # inital data readin
 while True:
     try:
         data_store_content.read_data()
+        data_store_content_available = True
         break
     except Exception as e:
         logger.error(f"Content data could not initially be read, error: {e}. Trying again in 60 seconds.")
@@ -68,6 +71,7 @@ while True:
 while True:
     try:
         data_store_collaborative.read_data()
+        data_store_collaborative_available = True
         break
     except Exception as e:
         logger.error(f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
@@ -89,6 +93,18 @@ def home():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+@app.get("/health_model")
+def health_model_check():
+    if data_store_content_available and data_store_collaborative_available:
+        return {"status": "ok"}
+    else:
+        # Return a 503 Service Unavailable status code with a message
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "error", "message": "One or more data stores are not loaded with data."},
+        )
+
 
 class RecommendationRequest(BaseModel):
     user_id: int = 0
