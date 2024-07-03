@@ -49,6 +49,7 @@ class FallbackContentMixed(RecommendationStrategy):
     ) -> Tuple[str, List, Optional[str]]:
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
+
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
             preference_mask,
@@ -141,75 +142,24 @@ class CollaborativeRandomized(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(self, user_id: str, preference_mask: list, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
+
+
+
+        preference_mask_set = set(preference_mask)
+        df_status_masked_set = set(self.df_status_masked.index)
+
         recommendations, error = get_top_n_collaborative_randomized(
             self.model,
             user_id,
-            preference_mask,
+            preference_mask_set,
             n,
             sample,
             self.dataset,
-            self.df_status_masked,
+            df_status_masked_set,
             self.logger,
         )
         return self.strategy, recommendations, error
 
-
-# untested
-class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
-    """Collaborative filtering with randomized sampling interweaved with content-based recommendations."""
-
-    def __init__(self, logger, data_store_collaborative, data_store_content):
-        self.strategy = "CollaborativeRandomizedContentInterveaved"
-        self.collaborative_model = data_store_collaborative.model
-        self.collaborative_dataset = data_store_collaborative.dataset
-        self.content_df = data_store_content.df
-        self.content_df_status_masked = data_store_content.df_status_masked
-        self.content_df_quality = data_store_content.df_quality
-        self.content_similarity_matrix = data_store_content.similarity_matrix
-        self.content_prefilter_features = data_store_content.prefilter_features
-        self.logger = logger
-
-    def get_recommendations(
-        self, user_id: str, bike_id: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int
-    ) -> Tuple[str, List, Optional[str]]:
-        # Get collaborative recommendations with randomized sampling
-        collaborative_recommendations, collaborative_error = get_top_n_collaborative_randomized(
-            self.collaborative_model,
-            user_id,
-            n,
-            sample,
-            self.collaborative_dataset,
-            self.content_df_status_masked,
-            self.logger,
-        )
-
-        # Get content-based recommendations
-        bike_similarity_df, content_error = construct_dense_similarity_row(self.content_similarity_matrix, bike_id)
-        content_recommendations, content_error = get_top_n_recommendations_mix(
-            bike_id,
-            family_id,
-            price,
-            frame_size_code,
-            self.content_df,
-            self.content_df_status_masked,
-            self.content_df_quality,
-            bike_similarity_df,
-            self.content_prefilter_features,
-            self.logger,
-            n,
-            ratio=0.5,
-            interveave_prefilter_general=True,
-        )
-
-        # Interveave collaborative and content recommendations using the provided function
-        interveaved_recommendation = interveave(collaborative_recommendations, content_recommendations)
-
-        # Truncate the list to the desired number of recommendations
-        interveaved_recommendation = interveaved_recommendation[:n]
-
-        # Combine errors if any
-        error = collaborative_error or content_error
-        return self.strategy, interveaved_recommendation, error
 
 
 # Dictionary of strategies
