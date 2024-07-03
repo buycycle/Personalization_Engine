@@ -12,7 +12,7 @@ from src.driver_content import prefilter_features
 from src.strategies import ContentMixed
 
 
-def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
+def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=50):
     """test time and len of return for all strategies of the fastapi app"""
     bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
@@ -55,7 +55,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
         # ... (other assertions or checks based on the response)
 
 
-def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_collaborative, limit=100, n_test=10):
+def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_collaborative, limit=50, n_test=10):
     """test time and len of return for all strategies and a random subsample of collaborative users of the fastapi app"""
     bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
@@ -110,7 +110,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
             # ... (other assertions or checks based on the response)
 
 
-def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=150, n_test=100):
+def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test=100):
     """test time and len of return for all strategies and a random bike_ids of the fastapi app"""
     bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())

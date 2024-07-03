@@ -33,7 +33,6 @@ from src.strategies import (
     ContentMixed,
     Collaborative,
     CollaborativeRandomized,
-    CollaborativeRandomizedContentInterveaved,
 )
 from src.strategies import strategy_dict
 
@@ -184,11 +183,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
-        elif isinstance(strategy_instance, CollaborativeRandomizedContentInterveaved):
-            # Ensure that the additional parameters required for this strategy are available
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, preference_mask, bike_id, bike_type, family_id, price, frame_size_code, n, sample
-            )
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())
