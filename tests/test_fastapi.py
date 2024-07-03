@@ -12,7 +12,7 @@ from src.driver_content import prefilter_features
 from src.strategies import ContentMixed
 
 
-def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=50):
+def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
     """test time and len of return for all strategies of the fastapi app"""
     bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
