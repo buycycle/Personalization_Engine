@@ -4,8 +4,8 @@ import pandas as pd
 # currently only once feature is supported, check .all or .any for supporting multiple features
 # however not sure if that makes sense, maybe .any for family and family_model
 
-# filter at each request
-preference_features = ["continent_id"]
+# available for filtering at each request
+preference_features = ["continent_id", "motor"]
 # for content based
 prefilter_features = ["family_id", "bike_type"]
 

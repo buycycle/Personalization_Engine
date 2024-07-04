@@ -166,11 +166,26 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
-        # contruct preference dict
+
+        # filter recommendations for preferences
         preferences = {"continent_id": continent_id,
                        }
-
         preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
+
+        # if US or UK, also allow non-ebikes from EU
+        # merge with preferences above with OR condition
+        if continent_id in [4, 7]:
+            ebike_sending_preferences = {"continent_id": 1,
+                                         "motor": 0,
+                                         }
+            # Get the preference DataFrame based on the ebike_sending_preferences
+            ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
+
+            # Ensure both DataFrames are aligned by reindexing
+            ebike_preference_mask = ebike_preference_mask.reindex_like(preference_mask).fillna(0).astype(int)
+
+            # Perform a logical OR operation on the entire DataFrame
+            preference_mask = (preference_mask | ebike_preference_mask).astype(int)
 
         strategy_factory = StrategyFactory(strategy_dict)
 

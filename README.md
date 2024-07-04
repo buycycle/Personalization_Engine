@@ -326,7 +326,8 @@ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
            "user_id": 123,
            "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
            "n": 8,
-           "family_id": 403
+           "family_id": 403,
+           "continent_id": 1
          }' \
      --header "version: stable"
 dev
@@ -338,7 +339,8 @@ curl -i -X POST https://dev.recommendation.buycycle.com/recommendation \
            "user_id": 123,
            "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
            "n": 8,
-           "family_id": 403
+           "family_id": 403,
+           "continent_id": 1
          }' \
      --header "version: stable-001-dev"
 

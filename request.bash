@@ -16,6 +16,7 @@ data_template='{
   "frame_size_code":"58",
   "price": 2750,
   "family_id": 803,
+  "continent_id": 1,
   "n": 12
 }'
 # Total number of requests to send
