@@ -178,14 +178,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             ebike_sending_preferences = {"continent_id": 1,
                                          "motor": 0,
                                          }
-            # Get the preference DataFrame based on the ebike_sending_preferences
             ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
 
-            # Ensure both DataFrames are aligned by reindexing
-            ebike_preference_mask = ebike_preference_mask.reindex_like(preference_mask).fillna(0).astype(int)
-
-            # Perform a logical OR operation on the entire DataFrame
-            preference_mask = (preference_mask | ebike_preference_mask).astype(int)
+            preference_mask = preference_mask + ebike_preference_mask
 
         strategy_factory = StrategyFactory(strategy_dict)
 
