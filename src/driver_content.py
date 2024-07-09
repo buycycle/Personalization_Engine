@@ -22,6 +22,7 @@ categorical_features = [
     "shifting_code",
     "color",
     "suspension",
+    "continent_id",
 ]
 numerical_features = ["price", "frame_size_code", "year"]
 
