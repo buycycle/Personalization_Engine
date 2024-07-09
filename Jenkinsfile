@@ -99,8 +99,8 @@ pipeline {
                     }
                     sh '''
                       set +x
-                      argocd app sync recommendation-api-$namespace --server argocd.cube-gebraucht.com --auth-token $TOKEN
-                      argocd app wait recommendation-api-$namespace --server argocd.cube-gebraucht.com --auth-token $TOKEN
+                      argocd app sync recommendation-api-ab-test-$namespace --server argocd.cube-gebraucht.com --auth-token $TOKEN
+                      argocd app wait recommendation-api-ab-test-$namespace --server argocd.cube-gebraucht.com --auth-token $TOKEN
                     '''
                 }
             }
