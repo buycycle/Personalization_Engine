@@ -151,12 +151,6 @@ def get_top_n_recommendations_mix(
 
     try:
         if bike_id not in df.index:
-            logger.warning(
-                "bike_id not in df, using quality recommendations",
-                extra={
-                    "bike_id": bike_id,
-                },
-            )
 
             top_n_quality = get_top_n_quality_prefiltered(df_quality, bike_type, family_id, price, frame_size_code, sample)
 
