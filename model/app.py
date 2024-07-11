@@ -17,6 +17,7 @@ from threading import Thread
 import configparser
 
 # get loggers
+import logging
 from buycycle.logger import Logger
 from buycycle.data import get_numeric_frame_size
 
@@ -50,7 +51,7 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "stable-009"
 
-logger = Logger.configure_logger(environment, ab, app_name, app_version)
+logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
 logger.info("FastAPI app started")
 
 # create data store
