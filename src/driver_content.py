@@ -74,7 +74,7 @@ main_query = """SELECT bikes.id as id,
                 -- for non active bikes we set a one year cap for updated_at
                 WHERE
                     (status = 'active') OR
-                    (status NOT IN ('new', 'deleted', 'deleted_by_admin', 'rejected', 'deleted_draft', 'inactive', 'blocked') AND TIMESTAMPDIFF(WEEK, bikes.updated_at, NOW()) <= 6)
+                    (status NOT IN ('new', 'deleted', 'deleted_by_admin', 'rejected', 'deleted_draft', 'inactive', 'blocked') AND TIMESTAMPDIFF(WEEK, bikes.updated_at, NOW()) <= 2)
 
              """
 
