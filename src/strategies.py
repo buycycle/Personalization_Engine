@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
-from src.content import get_top_n_recommendations_prefiltered_bot
+from src.content import get_top_n_quality_prefiltered_bot
 from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
@@ -163,26 +163,28 @@ class CollaborativeRandomized(RecommendationStrategy):
 
 class Quality(RecommendationStrategy):
     """Apply filters and sort by quality score"""
-
     def __init__(self, logger, data_store_content):
-        self.strategy = "Quality",
-        self.logger = logger
+        self.strategy = "Quality"
+        self.df_quality = data_store_content.df_quality
+    def get_recommendations(self, bike_type: int, price: int, rider_height_max: int, rider_height_min: int, family_id: int, preference_mask: List[int], n: int) -> Tuple[str, List[int], Optional[str]]:
+        preference_mask_set = set(preference_mask)
+        df_status_masked_set = set(self.df_status_masked.index)  # Assuming df_status_masked is defined elsewhere in the class
+        # Define the quality_features tuple with filter conditions
+        quality_features = (
+            ("bike_type", lambda: self.df_quality["bike_type"] == bike_type),
+            ("price", lambda: (self.df_quality["price"] >= price * 0.8) & (self.df_quality["price"] <= price * 1.2)),
+            ("rider_height_max", lambda: self.df_quality["rider_height_max"] <= rider_height_max),
+            ("rider_height_min", lambda: self.df_quality["rider_height_min"] >= rider_height_min),
+            ("family_id", lambda: self.df_quality["family_id"] == family_id)
+        )
+        recommendations, error = get_top_n_quality_prefiltered_bot(
+            self.df_quality,
+            preference_mask_set,
+            quality_features,
+            n
+        )
 
-    def get_recommendations(self, preference_mask: list, n: int) -> Tuple[str, List, Optional[str]]:
-
-        recommendations, error = get_top_n_quality_prefiltered_bot
-
-
-
-
-# Define the quality features and their filter conditions
-quality_features = [
-    ("index", lambda df: df.index.isin(preference_mask)),
-    ("bike_type", lambda df: df["bike_type"] == bike_type),
-    ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
-    ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-    ("family_id", lambda df: df["family_id"] == family_id)
-]
+        return self.strategy, recommendations, error
 
 
 # Dictionary of strategies

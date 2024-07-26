@@ -102,14 +102,18 @@ main_query_dtype = {
     "family_id": pd.Int64Dtype(),
 }
 
-# Define the quality features and their filter conditions
+# not used, just to make sure what feautures are necessary
 quality_features = [
-    ("index", lambda df: df.index.isin(preference_mask)),
-    ("bike_type", lambda df: df["bike_type"] == bike_type),
-    ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
-    ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-    ("family_id", lambda df: df["family_id"] == family_id)
-]
+        "bike_type",
+        "price",
+        "rider_height_max",
+        "rider_height_min",
+        "family_id",
+        "slug"
+        ]
+
+
+
 
 quality_query = """SELECT
     bikes.id as id,
