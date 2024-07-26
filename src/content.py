@@ -5,6 +5,38 @@ from typing import Tuple, List, Optional
 
 from src.helper import interveave
 
+def get_top_n_quality_prefiltered_bot(
+        df_quality: pd.DataFrame, preference_mask: list, quality_features: tuple, n: int = 16
+) -> list:
+    """
+    Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
+    Args:
+        df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
+        preference_mask (list): bike indicies matching preferences
+        quality_features (tuple): filtering features and filter condition
+        n (int): number of recommendations to return
+    Returns:
+        list: list of top n bike ids by quality
+    """
+    try:
+        error = None
+        top_n_recommendations = []
+
+
+        # Apply filters progressively
+        df_filtered = df_quality
+        for feature, condition in quality_features:
+            df_filtered = df_filtered[condition(df_filtered)]
+            if len(df_filtered) >= n:
+                top_n_recommendations = df_filtered.head(n).index.tolist()
+                return top_n_recommendations, error
+
+        # If not enough elements after all filters, return the top n from the last filtered DataFrame
+        return df_filtered.head(n).index.tolist()
+
+    except Exception as e:
+        error = str(e)
+        return top_n_recommendations, error
 
 def get_top_n_quality_prefiltered(
         df_quality: pd.DataFrame, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16

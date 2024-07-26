@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
+from src.content import get_top_n_recommendations_prefiltered_bot
 from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
@@ -160,6 +161,28 @@ class CollaborativeRandomized(RecommendationStrategy):
         )
         return self.strategy, recommendations, error
 
+class Quality(RecommendationStrategy):
+    """Apply filters and sort by quality score"""
+
+    def __init__(self, logger, data_store_content):
+        self.strategy = "Quality",
+        self.logger = logger
+
+    def get_recommendations(self, preference_mask: list, n: int) -> Tuple[str, List, Optional[str]]:
+
+        recommendations, error = get_top_n_quality_prefiltered_bot
+
+
+
+
+# Define the quality features and their filter conditions
+quality_features = [
+    ("index", lambda df: df.index.isin(preference_mask)),
+    ("bike_type", lambda df: df["bike_type"] == bike_type),
+    ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+    ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
+    ("family_id", lambda df: df["family_id"] == family_id)
+]
 
 
 # Dictionary of strategies
@@ -168,6 +191,7 @@ strategy_dict = {
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
     "FallbackContentMixed": FallbackContentMixed,
+    "bot": Quality,
 }
 # Instantiate the StrategyFactory with the dictionary
 strategy_factory = StrategyFactory(strategy_dict)
