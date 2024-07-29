@@ -33,6 +33,7 @@ from src.strategies import (
     ContentMixed,
     Collaborative,
     CollaborativeRandomized,
+    Quality,
 )
 from src.strategies import strategy_dict
 
@@ -115,6 +116,8 @@ class RecommendationRequest(BaseModel):
     family_id: int = 1101
     price: int = 1200
     frame_size_code: str = "56"
+    rider_height_min: int = 150
+    rider_height_max: int = 195
     n: int = 12
     strategy: str = "product_page"
 
@@ -142,6 +145,8 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     family_id = request_data.family_id
     price = request_data.price
     frame_size_code = get_numeric_frame_size(request_data.frame_size_code, bike_type, default_value=56)
+    rider_height_min = request_data.rider_height_min
+    rider_height_max = request_data.rider_height_max
     n = request_data.n
     strategy_name = request_data.strategy
 
@@ -209,6 +214,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
+        elif isinstance(strategy_instance, Quality):  # Add this condition
+            # Convert frame_size_code to rider_height_min and rider_height_max if necessary
+            strategy, recommendation, error = strategy_instance.get_recommendations(bike_type, price, rider_height_max, rider_height_min, family_id, preference_mask, n)
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())

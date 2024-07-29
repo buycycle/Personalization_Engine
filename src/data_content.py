@@ -232,6 +232,10 @@ def get_data(
 
     df_quality = frame_size_code_to_numeric(df_quality, bike_type_id_column="bike_type")
     df_quality.dropna(inplace=True)
+    df_quality['rider_height_min'] = df_quality['rider_height_min'].fillna(150).astype('int64')
+    df_quality['rider_height_max'] = df_quality['rider_height_max'].fillna(195).astype('int64')
+
+
 
     return df, df_quality
 

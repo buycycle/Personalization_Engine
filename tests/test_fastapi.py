@@ -14,7 +14,7 @@ from src.strategies import ContentMixed
 
 def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
     """test time and len of return for all strategies of the fastapi app"""
-    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
 
     # s to ms
@@ -34,6 +34,8 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
             "family_id": family_id,
             "price": price,
             "frame_size_code": frame_size_code,
+            "rider_height_min": rider_height_min,
+            "rider_height_max": rider_height_max,
             "n": n,
             "strategy": strategy,  # set the current strategy
         }
@@ -57,7 +59,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
 
 def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_collaborative, limit=50, n_test=10):
     """test time and len of return for all strategies and a random subsample of collaborative users of the fastapi app"""
-    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
     data_store_collaborative = testdata_collaborative
 
@@ -83,6 +85,8 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
                 "family_id": family_id,
                 "price": price,
                 "frame_size_code": frame_size_code,
+                "rider_height_min": rider_height_min,
+                "rider_height_max": rider_height_max,
                 "n": n,
                 "strategy": strategy,  # set the current strategy
             }
@@ -112,7 +116,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
 
 def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test=100):
     """test time and len of return for all strategies and a random bike_ids of the fastapi app"""
-    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
+    bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger, strategy_dict = inputs_fastapi
     strategies = list(strategy_dict.keys())
 
     # exclude braze and homepage since they do not ensure returning n
@@ -133,6 +137,8 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
                 "family_id": family_id,
                 "price": price,
                 "frame_size_code": frame_size_code,
+                "rider_height_min": rider_height_min,
+                "rider_height_max": rider_height_max,
                 "n": n,
                 "strategy": strategy,  # set the current strategy
             }

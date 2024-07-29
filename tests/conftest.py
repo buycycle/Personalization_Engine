@@ -78,13 +78,15 @@ def inputs(app_mock, mock_logger):
     family_id = 2502
     price = 1200
     frame_size_code = "56"
+    rider_height_min = 140
+    rider_height_max = 195
     n = 12
     sample = 50
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
+    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger
 
 
 @pytest.fixture(scope="package")
@@ -109,13 +111,15 @@ def inputs_fastapi(app_mock, mock_logger):
     family_id = 1101
     price = 1200
     frame_size_code = "56"
+    rider_height_min = 140
+    rider_height_max = 195
     n = 12
     sample = 50
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
+    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger, strategy
 
 
 @pytest.fixture(scope="package")

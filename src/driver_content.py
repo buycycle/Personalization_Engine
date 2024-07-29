@@ -158,6 +158,6 @@ quality_query_dtype = {
     "quality_score": pd.Int64Dtype(),
     "slug": pd.StringDtype(),
     "category": pd.StringDtype(),
-    "rider_height_min": pd.Int64Dtype(),
-    "rider_height_max": pd.Int64Dtype(),
+    "rider_height_min": pd.Float64Dtype(),
+    "rider_height_max": pd.Float64Dtype(),
 }
