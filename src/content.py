@@ -7,7 +7,7 @@ from src.helper import interveave
 
 def get_top_n_quality_prefiltered_bot(
         df_quality: pd.DataFrame, preference_mask_set: set, quality_features: tuple, n: int = 16
-) -> list:
+) -> Tuple[List[str], Optional[str]]:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
@@ -16,22 +16,28 @@ def get_top_n_quality_prefiltered_bot(
         quality_features (tuple): filtering features and filter condition
         n (int): number of recommendations to return
     Returns:
-        list: list of top n bike ids by quality
+        Tuple[List[str], Optional[str]]: list of top n bike ids by quality and an error message if any
     """
+    error = None
     try:
-        top_n_recommendations = []
         # Apply preference mask filter
         df_filtered = df_quality[df_quality.index.isin(preference_mask_set)]
+        last_valid_df = df_filtered  # Keep track of the last valid DataFrame
         # Apply additional filters progressively
         for feature, condition in quality_features:
-            df_filtered = df_filtered[condition(df_filtered)]
-            if len(df_filtered) >= n:
-                top_n_recommendations = df_filtered.head(n).index.tolist()
-                return top_n_recommendations
-        # If not enough elements after all filters, return the top n from the last filtered DataFrame
-        return df_filtered.slug.head(n).index.tolist()
+            df_temp = df_filtered[condition(df_filtered)]
+            if len(df_temp) >= n:
+                last_valid_df = df_temp  # Update the last valid DataFrame
+            else:
+                break  # Stop filtering if we have less than n elements
+            df_filtered = df_temp  # Apply the current filter
+        # Return the top n from the last valid filtered DataFrame
+        top_n_recommendations = last_valid_df.head(n).index.tolist()
+        return top_n_recommendations, error
+
     except Exception as e:
-        raise e  # Reraise the exception to be handled by the caller
+        error = str(e)
+        return [], error  # Return an empty list if an exception occurs
 
 def get_top_n_quality_prefiltered(
         df_quality: pd.DataFrame, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16

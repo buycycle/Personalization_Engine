@@ -33,7 +33,7 @@ from src.strategies import (
     ContentMixed,
     Collaborative,
     CollaborativeRandomized,
-    Quality,
+    QualityFilter,
 )
 from src.strategies import strategy_dict
 
@@ -164,7 +164,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     sample = n * 5
 
     # Instantiate strategy
-    # Assuming this is what you meant by 'strategy_traget'
     strategy_target = strategy_name
 
 
@@ -214,8 +213,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
             strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
-        elif isinstance(strategy_instance, Quality):  # Add this condition
-            # Convert frame_size_code to rider_height_min and rider_height_max if necessary
+        elif isinstance(strategy_instance, QualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_type, price, rider_height_max, rider_height_min, family_id, preference_mask, n)
         else:
             # Handle unknown strategy
