@@ -171,20 +171,14 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
 
+        # apply filtering logic that results in preference_mask that is applied to all the recommendations
+        # combine user specific stated preference, and company logic preference
+
+
         # filter recommendations for preferences
         preferences = {"continent_id": continent_id,
                        }
 
-        # add here the read of the stateed preferences of the user
-        # make this a seperate df and filter for the user
-
-        # Define the quality_features tuple with filter conditions
-        #preference_features = (
-        #    ("continent_id", lambda df: df["continent_id"] == continent_id),
-        #    ("price", lambda df: df["price"] <= price_max),
-        #    ("frame_size_code", lambda df: df["frame_size_code"] <= get_numeric_frame_size(frame_size_code),
-        #    ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height_min),
-        #)
         preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
@@ -196,6 +190,20 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
+
+        # user specific preferences
+        # get_preference_mask needs to be able to deal with conditions
+        if user_id != 0:
+            specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user['user_id'] == user_id]
+
+            preference_user= (
+                ("price", lambda df: df["price"] <= specific_user_preferences.max_price.tolist()),
+                ("category_id", lambda df: df["category_id"] == specific_user_preferences.category_id.tolist()),
+                ("frame_size_code", lambda df: (df["frame_size_code"] >= specific_user_preferences.frame_size.tolist() * 0.8) & (df["frame_size_code"] <= specific_user_preferences.frame_size.tolist() * 1.2)),
+            )
+            preference_mask_user = get_preference_mask(data_store_content.df_preference, preference_user)
+
+            preference_mask = preference_mask + preference_mask_user
 
         strategy_factory = StrategyFactory(strategy_dict)
 

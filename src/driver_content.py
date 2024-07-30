@@ -5,7 +5,7 @@ import pandas as pd
 # however not sure if that makes sense, maybe .any for family and family_model
 
 # available for filtering at each request
-preference_features = ["continent_id", "motor"]
+preference_features = ["continent_id", "motor","price", "frame_size_code"]
 # for content based
 prefilter_features = ["family_id", "bike_type"]
 
@@ -161,3 +161,36 @@ quality_query_dtype = {
     "rider_height_min": pd.Float64Dtype(),
     "rider_height_max": pd.Float64Dtype(),
 }
+
+
+user_preference_query= """SELECT
+
+    with preference_table as (SELECT
+      USER_BIKE_PREFERENCES.USER_ID,
+        COALESCE(TRY_TO_NUMBER(PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):max_price::STRING), 20000) AS max_price,
+      CATEGORY.VALUE::STRING AS category,
+      FRAME_SIZE.VALUE::STRING AS frame_size
+    FROM
+      BUYCYCLE.PUBLIC.USER_BIKE_PREFERENCES,
+      LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):categories) CATEGORY,
+      LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):frame_sizes) FRAME_SIZE)
+
+    select user_id,
+        max_price,
+        bike_categories.id as category_id,
+        frame_size,
+
+
+        from preference_table
+
+
+    LEFT JOIN BUYCYCLE.PUBLIC.bike_categories ON category = LOWER(bike_categories.name)
+"""
+
+user_preference_query_dtype = {
+    "user_id": pd.Int64Dtype(),
+    "max_price": pd.Float64Dtype(),
+    "category_id": pd.Int64Dtype(),
+    "frame_size_code": pd.StringDtype(),
+    }
+
