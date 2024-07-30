@@ -174,6 +174,17 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # filter recommendations for preferences
         preferences = {"continent_id": continent_id,
                        }
+
+        # add here the read of the stateed preferences of the user
+        # make this a seperate df and filter for the user
+
+        # Define the quality_features tuple with filter conditions
+        #preference_features = (
+        #    ("continent_id", lambda df: df["continent_id"] == continent_id),
+        #    ("price", lambda df: df["price"] <= price_max),
+        #    ("frame_size_code", lambda df: df["frame_size_code"] <= get_numeric_frame_size(frame_size_code),
+        #    ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height_min),
+        #)
         preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
@@ -241,8 +252,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
 
         # Convert the recommendation to int if recommendation is not an empty list
-        if len(recommendation) > 0:
-            recommendation = [int(i) for i in recommendation]
         logger.info(
             "successful recommendation",
             extra={
