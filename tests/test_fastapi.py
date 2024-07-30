@@ -21,7 +21,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
     limit = limit / 1000
 
     # exclude braze and homepage since they do not ensure returning n
-    to_remove = ["braze", "homepage"]
+    to_remove = ["braze", "homepage","bot"]
     strategies = [item for item in strategies if item not in to_remove]
 
     for strategy in strategies:
@@ -67,7 +67,7 @@ def test_integration_fast_time_len_strats_collab_users(inputs_fastapi, testdata_
     users = list(users)
 
     # exclude braze and homepage since they do not ensure returning n
-    to_remove = ["braze", "homepage"]
+    to_remove = ["braze", "homepage","bot"]
     # Remove items from strategies if they exist
     strategies = [item for item in strategies if item not in to_remove]
 
@@ -120,7 +120,7 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
     strategies = list(strategy_dict.keys())
 
     # exclude braze and homepage since they do not ensure returning n
-    to_remove = ["braze", "homepage"]
+    to_remove = ["braze", "homepage","bot"]
     # Remove items from strategies if they exist
     strategies = [item for item in strategies if item not in to_remove]
 

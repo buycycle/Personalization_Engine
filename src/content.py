@@ -32,7 +32,7 @@ def get_top_n_quality_prefiltered_bot(
                 break  # Stop filtering if we have less than n elements
             df_filtered = df_temp  # Apply the current filter
         # Return the top n from the last valid filtered DataFrame
-        top_n_recommendations = last_valid_df.head(n).index.tolist()
+        top_n_recommendations = last_valid_df.head(n).slug.tolist()
         return top_n_recommendations, error
 
     except Exception as e:
