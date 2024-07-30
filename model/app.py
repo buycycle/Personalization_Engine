@@ -176,24 +176,25 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
 
         # filter recommendations for preferences
-        preferences = {"continent_id": continent_id,
-                       }
-
+        preferences = (
+            ("continent_id", lambda df: df["continent_id"] == continent_id)
+        )
         preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
         # merge with preferences above with OR condition
         if continent_id in [4, 7]:
-            ebike_sending_preferences = {"continent_id": 1,
-                                         "motor": 0,
-                                         }
+            ebike_sending_preferences = (
+                ("continent_id", lambda df: df["continent_id"] == 1)
+                ("motor", lambda df: df["motor"] == 0)
+            )
             ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
 
         # user specific preferences
         # get_preference_mask needs to be able to deal with conditions
-        if user_id != 0:
+        if user_id != 0 and user_id in data_store_content.df_preference_user.user_id:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user['user_id'] == user_id]
 
             preference_user= (
