@@ -9,7 +9,11 @@ from src.content import get_top_n_quality_prefiltered_bot
 from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
-from src.collaborative import get_top_n_collaborative, get_top_n_collaborative_randomized, read_data_model
+from src.collaborative import (
+    get_top_n_collaborative,
+    get_top_n_collaborative_randomized,
+    read_data_model,
+)
 from src.data_content import construct_dense_similarity_row
 
 from src.helper import interveave
@@ -46,10 +50,18 @@ class FallbackContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-            self, bike_id: int, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
+        self,
+        bike_id: int,
+        preference_mask: list,
+        bike_type: int,
+        family_id: int,
+        price: int,
+        frame_size_code: str,
+        n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
-
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
@@ -85,9 +97,18 @@ class ContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-            self, bike_id: int, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
+        self,
+        bike_id: int,
+        preference_mask: list,
+        bike_type: int,
+        family_id: int,
+        price: int,
+        frame_size_code: str,
+        n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
@@ -119,7 +140,9 @@ class Collaborative(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, preference_mask: list, n: int) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(
+        self, user_id: str, preference_mask: list, n: int
+    ) -> Tuple[str, List, Optional[str]]:
         recommendations, error = get_top_n_collaborative(
             self.model,
             preference_mask,
@@ -142,10 +165,9 @@ class CollaborativeRandomized(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, preference_mask: list, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
-
-
-
+    def get_recommendations(
+        self, user_id: str, preference_mask: list, n: int, sample: int
+    ) -> Tuple[str, List, Optional[str]]:
         preference_mask_set = set(preference_mask)
         df_status_masked_set = set(self.df_status_masked.index)
 
@@ -161,26 +183,38 @@ class CollaborativeRandomized(RecommendationStrategy):
         )
         return self.strategy, recommendations, error
 
+
 class QualityFilter(RecommendationStrategy):
     """Apply filters and sort by quality score"""
+
     def __init__(self, logger, data_store_collaborative, data_store_content):
         self.strategy = "QualityFilter"
         self.df_quality = data_store_content.df_quality
-    def get_recommendations(self, bike_type: int, price: int, rider_height_max: int, rider_height_min: int, family_id: int, preference_mask: List[int], n: int) -> Tuple[str, List[int], Optional[str]]:
+
+    def get_recommendations(
+        self,
+        bike_type: int,
+        price: int,
+        rider_height_max: int,
+        rider_height_min: int,
+        family_id: int,
+        preference_mask: List[int],
+        n: int,
+    ) -> Tuple[str, List[int], Optional[str]]:
         preference_mask_set = set(preference_mask)
         # Define the quality_features tuple with filter conditions
         quality_features = (
             ("bike_type", lambda df: df["bike_type"] == bike_type),
-            ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+            (
+                "price",
+                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+            ),
             ("rider_height_max", lambda df: df["rider_height_max"] <= rider_height_max),
             ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height_min),
-            ("family_id", lambda df: df["family_id"] == family_id)
+            ("family_id", lambda df: df["family_id"] == family_id),
         )
         recommendations, error = get_top_n_quality_prefiltered_bot(
-            self.df_quality,
-            preference_mask_set,
-            quality_features,
-            n
+            self.df_quality, preference_mask_set, quality_features, n
         )
         return self.strategy, recommendations, error
 

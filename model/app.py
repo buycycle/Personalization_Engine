@@ -22,7 +22,13 @@ from buycycle.data import get_numeric_frame_size, get_preference_mask
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
-from src.driver_collaborative import bike_id, features, item_features, user_features, implicit_feedback
+from src.driver_collaborative import (
+    bike_id,
+    features,
+    item_features,
+    user_features,
+    implicit_feedback,
+)
 
 # import functions from src folder
 from src.data_content import DataStoreContent
@@ -57,7 +63,7 @@ logger.info("FastAPI app started")
 data_store_content = DataStoreContent(prefilter_features=prefilter_features)
 data_store_collaborative = DataStoreCollaborative()
 data_store_content_available = False
-data_store_collaborative_available= False
+data_store_collaborative_available = False
 
 # inital data readin
 while True:
@@ -66,7 +72,9 @@ while True:
         data_store_content_available = True
         break
     except Exception as e:
-        logger.error(f"Content data could not initially be read, error: {e}. Trying again in 60 seconds.")
+        logger.error(
+            f"Content data could not initially be read, error: {e}. Trying again in 60 seconds."
+        )
         time.sleep(60)
 
 while True:
@@ -75,13 +83,19 @@ while True:
         data_store_collaborative_available = True
         break
     except Exception as e:
-        logger.error(f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
+        logger.error(
+            f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds."
+        )
         time.sleep(60)
 
-read_interval=60 + random.uniform(-5, 5)
+read_interval = 60 + random.uniform(-5, 5)
 # read the data periodically
-data_loader_content = Thread(target=data_store_content.read_data_periodically, args=(read_interval, logger))
-data_loader_collaborative = Thread(target=data_store_collaborative.read_data_periodically, args=(read_interval, logger))
+data_loader_content = Thread(
+    target=data_store_content.read_data_periodically, args=(read_interval, logger)
+)
+data_loader_collaborative = Thread(
+    target=data_store_collaborative.read_data_periodically, args=(read_interval, logger)
+)
 
 data_loader_content.start()
 data_loader_collaborative.start()
@@ -91,9 +105,11 @@ data_loader_collaborative.start()
 def home():
     return {"message": "Recommender system"}
 
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
 
 @app.get("/health_model")
 def health_model_check():
@@ -103,7 +119,10 @@ def health_model_check():
         # Return a 503 Service Unavailable status code with a message
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"status": "error", "message": "One or more data stores are not loaded with data."},
+            content={
+                "status": "error",
+                "message": "One or more data stores are not loaded with data.",
+            },
         )
 
 
@@ -144,7 +163,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
-    frame_size_code = get_numeric_frame_size(request_data.frame_size_code, bike_type, default_value=56)
+    frame_size_code = get_numeric_frame_size(
+        request_data.frame_size_code, bike_type, default_value=56
+    )
     rider_height_min = request_data.rider_height_min
     rider_height_max = request_data.rider_height_max
     n = request_data.n
@@ -166,23 +187,26 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # Instantiate strategy
     strategy_target = strategy_name
 
-
-
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
-
         # filter recommendations for preferences
-        preferences = {"continent_id": continent_id,
-                       }
-        preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
+        preferences = {
+            "continent_id": continent_id,
+        }
+        preference_mask = get_preference_mask(
+            data_store_content.df_preference, preferences
+        )
 
         # if US or UK, also allow non-ebikes from EU
         # merge with preferences above with OR condition
         if continent_id in [4, 7]:
-            ebike_sending_preferences = {"continent_id": 1,
-                                         "motor": 0,
-                                         }
-            ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
+            ebike_sending_preferences = {
+                "continent_id": 1,
+                "motor": 0,
+            }
+            ebike_preference_mask = get_preference_mask(
+                data_store_content.df_preference, ebike_sending_preferences
+            )
 
             preference_mask = preference_mask + ebike_preference_mask
 
@@ -208,13 +232,33 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # Recommend
         # different strategies use different inputs, think about how to clean this up
         if isinstance(strategy_instance, (ContentMixed, FallbackContentMixed)):
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                bike_id,
+                preference_mask,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                n,
+            )
         elif isinstance(strategy_instance, Collaborative):
-            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                id, preference_mask, n
+            )
         elif isinstance(strategy_instance, CollaborativeRandomized):
-            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                id, preference_mask, n, sample
+            )
         elif isinstance(strategy_instance, QualityFilter):
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_type, price, rider_height_max, rider_height_min, family_id, preference_mask, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                bike_type,
+                price,
+                rider_height_max,
+                rider_height_min,
+                family_id,
+                preference_mask,
+                n,
+            )
         else:
             # Handle unknown strategy
             accepted_strategies = list(strategy_dict.keys())
@@ -238,7 +282,15 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                bike_id,
+                preference_mask,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                n,
+            )
 
         logger.info(
             "successful recommendation",
@@ -261,7 +313,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         if error:
             # Return error response if it exists
             logger.error("Error no recommendation available, exception: " + error)
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error no recommendation available")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Error no recommendation available",
+            )
         else:
             # Return success response with recommendation data
             return {

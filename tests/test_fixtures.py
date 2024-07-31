@@ -29,9 +29,19 @@ from src.driver_content import (
     categorical_features_overweight_factor,
 )
 
-from src.driver_collaborative import user_id, bike_id, item_features, user_features, query
+from src.driver_collaborative import (
+    user_id,
+    bike_id,
+    item_features,
+    user_features,
+    query,
+)
 
-from src.collaborative import create_data_model_collaborative, update_model, read_data_model
+from src.collaborative import (
+    create_data_model_collaborative,
+    update_model,
+    read_data_model,
+)
 from src.data_collaborative import write_data, read_data_collaborative
 
 
@@ -50,10 +60,24 @@ def inputs():
     app = Flask(__name__)
     logger = create_logger(app)
 
-    preferences = {"continent_id": continent_id,
-                       }
+    preferences = {
+        "continent_id": continent_id,
+    }
 
-    return bike_id, preferences , bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger
+    return (
+        bike_id,
+        preferences,
+        bike_type,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        n,
+        sample,
+        ratio,
+        app,
+        logger,
+    )
 
 
 @pytest.fixture(scope="package")

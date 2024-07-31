@@ -29,7 +29,11 @@ numerical_features = ["price", "frame_size_code", "year"]
 # features to overweight
 numerical_features_to_overweight = ["price", "frame_size_code"]
 numerical_features_overweight_factor = 4
-categorical_features_to_overweight = ["bike_component_id", "bike_category_id", "bike_type"]
+categorical_features_to_overweight = [
+    "bike_component_id",
+    "bike_category_id",
+    "bike_type",
+]
 categorical_features_overweight_factor = 8
 
 # main query, needs to include at least the id and the features defined above
@@ -104,15 +108,13 @@ main_query_dtype = {
 
 # not used, just to make sure what feautures are necessary
 quality_features = [
-        "bike_type",
-        "price",
-        "rider_height_max",
-        "rider_height_min",
-        "family_id",
-        "slug"
-        ]
-
-
+    "bike_type",
+    "price",
+    "rider_height_max",
+    "rider_height_min",
+    "family_id",
+    "slug",
+]
 
 
 quality_query = """SELECT

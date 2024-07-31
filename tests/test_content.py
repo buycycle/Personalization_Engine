@@ -14,9 +14,23 @@ from src.strategies import ContentMixed
 
 from buycycle.data import get_preference_mask
 
+
 def test_time_ContentMixed(inputs, testdata_collaborative, testdata_content, limit=100):
     """test time of recommendation for a predifined bike_id with DB read-in"""
-    bike_id, preferences, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    (
+        bike_id,
+        preferences,
+        bike_type,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        n,
+        sample,
+        ratio,
+        app,
+        logger,
+    ) = inputs
 
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
@@ -28,20 +42,37 @@ def test_time_ContentMixed(inputs, testdata_collaborative, testdata_content, lim
     start_time = time.time()
 
     mixed_strategy = ContentMixed(logger, data_store_collaborative, data_store_content)
-    strategy, recommendation, error = mixed_strategy.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
+    strategy, recommendation, error = mixed_strategy.get_recommendations(
+        bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n
+    )
 
     end_time = time.time()
-    assert end_time - start_time < limit, f"ContentMixed took {(end_time - start_time)*1000} ms, limit is {limit*1000} ms"
+    assert (
+        end_time - start_time < limit
+    ), f"ContentMixed took {(end_time - start_time)*1000} ms, limit is {limit*1000} ms"
 
 
-
-
-def test_len_random_ContentMixed(inputs, testdata_collaborative, testdata_content, n_test=100):
+def test_len_random_ContentMixed(
+    inputs, testdata_collaborative, testdata_content, n_test=100
+):
     """test length of recommendation list for radnom bike ids
     similarity_matrix rows are bike_ids with all statuses
     """
 
-    bike_id, preferences, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, app, logger = inputs
+    (
+        bike_id,
+        preferences,
+        bike_type,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        n,
+        sample,
+        ratio,
+        app,
+        logger,
+    ) = inputs
 
     data_store_collaborative = testdata_collaborative
     data_store_content = testdata_content
@@ -52,8 +83,12 @@ def test_len_random_ContentMixed(inputs, testdata_collaborative, testdata_conten
         # i is a random number between 0 and 50000
         bike_id = int(50000 * np.random.random_sample())
 
-        mixed_strategy = ContentMixed(logger, data_store_collaborative, data_store_content)
-        strategy, recommendation, error = mixed_strategy.get_recommendations(bike_id, preferences, bike_type, family_id, price, frame_size_code, n)
+        mixed_strategy = ContentMixed(
+            logger, data_store_collaborative, data_store_content
+        )
+        strategy, recommendation, error = mixed_strategy.get_recommendations(
+            bike_id, preferences, bike_type, family_id, price, frame_size_code, n
+        )
 
         assert (
             len(recommendation) == n

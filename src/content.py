@@ -5,8 +5,12 @@ from typing import Tuple, List, Optional
 
 from src.helper import interveave
 
+
 def get_top_n_quality_prefiltered_bot(
-        df_quality: pd.DataFrame, preference_mask_set: set, quality_features: tuple, n: int = 16
+    df_quality: pd.DataFrame,
+    preference_mask_set: set,
+    quality_features: tuple,
+    n: int = 16,
 ) -> Tuple[List[str], Optional[str]]:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
@@ -39,8 +43,15 @@ def get_top_n_quality_prefiltered_bot(
         error = str(e)
         return [], error  # Return an empty list if an exception occurs
 
+
 def get_top_n_quality_prefiltered(
-        df_quality: pd.DataFrame, preference_mask: list, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int = 16
+    df_quality: pd.DataFrame,
+    preference_mask: list,
+    bike_type: int,
+    family_id: int,
+    price: int,
+    frame_size_code: str,
+    n: int = 16,
 ) -> list:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
@@ -57,11 +68,18 @@ def get_top_n_quality_prefiltered(
     """
     df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
     # Filter for 20% higher and lower price
-    df_filtered_bike_type= df_quality_preference[df_quality_preference["bike_type"] == bike_type]
+    df_filtered_bike_type = df_quality_preference[
+        df_quality_preference["bike_type"] == bike_type
+    ]
     # Filter for 20% higher and lower price
-    df_filtered_price = df_filtered_bike_type[(df_filtered_bike_type["price"] >= price * 0.8) & (df_filtered_bike_type["price"] <= price * 1.2)]
+    df_filtered_price = df_filtered_bike_type[
+        (df_filtered_bike_type["price"] >= price * 0.8)
+        & (df_filtered_bike_type["price"] <= price * 1.2)
+    ]
     # Filter for same frame_size_code
-    df_filtered_size = df_filtered_price[df_filtered_price["frame_size_code"] == frame_size_code]
+    df_filtered_size = df_filtered_price[
+        df_filtered_price["frame_size_code"] == frame_size_code
+    ]
     # Filter for same family_id
     df_filtered_family = df_filtered_size[df_filtered_size["family_id"] == family_id]
     # Step-wise approach to get at least n elements
@@ -79,7 +97,9 @@ def get_top_n_quality_prefiltered(
         return df_quality.head(n).index.tolist()
 
 
-def get_top_n_recommendations(bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: list, n: int = 16) -> list:
+def get_top_n_recommendations(
+    bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: list, n: int = 16
+) -> list:
     """
     Returns the top n recommendations for a bike_id, given a bike_similarity_df
     Args:
@@ -94,7 +114,9 @@ def get_top_n_recommendations(bike_similarity_df: pd.DataFrame, bike_id: int, pr
 
     """
 
-    bike_similarity_df = bike_similarity_df[bike_similarity_df.index.isin(preference_mask)]
+    bike_similarity_df = bike_similarity_df[
+        bike_similarity_df.index.isin(preference_mask)
+    ]
 
     # squeeze to convert pd.DataFrame into pd.Series
     return bike_similarity_df.loc[bike_id].squeeze().nsmallest(n + 1).index.tolist()
@@ -129,7 +151,9 @@ def get_top_n_recommendations_prefiltered(
 
     prefilter_values = df.loc[bike_id, prefilter_features]
 
-    assert len(prefilter_features) == len(prefilter_values), "Features and values must have the same length"
+    assert len(prefilter_features) == len(
+        prefilter_values
+    ), "Features and values must have the same length"
 
     # mask for df_status_masked to include only where all prefilter_features are true
     mask = (df_status_masked[prefilter_features] == prefilter_values).all(axis=1)
@@ -205,19 +229,35 @@ def get_top_n_recommendations_mix(
                 },
             )
 
-            top_n_quality = get_top_n_quality_prefiltered(df_quality, preference_mask, bike_type, family_id, price, frame_size_code, sample)
-
+            top_n_quality = get_top_n_quality_prefiltered(
+                df_quality,
+                preference_mask,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                sample,
+            )
 
             return random.sample(top_n_quality, n), error
 
         else:
             # prefiltered recommendations
             top_n_recommendations_prefiltered = get_top_n_recommendations_prefiltered(
-                bike_similarity_df, preference_mask, df, df_status_masked, bike_id, prefilter_features, logger, int(n * ratio)
+                bike_similarity_df,
+                preference_mask,
+                df,
+                df_status_masked,
+                bike_id,
+                prefilter_features,
+                logger,
+                int(n * ratio),
             )
 
             # get the top n recommendations for the bike_id
-            top_n_recommendations_generic = get_top_n_recommendations(bike_similarity_df, bike_id, preference_mask, n)
+            top_n_recommendations_generic = get_top_n_recommendations(
+                bike_similarity_df, bike_id, preference_mask, n
+            )
 
             # remove bike_id from recommendations, we do not want to recommend the same bike
             try:
@@ -233,10 +273,15 @@ def get_top_n_recommendations_mix(
             if top_n_recommendations_prefiltered:
                 # interveave prefiltered and generic recommendations
                 if interveave_prefilter_general:
-                    top_n_recommendations = interveave(top_n_recommendations_prefiltered, top_n_recommendations_generic)
+                    top_n_recommendations = interveave(
+                        top_n_recommendations_prefiltered, top_n_recommendations_generic
+                    )
 
                 else:
-                    top_n_recommendations = top_n_recommendations_prefiltered + top_n_recommendations_generic
+                    top_n_recommendations = (
+                        top_n_recommendations_prefiltered
+                        + top_n_recommendations_generic
+                    )
 
             else:
                 top_n_recommendations = top_n_recommendations_generic
