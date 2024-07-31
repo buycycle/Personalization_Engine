@@ -240,9 +240,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
             strategy, recommendation, error = strategy_instance.get_recommendations(bike_id, preference_mask, bike_type, family_id, price, frame_size_code, n)
 
-        # Convert the recommendation to int if recommendation is not an empty list
-        if len(recommendation) > 0:
-            recommendation = [int(i) for i in recommendation]
         logger.info(
             "successful recommendation",
             extra={
