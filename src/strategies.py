@@ -196,7 +196,6 @@ class QualityFilter(RecommendationStrategy):
         category: str,
         price: int,
         rider_height: int,
-        family_id: int,
         preference_mask: List[int],
         n: int,
     ) -> Tuple[str, List[int], Optional[str]]:
