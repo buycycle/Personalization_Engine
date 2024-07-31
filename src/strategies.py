@@ -193,7 +193,7 @@ class QualityFilter(RecommendationStrategy):
 
     def get_recommendations(
         self,
-        bike_type: int,
+        category: str,
         price: int,
         rider_height: int,
         family_id: int,
@@ -203,14 +203,13 @@ class QualityFilter(RecommendationStrategy):
         preference_mask_set = set(preference_mask)
         # Define the quality_features tuple with filter conditions
         quality_features = (
-            ("bike_type", lambda df: df["bike_type"] == bike_type),
+            ("category", lambda df: df["category"] == category),
             (
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
             ("rider_height_max", lambda df: df["rider_height_max"] <= rider_height),
             ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height),
-            ("family_id", lambda df: df["family_id"] == family_id),
         )
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n

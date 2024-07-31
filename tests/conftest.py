@@ -84,6 +84,7 @@ def inputs(app_mock, mock_logger):
     bike_id = 18894
     continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
     family_id = 2502
     price = 1200
@@ -99,6 +100,7 @@ def inputs(app_mock, mock_logger):
         bike_id,
         continent_id,
         bike_type,
+        category,
         distinct_id,
         family_id,
         price,
@@ -128,6 +130,7 @@ def inputs_fastapi(app_mock, mock_logger):
     bike_id = 14394
     continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
     family_id = 1101
     price = 1200
@@ -143,6 +146,7 @@ def inputs_fastapi(app_mock, mock_logger):
         bike_id,
         continent_id,
         bike_type,
+        category,
         distinct_id,
         family_id,
         price,

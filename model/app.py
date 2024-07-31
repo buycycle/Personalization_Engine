@@ -136,6 +136,7 @@ class RecommendationRequest(BaseModel):
     price: int = 1200
     frame_size_code: str = "56"
     rider_height: int = 180
+    category: str = "road"
     n: int = 12
     strategy: str = "product_page"
 
@@ -166,6 +167,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         request_data.frame_size_code, bike_type, default_value=56
     )
     rider_height = request_data.rider_height
+    category = request_data.category
     n = request_data.n
     strategy_name = request_data.strategy
 
@@ -249,10 +251,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
         elif isinstance(strategy_instance, QualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(
-                bike_type,
+                category,
                 price,
                 rider_height,
-                family_id,
                 preference_mask,
                 n,
             )
