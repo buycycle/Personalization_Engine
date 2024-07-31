@@ -88,8 +88,7 @@ def inputs(app_mock, mock_logger):
     family_id = 2502
     price = 1200
     frame_size_code = "56"
-    rider_height_min = 140
-    rider_height_max = 195
+    rider_height = 180
     n = 12
     sample = 50
     ratio = 0.5
@@ -104,8 +103,7 @@ def inputs(app_mock, mock_logger):
         family_id,
         price,
         frame_size_code,
-        rider_height_min,
-        rider_height_max,
+        rider_height,
         n,
         sample,
         ratio,
@@ -134,8 +132,7 @@ def inputs_fastapi(app_mock, mock_logger):
     family_id = 1101
     price = 1200
     frame_size_code = "56"
-    rider_height_min = 140
-    rider_height_max = 195
+    rider_height = 180
     n = 12
     sample = 50
     ratio = 0.5
@@ -150,8 +147,7 @@ def inputs_fastapi(app_mock, mock_logger):
         family_id,
         price,
         frame_size_code,
-        rider_height_min,
-        rider_height_max,
+        rider_height,
         n,
         sample,
         ratio,

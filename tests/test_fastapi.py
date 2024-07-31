@@ -22,8 +22,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
         family_id,
         price,
         frame_size_code,
-        rider_height_min,
-        rider_height_max,
+        rider_height,
         n,
         sample,
         ratio,
@@ -50,8 +49,7 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
             "family_id": family_id,
             "price": price,
             "frame_size_code": frame_size_code,
-            "rider_height_min": rider_height_min,
-            "rider_height_max": rider_height_max,
+            "rider_height": rider_height,
             "n": n,
             "strategy": strategy,  # set the current strategy
         }
@@ -91,8 +89,7 @@ def test_integration_fast_time_len_strats_collab_users(
         family_id,
         price,
         frame_size_code,
-        rider_height_min,
-        rider_height_max,
+        rider_height,
         n,
         sample,
         ratio,
@@ -125,8 +122,7 @@ def test_integration_fast_time_len_strats_collab_users(
                 "family_id": family_id,
                 "price": price,
                 "frame_size_code": frame_size_code,
-                "rider_height_min": rider_height_min,
-                "rider_height_max": rider_height_max,
+                "rider_height": rider_height,
                 "n": n,
                 "strategy": strategy,  # set the current strategy
             }
@@ -172,8 +168,7 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
         family_id,
         price,
         frame_size_code,
-        rider_height_min,
-        rider_height_max,
+        rider_height,
         n,
         sample,
         ratio,
@@ -201,8 +196,7 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
                 "family_id": family_id,
                 "price": price,
                 "frame_size_code": frame_size_code,
-                "rider_height_min": rider_height_min,
-                "rider_height_max": rider_height_max,
+                "rider_height": rider_height,
                 "n": n,
                 "strategy": strategy,  # set the current strategy
             }

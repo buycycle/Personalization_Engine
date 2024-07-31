@@ -195,8 +195,7 @@ class QualityFilter(RecommendationStrategy):
         self,
         bike_type: int,
         price: int,
-        rider_height_max: int,
-        rider_height_min: int,
+        rider_height: int,
         family_id: int,
         preference_mask: List[int],
         n: int,
@@ -209,8 +208,8 @@ class QualityFilter(RecommendationStrategy):
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
-            ("rider_height_max", lambda df: df["rider_height_max"] <= rider_height_max),
-            ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height_min),
+            ("rider_height_max", lambda df: df["rider_height_max"] <= rider_height),
+            ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height),
             ("family_id", lambda df: df["family_id"] == family_id),
         )
         recommendations, error = get_top_n_quality_prefiltered_bot(

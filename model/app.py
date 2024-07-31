@@ -135,8 +135,7 @@ class RecommendationRequest(BaseModel):
     family_id: int = 1101
     price: int = 1200
     frame_size_code: str = "56"
-    rider_height_min: int = 150
-    rider_height_max: int = 195
+    rider_height: int = 180
     n: int = 12
     strategy: str = "product_page"
 
@@ -166,8 +165,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     frame_size_code = get_numeric_frame_size(
         request_data.frame_size_code, bike_type, default_value=56
     )
-    rider_height_min = request_data.rider_height_min
-    rider_height_max = request_data.rider_height_max
+    rider_height = request_data.rider_height
     n = request_data.n
     strategy_name = request_data.strategy
 
@@ -253,8 +251,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 bike_type,
                 price,
-                rider_height_max,
-                rider_height_min,
+                rider_height,
                 family_id,
                 preference_mask,
                 n,
