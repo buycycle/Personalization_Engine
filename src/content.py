@@ -39,7 +39,7 @@ def get_top_n_quality_prefiltered_bot(
         # Return the top n*2 from the last valid filtered DataFrame
         df_top_n = last_valid_df.head(n*2)
         # to introduce some variance in the results, sample n from the top n*2
-        df_sampled = df_top_n.sample(n=n, random_state=42)  # random_state for reproducibility
+        df_sampled = df_top_n.sample(n=n)
         top_n_recommendations = df_sampled.slug.tolist()
         return top_n_recommendations, error
     except Exception as e:
