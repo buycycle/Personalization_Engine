@@ -239,6 +239,9 @@ def get_data(
 
 
     df_preference_user = snowflake_sql_db_read(query=user_preference_query, DB="DB_EVENTS", driver="snowflake", index_col="user_id")
+    #clean up the DB formattting mess
+    df_preference_user['max_price'] = df_preference_user['max_price'].replace('null', '20000')
+    df_preference_user['max_price'] = df_preference_user['max_price'].str.replace('"', '').str.replace('.','').astype(int)
 
     return df, df_quality, df_preference_user
 

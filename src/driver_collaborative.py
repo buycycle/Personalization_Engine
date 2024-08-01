@@ -206,18 +206,12 @@ SELECT
     min(fq.family_id) as family_id,
     min(fq.rider_height_min) as rider_height_min,
     min(fq.rider_height_max) as rider_height_max,
-CASE
-    WHEN (min(fq.price) > up.budget_min AND min(fq.price) < up.budget_max) OR min(fq.bike_category_id) = up.bike_category_id THEN sum(fq.feedback) * 2
-    ELSE sum(fq.feedback)
-END AS feedback
+    SUM(fq.feedback) as feedback
 
 FROM feedback_query fq
-left JOIN user_preference up ON fq.user_id = up.user_id
 GROUP BY
     fq.user_id,
     fq.bike_id,
-    up.budget_min,
-    up.budget_max,
     fq.bike_type_id,
-    up.bike_category_id
+    fq.bike_category_id
 """
