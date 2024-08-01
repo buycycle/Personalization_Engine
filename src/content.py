@@ -36,16 +36,15 @@ def get_top_n_quality_prefiltered_bot(
             else:
                 break  # Stop filtering if we have less than n elements
             df_filtered = df_temp  # Apply the current filter
-        # Return the top n from the last valid filtered DataFrame
-        top_n_recommendations = last_valid_df.head(n*2).slug.tolist()
-        # to introduce some variance in the results
-        top_n_recommendations = top_n_recommendations.sample(frac=1).head(n)
+        # Return the top n*2 from the last valid filtered DataFrame
+        df_top_n = last_valid_df.head(n*2)
+        # to introduce some variance in the results, sample n from the top n*2
+        df_sampled = df_top_n.sample(n=n, random_state=42)  # random_state for reproducibility
+        top_n_recommendations = df_sampled.slug.tolist()
         return top_n_recommendations, error
-
     except Exception as e:
         error = str(e)
         return [], error  # Return an empty list if an exception occurs
-
 
 def get_top_n_quality_prefiltered(
     df_quality: pd.DataFrame,
