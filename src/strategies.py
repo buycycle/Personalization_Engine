@@ -193,7 +193,7 @@ class QualityFilter(RecommendationStrategy):
             self.df_quality,
             preference_mask_set,
             filter_features,
-            n
+            n,
         )
         return self.strategy, recommendations, error
 

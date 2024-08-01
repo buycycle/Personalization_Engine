@@ -18,7 +18,7 @@ import configparser
 
 # get loggers
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size, get_preference_mask
+from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -179,7 +179,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         preferences = (
             ("continent_id", lambda df: df["continent_id"] == continent_id)
         )
-        preference_mask = get_preference_mask(data_store_content.df_preference, preferences)
+        preference_mask = get_preference_mask_condition(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
         # merge with preferences above with OR condition
@@ -188,7 +188,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 ("continent_id", lambda df: df["continent_id"] == 1)
                 ("motor", lambda df: df["motor"] == 0)
             )
-            ebike_preference_mask = get_preference_mask(data_store_content.df_preference, ebike_sending_preferences)
+            ebike_preference_mask = get_preference_mask_condition(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
 
@@ -202,7 +202,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 ("category_id", lambda df: df["category_id"] == specific_user_preferences.category_id.tolist()),
                 ("frame_size_code", lambda df: (df["frame_size_code"] >= specific_user_preferences.frame_size.tolist() * 0.8) & (df["frame_size_code"] <= specific_user_preferences.frame_size.tolist() * 1.2)),
             )
-            preference_mask_user = get_preference_mask(data_store_content.df_preference, preference_user)
+            preference_mask_user = get_preference_mask_condition(data_store_content.df_preference, preference_user)
 
             preference_mask = preference_mask + preference_mask_user
 

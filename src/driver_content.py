@@ -163,20 +163,23 @@ quality_query_dtype = {
 }
 
 
-user_preference_query= """with preference_table as (SELECT
-  USER_BIKE_PREFERENCES.USER_ID,
-  COALESCE(TRY_TO_NUMBER(PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):max_price::STRING), 20000) AS max_price,
-  CATEGORY.VALUE::STRING AS category,
-  FRAME_SIZE.VALUE::STRING AS frame_size
-FROM
-  BUYCYCLE.PUBLIC.USER_BIKE_PREFERENCES,
-  LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):categories) CATEGORY,
-  LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES):frame_sizes) FRAME_SIZE)
-select user_id,
+user_preference_query= """
+WITH preference_table AS (
+    SELECT
+        USER_BIKE_PREFERENCES.USER_ID,
+        PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['max_price'] AS max_price,
+        CATEGORY.VALUE::STRING AS category,
+        FRAME_SIZE.VALUE::STRING AS frame_size
+    FROM
+        BUYCYCLE.PUBLIC.USER_BIKE_PREFERENCES,
+        LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['categories']) CATEGORY,
+        LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['frame_sizes']) FRAME_SIZE
+)
+SELECT user_id,
     max_price,
     bike_categories.id as category_id,
     frame_size
-from preference_table
+FROM preference_table
 LEFT JOIN BUYCYCLE.PUBLIC.bike_categories ON category = LOWER(bike_categories.name)
 """
 user_preference_query_dtype = {
