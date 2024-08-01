@@ -26,6 +26,8 @@ def get_top_n_quality_prefiltered_bot(
     try:
         # Apply preference mask filter
         df_filtered = df_quality[df_quality.index.isin(preference_mask_set)]
+        # to introduce some variance in the results
+        df_filtered = df_filtered.sample(frac=0.5)
         last_valid_df = df_filtered  # Keep track of the last valid DataFrame
         # Apply additional filters progressively
         for feature, condition in quality_features:
