@@ -118,6 +118,9 @@ Same as above but draw from a sample of more recommendations and randomize.
 ## Preference filter
 To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id.
 
+## Bot
+The chat bot buyers guide is relying on the QualityFilter strategy that returns slugs of progressivly prefiltered bikes in desc order of quality_score.
+
 ## AB test
 
 The AB test is implemented with istio on Kubernetes.
@@ -173,6 +176,7 @@ If the specified strategy or fallback strategy leads to < n recommendations, use
         "braze": Collaborative,
         "homepage": CollaborativeRandomized,
         "FallbackContentMixed": FallbackContentMixed,
+        "bot": QualityFilter,
     }
 
 
@@ -194,6 +198,11 @@ If the specified strategy or fallback strategy leads to < n recommendations, use
 4. `CollaborativeRandomized`:
    - This strategy is a variation of collaborative filtering that includes randomized sampling.
    - It uses the `get_top_n_collaborative_randomized` function to generate recommendations, which introduces randomness to potentially increase the diversity of recommendations.
+   - The strategy returns a tuple with the strategy name, a list of recommendations, and an optional error message.
+5. `QualityFilter`:
+   - This strategy applies filters to the bikes list sorted by quality score and returns the slugs.
+   - Currently we consider, category, price and rider_height.
+   - The strategy uses the `get_top_n_quality_prefiltered_bot` function to generate recommendations after applying the specified filters.
    - The strategy returns a tuple with the strategy name, a list of recommendations, and an optional error message.
 
 ### Usage
