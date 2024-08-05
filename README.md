@@ -115,6 +115,12 @@ The data generation condenses all click data of unique user_id (distinct_id in t
 ## CollaborativeRandomized
 Same as above but draw from a sample of more recommendations and randomize.
 
+## Preference filter
+To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id.
+
+## Bot
+The chat bot buyers guide is relying on the QualityFilter strategy that returns slugs of progressivly prefiltered bikes in desc order of quality_score.
+
 ## AB test
 
 The AB test is implemented with istio on Kubernetes.
@@ -170,6 +176,7 @@ If the specified strategy or fallback strategy leads to < n recommendations, use
         "braze": Collaborative,
         "homepage": CollaborativeRandomized,
         "FallbackContentMixed": FallbackContentMixed,
+        "bot": QualityFilter,
     }
 
 
@@ -191,6 +198,11 @@ If the specified strategy or fallback strategy leads to < n recommendations, use
 4. `CollaborativeRandomized`:
    - This strategy is a variation of collaborative filtering that includes randomized sampling.
    - It uses the `get_top_n_collaborative_randomized` function to generate recommendations, which introduces randomness to potentially increase the diversity of recommendations.
+   - The strategy returns a tuple with the strategy name, a list of recommendations, and an optional error message.
+5. `QualityFilter`:
+   - This strategy applies filters to the bikes list sorted by quality score and returns the slugs.
+   - Currently we consider, category, price and rider_height.
+   - The strategy uses the `get_top_n_quality_prefiltered_bot` function to generate recommendations after applying the specified filters.
    - The strategy returns a tuple with the strategy name, a list of recommendations, and an optional error message.
 
 ### Usage
@@ -323,7 +335,8 @@ curl -i -X POST https://ab.recommendation.buycycle.com/recommendation \
            "user_id": 123,
            "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
            "n": 8,
-           "family_id": 403
+           "family_id": 403,
+           "continent_id": 1
          }' \
      --header "version: stable"
 dev
@@ -335,7 +348,8 @@ curl -i -X POST https://dev.recommendation.buycycle.com/recommendation \
            "user_id": 123,
            "distinct_id": "3bf240f7-aead-4227-8538-b204aaa58692",
            "n": 8,
-           "family_id": 403
+           "family_id": 403,
+           "continent_id": 1
          }' \
      --header "version: stable-001-dev"
 
@@ -347,3 +361,8 @@ local
 curl -i -X POST 0.0.0.0:8000/recommendation ...
 
 ```
+
+
+## To-does:
+
+Merge get_top_n_quality_prefiltered_bot and get_top_n_quality_prefiltered.

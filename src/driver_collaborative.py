@@ -167,7 +167,7 @@ FROM (
         UNION ALL
         SELECT 'share_bike', anonymous_id, bike_id, timestamp FROM share_bike WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
     ) AS subquery
-    GROUP BY anonymous_id, bike_id HAVING feedback > 0.2
+    GROUP BY anonymous_id, bike_id HAVING feedback > 1
 ) AS implicit_feedback
 LEFT JOIN user_mapping ON implicit_feedback.anonymous_id = user_mapping.anonymous_id -- Join with the mapping
 JOIN BUYCYCLE.PUBLIC.BIKES ON implicit_feedback.bike_id = BIKES.id

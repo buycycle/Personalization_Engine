@@ -23,6 +23,7 @@ from src.driver_content import (
     quality_query_dtype,
     categorical_features,
     numerical_features,
+    preference_features,
     prefilter_features,
     numerical_features_to_overweight,
     numerical_features_overweight_factor,
@@ -30,9 +31,19 @@ from src.driver_content import (
     categorical_features_overweight_factor,
 )
 
-from src.driver_collaborative import user_id, bike_id, item_features, user_features, query
+from src.driver_collaborative import (
+    user_id,
+    bike_id,
+    item_features,
+    user_features,
+    query,
+)
 
-from src.collaborative import create_data_model_collaborative, update_model, read_data_model
+from src.collaborative import (
+    create_data_model_collaborative,
+    update_model,
+    read_data_model,
+)
 from src.data_collaborative import write_data, read_data_collaborative
 
 from src.strategies import strategy_dict
@@ -70,19 +81,37 @@ def inputs(app_mock, mock_logger):
     logger = mock_logger
     app = app_mock
 
-    bike_id = 22187
+    bike_id = 18894
+    continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
-    family_id = 1101
+    family_id = 2502
     price = 1200
     frame_size_code = "56"
+    rider_height = 180
     n = 12
     sample = 50
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger
+    return (
+        bike_id,
+        continent_id,
+        bike_type,
+        category,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        rider_height,
+        n,
+        sample,
+        ratio,
+        client,
+        logger,
+    )
 
 
 @pytest.fixture(scope="package")
@@ -92,8 +121,6 @@ def inputs_fastapi(app_mock, mock_logger):
     # Run the create_data.py script to generate test data
     subprocess.run(["python", "create_data.py", "./data/", "test"], check=True)
 
-
-
     logger = mock_logger
 
     app = app_mock
@@ -101,18 +128,37 @@ def inputs_fastapi(app_mock, mock_logger):
     strategy = strategy_dict
 
     bike_id = 14394
+    continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
     family_id = 1101
     price = 1200
     frame_size_code = "56"
+    rider_height = 180
     n = 12
     sample = 50
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, bike_type, distinct_id, family_id, price, frame_size_code, n, sample, ratio, client, logger, strategy
+    return (
+        bike_id,
+        continent_id,
+        bike_type,
+        category,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        rider_height,
+        n,
+        sample,
+        ratio,
+        client,
+        logger,
+        strategy,
+    )
 
 
 @pytest.fixture(scope="package")
@@ -122,12 +168,13 @@ def testdata_content():
         os.makedirs("./data/")
 
     create_data_model_content(
-        main_query + "LIMIT 1000",  # limit to subset for integation testing
+        main_query + "LIMIT 2000",  # limit to subset for integation testing
         main_query_dtype,
         quality_query,
         quality_query_dtype,
         categorical_features,
         numerical_features,
+        preference_features,
         prefilter_features,
         numerical_features_to_overweight,
         numerical_features_overweight_factor,

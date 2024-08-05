@@ -5,10 +5,15 @@ from abc import ABC, abstractmethod
 
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
+from src.content import get_top_n_quality_prefiltered_bot
 from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
-from src.collaborative import get_top_n_collaborative, get_top_n_collaborative_randomized, read_data_model
+from src.collaborative import (
+    get_top_n_collaborative,
+    get_top_n_collaborative_randomized,
+    read_data_model,
+)
 from src.data_content import construct_dense_similarity_row
 
 from src.helper import interveave
@@ -45,12 +50,22 @@ class FallbackContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
+        self,
+        bike_id: int,
+        preference_mask: list,
+        bike_type: int,
+        family_id: int,
+        price: int,
+        frame_size_code: str,
+        n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
+            preference_mask,
             bike_type,
             family_id,
             price,
@@ -82,12 +97,22 @@ class ContentMixed(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-            self, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int
+        self,
+        bike_id: int,
+        preference_mask: list,
+        bike_type: int,
+        family_id: int,
+        price: int,
+        frame_size_code: str,
+        n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
+            preference_mask,
             bike_type,
             family_id,
             price,
@@ -115,9 +140,12 @@ class Collaborative(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, n: int) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(
+        self, user_id: str, preference_mask: list, n: int
+    ) -> Tuple[str, List, Optional[str]]:
         recommendations, error = get_top_n_collaborative(
             self.model,
+            preference_mask,
             user_id,
             n,
             self.dataset,
@@ -137,76 +165,55 @@ class CollaborativeRandomized(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(
+        self, user_id: str, preference_mask: list, n: int, sample: int
+    ) -> Tuple[str, List, Optional[str]]:
+        preference_mask_set = set(preference_mask)
+        df_status_masked_set = set(self.df_status_masked.index)
+
         recommendations, error = get_top_n_collaborative_randomized(
             self.model,
             user_id,
+            preference_mask_set,
             n,
             sample,
             self.dataset,
-            self.df_status_masked,
+            df_status_masked_set,
             self.logger,
         )
         return self.strategy, recommendations, error
 
 
-# untested
-class CollaborativeRandomizedContentInterveaved(RecommendationStrategy):
-    """Collaborative filtering with randomized sampling interweaved with content-based recommendations."""
+class QualityFilter(RecommendationStrategy):
+    """Apply filters and sort by quality score"""
 
     def __init__(self, logger, data_store_collaborative, data_store_content):
-        self.strategy = "CollaborativeRandomizedContentInterveaved"
-        self.collaborative_model = data_store_collaborative.model
-        self.collaborative_dataset = data_store_collaborative.dataset
-        self.content_df = data_store_content.df
-        self.content_df_status_masked = data_store_content.df_status_masked
-        self.content_df_quality = data_store_content.df_quality
-        self.content_similarity_matrix = data_store_content.similarity_matrix
-        self.content_prefilter_features = data_store_content.prefilter_features
-        self.logger = logger
+        self.strategy = "QualityFilter"
+        self.df_quality = data_store_content.df_quality
 
     def get_recommendations(
-            self, user_id: str, bike_id: int, bike_type: int, family_id: int, price: int, frame_size_code: str, n: int, sample: int
-    ) -> Tuple[str, List, Optional[str]]:
-        # Get collaborative recommendations with randomized sampling
-        collaborative_recommendations, collaborative_error = get_top_n_collaborative_randomized(
-            self.collaborative_model,
-            user_id,
-            n,
-            sample,
-            self.collaborative_dataset,
-            self.content_df_status_masked,
-            self.logger,
+        self,
+        category: str,
+        price: int,
+        rider_height: int,
+        preference_mask: List[int],
+        n: int,
+    ) -> Tuple[str, List[int], Optional[str]]:
+        preference_mask_set = set(preference_mask)
+        # Define the quality_features tuple with filter conditions
+        quality_features = (
+            ("category", lambda df: df["category"] == category),
+            (
+                "price",
+                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+            ),
+            ("rider_height_max", lambda df: df["rider_height_max"] >= rider_height),
+            ("rider_height_min", lambda df: df["rider_height_min"] <= rider_height),
         )
-
-        # Get content-based recommendations
-        bike_similarity_df, content_error = construct_dense_similarity_row(self.content_similarity_matrix, bike_id)
-        content_recommendations, content_error = get_top_n_recommendations_mix(
-            bike_id,
-            bike_type,
-            family_id,
-            price,
-            frame_size_code,
-            self.content_df,
-            self.content_df_status_masked,
-            self.content_df_quality,
-            bike_similarity_df,
-            self.content_prefilter_features,
-            self.logger,
-            n,
-            ratio=0.5,
-            interveave_prefilter_general=True,
+        recommendations, error = get_top_n_quality_prefiltered_bot(
+            self.df_quality, preference_mask_set, quality_features, n
         )
-
-        # Interveave collaborative and content recommendations using the provided function
-        interveaved_recommendation = interveave(collaborative_recommendations, content_recommendations)
-
-        # Truncate the list to the desired number of recommendations
-        interveaved_recommendation = interveaved_recommendation[:n]
-
-        # Combine errors if any
-        error = collaborative_error or content_error
-        return self.strategy, interveaved_recommendation, error
+        return self.strategy, recommendations, error
 
 
 # Dictionary of strategies
@@ -215,6 +222,7 @@ strategy_dict = {
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
     "FallbackContentMixed": FallbackContentMixed,
+    "bot": QualityFilter,
 }
 # Instantiate the StrategyFactory with the dictionary
 strategy_factory = StrategyFactory(strategy_dict)

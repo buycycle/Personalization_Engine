@@ -27,7 +27,14 @@ def s3_credentials(config_paths: str = "config/config.ini"):
     return Bucket, Key, Filename
 
 
-def download_s3(client: boto3.client, Bucket: str, Key: str, filename: str, path: str, newFilename: str):
+def download_s3(
+    client: boto3.client,
+    Bucket: str,
+    Key: str,
+    filename: str,
+    path: str,
+    newFilename: str,
+):
     """download a file from s3 and move it to a folder and rename it
     Args:
         client (boto3.client): s3 client
@@ -92,7 +99,9 @@ def map_feedback(df: pd, mapping: dict) -> pd.DataFrame:
     return df
 
 
-def clean_data(df: pd.DataFrame, user_id: str, interaction_limit: int = 1000) -> pd.DataFrame:
+def clean_data(
+    df: pd.DataFrame, user_id: str, interaction_limit: int = 1000
+) -> pd.DataFrame:
     """clean data
 
     Args:
@@ -114,7 +123,13 @@ def clean_data(df: pd.DataFrame, user_id: str, interaction_limit: int = 1000) ->
     return df
 
 
-def aggreate(df: pd.DataFrame, user_id: str, bike_id: str, user_features: list, item_features: list) -> pd.DataFrame:
+def aggreate(
+    df: pd.DataFrame,
+    user_id: str,
+    bike_id: str,
+    user_features: list,
+    item_features: list,
+) -> pd.DataFrame:
     features = user_features + item_features
 
     df = df.copy()
@@ -133,7 +148,14 @@ def aggreate(df: pd.DataFrame, user_id: str, bike_id: str, user_features: list, 
 
 
 def read_extract_local_data(
-    implicit_feedback, features, user_features, item_features, user_id, bike_id, file_name="data/export.json.gz", fraction=0.8
+    implicit_feedback,
+    features,
+    user_features,
+    item_features,
+    user_id,
+    bike_id,
+    file_name="data/export.json.gz",
+    fraction=0.8,
 ):
     """
     read the data from the local folder, extract the relevant features, clean and aggregate
@@ -225,20 +247,35 @@ def get_multi_day_data(
 
     client = aws_client()
 
-    datelist = pd.date_range(start=start_date, end=end_date, freq="D", inclusive=inclusive)
+    datelist = pd.date_range(
+        start=start_date, end=end_date, freq="D", inclusive=inclusive
+    )
     # generate Keys in the following format '2892805/2023/06/18/full_day/'
     Keys = [keysbase + date.strftime("%Y/%m/%d/full_day/") for date in datelist]
 
     df = pd.DataFrame()
 
     for Key in Keys:
-        download_s3(client, Bucket, Key, filename="export.json.gz", path="data/", newFilename="export.json.gz")
+        download_s3(
+            client,
+            Bucket,
+            Key,
+            filename="export.json.gz",
+            path="data/",
+            newFilename="export.json.gz",
+        )
 
         df = pd.concat(
             [
                 df,
                 read_extract_local_data(
-                    implicit_feedback, features, user_features, item_features, user_id, bike_id, fraction=fraction
+                    implicit_feedback,
+                    features,
+                    user_features,
+                    item_features,
+                    user_id,
+                    bike_id,
+                    fraction=fraction,
                 ),
             ],
             axis=0,
@@ -281,7 +318,9 @@ def get_last_date_local(path, limit=10):
         return datetime.date.today() - datetime.timedelta(days=limit)
 
 
-def get_last_date_S3(client: aws_client, Bucket: str, filename: str = "export.json.gz") -> datetime.date:
+def get_last_date_S3(
+    client: aws_client, Bucket: str, filename: str = "export.json.gz"
+) -> datetime.date:
     """get last date of data in S3, determined by last modified minus one day
     Args:
         client (boto3.client): boto3 client
@@ -294,7 +333,9 @@ def get_last_date_S3(client: aws_client, Bucket: str, filename: str = "export.js
     response = client.list_objects_v2(Bucket=Bucket)
     if "Contents" in response:
         # Filter objects so it only contains those end with 'export.json.gz'
-        contents = [obj for obj in response["Contents"] if obj["Key"].endswith(filename)]
+        contents = [
+            obj for obj in response["Contents"] if obj["Key"].endswith(filename)
+        ]
         # Get the max 'LastModified' among the filtered objects
         if contents:
             latest_obj = max(contents, key=lambda x: x["LastModified"])

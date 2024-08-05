@@ -1,13 +1,22 @@
 #!/bin/bash
-url="https://ab.recommendation.buycycle.com/recommendation"
+if [ "$1" == "live" ]; then
+  url="https://ab.recommendation.buycycle.com/recommendation"
+elif [ "$1" == "test" ]; then
+  url="https://dev.recommendation.buycycle.com/recommendation"
+else
+  echo "Error: Please specify 'live' or 'test' as the first argument."
+  exit 1
+fi
 data_template='{
-  "strategy": "product",
+  "strategy": "product_page",
   "bike_id": 21091,
+  "continent_id": 1,
   "user_id": 18742,
   "device_id": "bccd547b-6736-41a2-8543-677b724fb2a1",
   "frame_size_code":"58",
   "price": 2750,
   "family_id": 803,
+  "continent_id": 1,
   "n": 12
 }'
 # Total number of requests to send
