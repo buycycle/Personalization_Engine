@@ -207,8 +207,8 @@ class QualityFilter(RecommendationStrategy):
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
-            ("rider_height_max", lambda df: df["rider_height_max"] <= rider_height),
-            ("rider_height_min", lambda df: df["rider_height_min"] >= rider_height),
+            ("rider_height_max", lambda df: df["rider_height_max"] >= rider_height),
+            ("rider_height_min", lambda df: df["rider_height_min"] <= rider_height),
         )
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n
