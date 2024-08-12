@@ -109,12 +109,12 @@ def inputs_fastapi(app_mock, mock_logger):
     bike_type = 1
     distinct_id = "1234"
     family_id = 1101
-    price = 1200
+    price = 2000
     frame_size_code = "56"
     rider_height_min = 140
     rider_height_max = 195
-    n = 12
-    sample = 50
+    n = 5
+    sample = 10
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)

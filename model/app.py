@@ -18,7 +18,7 @@ import configparser
 
 # get loggers
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition
+from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition, get_preference_mask_condition_list
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -177,7 +177,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         # filter recommendations for preferences
         preferences = (
-            ("continent_id", lambda df: df["continent_id"] == continent_id)
+            ("continent_id", lambda df: df["continent_id"] == continent_id),
         )
         preference_mask = get_preference_mask_condition(data_store_content.df_preference, preferences)
 
@@ -185,10 +185,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # merge with preferences above with OR condition
         if continent_id in [4, 7]:
             ebike_sending_preferences = (
-                ("continent_id", lambda df: df["continent_id"] == 1)
-                ("motor", lambda df: df["motor"] == 0)
+                ("continent_id", lambda df: df["continent_id"] == 1),
+                ("motor", lambda df: df["motor"] == 0),
             )
-            ebike_preference_mask = get_preference_mask_condition(data_store_content.df_preference, ebike_sending_preferences)
+            ebike_preference_mask = get_preference_mask_condition_list(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
 
@@ -197,12 +197,12 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         if user_id != 0 and user_id in data_store_content.df_preference_user.user_id:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user['user_id'] == user_id]
 
-            preference_user= (
-                ("price", lambda df: df["price"] <= specific_user_preferences.max_price.tolist()),
-                ("category_id", lambda df: df["category_id"] == specific_user_preferences.category_id.tolist()),
-                ("frame_size_code", lambda df: (df["frame_size_code"] >= specific_user_preferences.frame_size.tolist() * 0.8) & (df["frame_size_code"] <= specific_user_preferences.frame_size.tolist() * 1.2)),
+            preference_user = (
+                ("price", [lambda df, max_price=value: df["price"] <= max_price for value in specific_user_preferences.max_price]),
+                ("category_id", [lambda df, category_id=value: df["category_id"] == category_id for value in specific_user_preferences.category_id]),
+                ("frame_size_code", [lambda df, frame_size=value: (df["frame_size_code"] >= frame_size * 0.8) & (df["frame_size_code"] <= frame_size * 1.2) for value in get_numeric_frame_size(specific_user_preferences.frame_size)]),
             )
-            preference_mask_user = get_preference_mask_condition(data_store_content.df_preference, preference_user)
+            preference_mask_user = get_preference_mask_condition_list(data_store_content.df_preference, preference_user)
 
             preference_mask = preference_mask + preference_mask_user
 
