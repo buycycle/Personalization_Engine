@@ -60,7 +60,9 @@ def construct_interactions(df, dataset, user_id, bike_id, feedback):
         interactions_weights (lightfm.SparseMatrix): lightfm interactions weights
     """
 
-    interactions, interactions_weights = dataset.build_interactions(df[[user_id, bike_id, feedback]].values)
+    interactions, interactions_weights = dataset.build_interactions(
+        df[[user_id, bike_id, feedback]].values
+    )
 
     return interactions, interactions_weights
 
@@ -120,10 +122,16 @@ def construct_user_features(df, dataset, bike_id, user_features):
 
 
 def construct_train_test(interactions, interactions_weights, test_percentage=0.2):
-    train, test = random_train_test_split(interactions, test_percentage=test_percentage, random_state=np.random.RandomState(3))
+    train, test = random_train_test_split(
+        interactions,
+        test_percentage=test_percentage,
+        random_state=np.random.RandomState(3),
+    )
 
     train_weights, test_weights = random_train_test_split(
-        interactions_weights, test_percentage=test_percentage, random_state=np.random.RandomState(3)
+        interactions_weights,
+        test_percentage=test_percentage,
+        random_state=np.random.RandomState(3),
     )
 
     return train, train_weights, test, test_weights
@@ -149,7 +157,12 @@ def construct_model(
         model (lightfm.LightFM): lightfm model instance
     """
 
-    model = LightFM(learning_rate=learning_rate, loss=loss, no_components=num_components, random_state=random_state)
+    model = LightFM(
+        learning_rate=learning_rate,
+        loss=loss,
+        no_components=num_components,
+        random_state=random_state,
+    )
 
     model.fit(
         train,
@@ -203,9 +216,13 @@ def get_model(
 
     dataset = construct_dataset(df, user_id, bike_id, user_features, item_features)
 
-    interactions, interactions_weights = construct_interactions(df, dataset, user_id, bike_id, feedback)
+    interactions, interactions_weights = construct_interactions(
+        df, dataset, user_id, bike_id, feedback
+    )
 
-    train, train_weights, test, test_weights = construct_train_test(interactions, interactions_weights, test_percentage)
+    train, train_weights, test, test_weights = construct_train_test(
+        interactions, interactions_weights, test_percentage
+    )
 
     user_features_matrix = construct_user_features(df, dataset, user_id, user_features)
 
@@ -225,7 +242,17 @@ def get_model(
 
     test_auc = auc(model, train, test, user_features_matrix, item_features_matrix)
 
-    return model, train, test, dataset, interactions, interactions_weights, user_features_matrix, item_features_matrix, test_auc
+    return (
+        model,
+        train,
+        test,
+        dataset,
+        interactions,
+        interactions_weights,
+        user_features_matrix,
+        item_features_matrix,
+        test_auc,
+    )
 
 
 def update_model(df, user_id, bike_id, user_features, item_features, path):
@@ -251,13 +278,19 @@ def auc(model, train, test, user_features_matrix, item_features_matrix, num_thre
     """calculate auc score for train and test data"""
 
     test_auc = auc_score(
-        model, test, user_features=user_features_matrix, item_features=item_features_matrix, num_threads=num_threads
+        model,
+        test,
+        user_features=user_features_matrix,
+        item_features=item_features_matrix,
+        num_threads=num_threads,
     ).mean()
 
     return test_auc
 
 
-def eval_model(model, train, test, user_features_matrix, item_features_matrix, k=4, num_threads=4):
+def eval_model(
+    model, train, test, user_features_matrix, item_features_matrix, k=4, num_threads=4
+):
     """calculate precision, train auc and test auc for model"""
     precision = precision_at_k(
         model=model,
@@ -297,7 +330,15 @@ def read_data_model(path="data/"):
     return model, dataset
 
 
-def get_top_n_collaborative(model, user_id: str, preference_mask: list, n: int, dataset, df_status_masked, logger) -> Tuple[List, Optional[str]]:
+def get_top_n_collaborative(
+    model,
+    user_id: str,
+    preference_mask: list,
+    n: int,
+    dataset,
+    df_status_masked,
+    logger,
+) -> Tuple[List, Optional[str]]:
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
 
@@ -318,7 +359,10 @@ def get_top_n_collaborative(model, user_id: str, preference_mask: list, n: int, 
     top_n_item_ids = []
     try:
         if user_id not in dataset.mapping()[0]:
-            return top_n_item_ids, error  # Return immediately with an empty list and error message
+            return (
+                top_n_item_ids,
+                error,
+            )  # Return immediately with an empty list and error message
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
 
@@ -336,10 +380,14 @@ def get_top_n_collaborative(model, user_id: str, preference_mask: list, n: int, 
         top_item_ids = [item_index_id_map[item_id] for item_id in top_items]
 
         # filter out items that are not in df_status_masked.index
-        top_item_ids = [item_id for item_id in top_item_ids if item_id in df_status_masked.index]
+        top_item_ids = [
+            item_id for item_id in top_item_ids if item_id in df_status_masked.index
+        ]
 
         # filter for items in preference_mask
-        top_item_ids = [item_id for item_id in top_item_ids if item_id in preference_mask]
+        top_item_ids = [
+            item_id for item_id in top_item_ids if item_id in preference_mask
+        ]
 
         # only return the top n items from top_item_ids
         top_n_item_ids = top_item_ids[:n]
@@ -352,7 +400,14 @@ def get_top_n_collaborative(model, user_id: str, preference_mask: list, n: int, 
 
 
 def get_top_n_collaborative_randomized(
-        model, user_id: str, preference_mask_set: set, n: int, sample: int, dataset, status_masked_set: set, logger
+    model,
+    user_id: str,
+    preference_mask_set: set,
+    n: int,
+    sample: int,
+    dataset,
+    status_masked_set: set,
+    logger,
 ) -> Tuple[List, Optional[str]]:
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
@@ -374,7 +429,10 @@ def get_top_n_collaborative_randomized(
     top_n_item_ids = []
     try:
         if user_id not in dataset.mapping()[0]:
-            return top_n_item_ids, error  # Return immediately with an empty list and error message
+            return (
+                top_n_item_ids,
+                error,
+            )  # Return immediately with an empty list and error message
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
         n_items = dataset.interactions_shape()[1]
@@ -384,19 +442,31 @@ def get_top_n_collaborative_randomized(
         # Map internal item index back to external item ids
         item_index_id_map = {v: c for c, v in dataset.mapping()[2].items()}
         # Combine filtering steps and use sets for faster membership checking
-        filtered_item_ids = [item_index_id_map[item_id] for item_id in top_items
-                             if item_index_id_map[item_id] in status_masked_set and
-                             item_index_id_map[item_id] in preference_mask_set]
+        filtered_item_ids = [
+            item_index_id_map[item_id]
+            for item_id in top_items
+            if item_index_id_map[item_id] in status_masked_set
+            and item_index_id_map[item_id] in preference_mask_set
+        ]
         # Randomly sample from the filtered_item_ids to introduce some variance
         random.shuffle(filtered_item_ids)
-        top_n_item_ids = filtered_item_ids[:min(n, sample)]
+        top_n_item_ids = filtered_item_ids[: min(n, sample)]
         return top_n_item_ids, error
     except Exception as e:
         error = str(e)
         logger.error(f"Error in get_top_n_collaborative_randomized: {error}")
         return top_n_item_ids, error
+
+
 def get_top_n_collaborative_randomized_legacy(
-        model, user_id: str, preference_mask_set: set, n: int, sample: int, dataset, df_status_masked_set: set, logger
+    model,
+    user_id: str,
+    preference_mask_set: set,
+    n: int,
+    sample: int,
+    dataset,
+    df_status_masked_set: set,
+    logger,
 ) -> Tuple[List, Optional[str]]:
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
@@ -420,7 +490,10 @@ def get_top_n_collaborative_randomized_legacy(
     top_n_item_ids = []
     try:
         if user_id not in dataset.mapping()[0]:
-            return top_n_item_ids, error  # Return immediately with an empty list and error message
+            return (
+                top_n_item_ids,
+                error,
+            )  # Return immediately with an empty list and error message
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
 
@@ -435,10 +508,12 @@ def get_top_n_collaborative_randomized_legacy(
         # Map internal item index back to external item ids
         item_index_id_map = {v: c for c, v in dataset.mapping()[2].items()}
 
-
-        top_item_ids = [item_index_id_map[item_id] for item_id in top_items
-                             if item_index_id_map[item_id] in df_status_masked_set and
-                             item_index_id_map[item_id] in preference_mask_set]
+        top_item_ids = [
+            item_index_id_map[item_id]
+            for item_id in top_items
+            if item_index_id_map[item_id] in df_status_masked_set
+            and item_index_id_map[item_id] in preference_mask_set
+        ]
 
         # randomly sample from the top_item_ids to introduce some variance
         top_item_ids = top_item_ids[:sample]

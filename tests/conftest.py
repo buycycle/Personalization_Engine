@@ -31,9 +31,19 @@ from src.driver_content import (
     categorical_features_overweight_factor,
 )
 
-from src.driver_collaborative import user_id, bike_id, item_features, user_features, query
+from src.driver_collaborative import (
+    user_id,
+    bike_id,
+    item_features,
+    user_features,
+    query,
+)
 
-from src.collaborative import create_data_model_collaborative, update_model, read_data_model
+from src.collaborative import (
+    create_data_model_collaborative,
+    update_model,
+    read_data_model,
+)
 from src.data_collaborative import write_data, read_data_collaborative
 
 from src.strategies import strategy_dict
@@ -74,19 +84,38 @@ def inputs(app_mock, mock_logger):
     bike_id = 18894
     continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
     family_id = 2502
     price = 1200
     frame_size_code = "56"
     rider_height_min = 140
     rider_height_max = 195
+    rider_height = 180
     n = 12
     sample = 50
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger
+    return (
+        bike_id,
+        continent_id,
+        bike_type,
+        category,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        rider_height_min,
+        rider_height_max,
+        rider_height,
+        n,
+        sample,
+        ratio,
+        client,
+        logger,
+    )
 
 
 @pytest.fixture(scope="package")
@@ -95,8 +124,6 @@ def inputs_fastapi(app_mock, mock_logger):
 
     # Run the create_data.py script to generate test data
     subprocess.run(["python", "create_data.py", "./data/", "test"], check=True)
-
-
 
     logger = mock_logger
 
@@ -107,19 +134,39 @@ def inputs_fastapi(app_mock, mock_logger):
     bike_id = 14394
     continent_id = 1
     bike_type = 1
+    category = "road"
     distinct_id = "1234"
     family_id = 1101
     price = 2000
     frame_size_code = "56"
     rider_height_min = 140
     rider_height_max = 195
+    rider_height = 180
     n = 5
     sample = 10
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
 
-    return bike_id, continent_id, bike_type, distinct_id, family_id, price, frame_size_code, rider_height_min, rider_height_max, n, sample, ratio, client, logger, strategy
+    return (
+        bike_id,
+        continent_id,
+        bike_type,
+        category,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        rider_height_min,
+        rider_height_max,
+        rider_height,
+        n,
+        sample,
+        ratio,
+        client,
+        logger,
+        strategy,
+    )
 
 
 @pytest.fixture(scope="package")

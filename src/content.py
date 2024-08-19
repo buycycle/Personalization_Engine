@@ -5,6 +5,7 @@ from typing import Tuple, List, Optional
 
 from src.helper import interveave
 
+
 def get_top_n_quality_prefiltered_bot(
         df_quality: pd.DataFrame, preference_mask_set: set, filter_features: tuple, n: int = 16
 ) -> Tuple[List[str], Optional[str]]:
@@ -27,22 +28,78 @@ def get_top_n_quality_prefiltered_bot(
         # Apply additional filters progressively
         for feature, condition in filter_features:
             df_temp = df_filtered[condition(df_filtered)]
-            if len(df_temp) >= n:
+            # introduce some variance
+            if len(df_temp) >= n*2:
                 last_valid_df = df_temp  # Update the last valid DataFrame
             else:
                 break  # Stop filtering if we have less than n elements
             df_filtered = df_temp  # Apply the current filter
-        # Return the top n from the last valid filtered DataFrame
-        top_n_recommendations = last_valid_df.head(n).slug.tolist()
+        # Return the top n*2 from the last valid filtered DataFrame
+        df_top_n = last_valid_df.head(n*2)
+        # to introduce some variance in the results, sample n from the top n*2
+        df_sampled = df_top_n.sample(n=n)
+        top_n_recommendations = df_sampled.slug.tolist()
         return top_n_recommendations, error
-
     except Exception as e:
         error = str(e)
         return [], error  # Return an empty list if an exception occurs
 
+def get_top_n_quality_prefiltered(
+    df_quality: pd.DataFrame,
+    preference_mask: list,
+    bike_type: int,
+    family_id: int,
+    price: int,
+    frame_size_code: str,
+    n: int = 16,
+) -> list:
+    """
+    Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
+    Args:
+        df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
+        preference_mask (list): bike indicies matching preferences
+        bike_type (int): bike_type of the bike
+        family_id (int): family_id of the bike
+        price (int): price of the bike
+        frame_size_code (str): frame_size_code of the bike
+        n (int): number of recommendations to return
+    Returns:
+        list: list of top n bike ids by quality
+    """
+    df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
+    # Filter for 20% higher and lower price
+    df_filtered_bike_type = df_quality_preference[
+        df_quality_preference["bike_type"] == bike_type
+    ]
+    # Filter for 20% higher and lower price
+    df_filtered_price = df_filtered_bike_type[
+        (df_filtered_bike_type["price"] >= price * 0.8)
+        & (df_filtered_bike_type["price"] <= price * 1.2)
+    ]
+    # Filter for same frame_size_code
+    df_filtered_size = df_filtered_price[
+        df_filtered_price["frame_size_code"] == frame_size_code
+    ]
+    # Filter for same family_id
+    df_filtered_family = df_filtered_size[df_filtered_size["family_id"] == family_id]
+    # Step-wise approach to get at least n elements
+    if len(df_filtered_family) >= n:
+        return df_filtered_family.head(n).index.tolist()
+    elif len(df_filtered_size) >= n:
+        return df_filtered_size.head(n).index.tolist()
+    elif len(df_filtered_price) >= n:
+        return df_filtered_price.head(n).index.tolist()
+    elif len(df_filtered_bike_type) >= n:
+        return df_filtered_bike_type.head(n).index.tolist()
+    elif len(df_quality_preference) >= n:
+        return df_quality_preference.head(n).index.tolist()
+    else:
+        return df_quality.head(n).index.tolist()
 
 
-def get_top_n_recommendations(bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: list, n: int = 16) -> list:
+def get_top_n_recommendations(
+    bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: list, n: int = 16
+) -> list:
     """
     Returns the top n recommendations for a bike_id, given a bike_similarity_df
     Args:
@@ -57,7 +114,9 @@ def get_top_n_recommendations(bike_similarity_df: pd.DataFrame, bike_id: int, pr
 
     """
 
-    bike_similarity_df = bike_similarity_df[bike_similarity_df.index.isin(preference_mask)]
+    bike_similarity_df = bike_similarity_df[
+        bike_similarity_df.index.isin(preference_mask)
+    ]
 
     # squeeze to convert pd.DataFrame into pd.Series
     return bike_similarity_df.loc[bike_id].squeeze().nsmallest(n + 1).index.tolist()
@@ -92,7 +151,9 @@ def get_top_n_recommendations_prefiltered(
 
     prefilter_values = df.loc[bike_id, prefilter_features]
 
-    assert len(prefilter_features) == len(prefilter_values), "Features and values must have the same length"
+    assert len(prefilter_features) == len(
+        prefilter_values
+    ), "Features and values must have the same length"
 
     # mask for df_status_masked to include only where all prefilter_features are true
     mask = (df_status_masked[prefilter_features] == prefilter_values).all(axis=1)
@@ -169,13 +230,14 @@ def get_top_n_recommendations_mix(
                 },
             )
 
-            preference_mask_set = set(preference_mask)
-
-            top_n_quality, error = get_top_n_quality_prefiltered_bot(
+            top_n_quality = get_top_n_quality_prefiltered(
                 df_quality,
-                preference_mask_set,
-                filter_features,
-                n
+                preference_mask,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                sample,
             )
 
             return random.sample(top_n_quality, n), error
@@ -183,11 +245,20 @@ def get_top_n_recommendations_mix(
         else:
             # prefiltered recommendations
             top_n_recommendations_prefiltered = get_top_n_recommendations_prefiltered(
-                bike_similarity_df, preference_mask, df, df_status_masked, bike_id, prefilter_features, logger, int(n * ratio)
+                bike_similarity_df,
+                preference_mask,
+                df,
+                df_status_masked,
+                bike_id,
+                prefilter_features,
+                logger,
+                int(n * ratio),
             )
 
             # get the top n recommendations for the bike_id
-            top_n_recommendations_generic = get_top_n_recommendations(bike_similarity_df, bike_id, preference_mask, n)
+            top_n_recommendations_generic = get_top_n_recommendations(
+                bike_similarity_df, bike_id, preference_mask, n
+            )
 
             # remove bike_id from recommendations, we do not want to recommend the same bike
             try:
@@ -203,10 +274,15 @@ def get_top_n_recommendations_mix(
             if top_n_recommendations_prefiltered:
                 # interveave prefiltered and generic recommendations
                 if interveave_prefilter_general:
-                    top_n_recommendations = interveave(top_n_recommendations_prefiltered, top_n_recommendations_generic)
+                    top_n_recommendations = interveave(
+                        top_n_recommendations_prefiltered, top_n_recommendations_generic
+                    )
 
                 else:
-                    top_n_recommendations = top_n_recommendations_prefiltered + top_n_recommendations_generic
+                    top_n_recommendations = (
+                        top_n_recommendations_prefiltered
+                        + top_n_recommendations_generic
+                    )
 
             else:
                 top_n_recommendations = top_n_recommendations_generic

@@ -58,13 +58,17 @@ class TestData(unittest.TestCase):
             config_paths=self.config_paths,
         )
         end_time = time.time()
-        self.assertLess(end_time - start_time, 120, "get_data() took more than 2 minutes to execute")
+        self.assertLess(
+            end_time - start_time, 120, "get_data() took more than 2 minutes to execute"
+        )
 
 
 def test_get_data_length(testdata_content):
     data_store_content = testdata_content
 
-    assert len(data_store_content.df) >= 10000, f"df has {len(data_store_content.df)} rows, which is less than 10000 rows"
+    assert (
+        len(data_store_content.df) >= 10000
+    ), f"df has {len(data_store_content.df)} rows, which is less than 10000 rows"
     assert (
         len(data_store_content.df_quality) >= 7000
     ), f"df_quality has {len(data_store_content.df_quality)} rows, which is less than 7000 rows"
@@ -78,13 +82,23 @@ def test_columns_in_get_data(testdata_content):
     features = prefilter_features + categorical_features + numerical_features
 
     for feature in prefilter_features:
-        assert feature in data_store_content.df.columns, f"{feature} is not in the dataframe"
+        assert (
+            feature in data_store_content.df.columns
+        ), f"{feature} is not in the dataframe"
 
 
-def test_get_data_na_drop_ratio(testdata_content, config_paths="config/config.ini", index_col="id"):
+def test_get_data_na_drop_ratio(
+    testdata_content, config_paths="config/config.ini", index_col="id"
+):
     data_store_content = testdata_content
 
-    df_all = sql_db_read(query=main_query, DB="DB_BIKES", config_paths=config_paths, dtype=main_query_dtype, index_col=index_col)
+    df_all = sql_db_read(
+        query=main_query,
+        DB="DB_BIKES",
+        config_paths=config_paths,
+        dtype=main_query_dtype,
+        index_col=index_col,
+    )
 
     na_ratio = 1 - (len(data_store_content.df) / len(df_all))
 
