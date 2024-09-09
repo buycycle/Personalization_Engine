@@ -217,7 +217,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         # user specific preferences
         # get_preference_mask needs to be able to deal with conditions
-        if user_id != 0 and user_id in data_store_content.df_preference_user.user_id:
+        if 0==1 and user_id != 0 and user_id in data_store_content.df_preference_user.user_id:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user['user_id'] == user_id]
 
             preference_user = (
