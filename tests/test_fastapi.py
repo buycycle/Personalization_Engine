@@ -295,6 +295,9 @@ def test_integration_bot_strategy(inputs_fastapi, limit=100):
     data = response.json()
     recommendation = data.get("recommendation")
     strategy_used = data.get("strategy")
+    # Print the output of the returned model
+    print(f"Strategy used: {strategy_used}")
+    print(f"Recommendation: {recommendation}")
     # Check the time taken for the recommendation
     assert (
         end_time - start_time < limit

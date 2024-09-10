@@ -204,6 +204,9 @@ class QualityFilter(RecommendationStrategy):
         category: str,
         price: int,
         rider_height: int,
+        is_ebike: int,
+        is_frameset: int,
+        brand: str,
         preference_mask: List[int],
         n: int,
     ) -> Tuple[str, List[int], Optional[str]]:
@@ -217,6 +220,10 @@ class QualityFilter(RecommendationStrategy):
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
+            ("is_ebike", lambda df: df["is_ebike"] == is_ebike),  # Assuming is_ebike is a boolean or similar
+            ("is_frameset", lambda df: df["is_frameset"] == is_frameset),  # Assuming is_frameset is a boolean or similar
+            # Only apply the brand filter if brand is not the string "null"
+            ("brand", lambda df: (df["brand"] == brand) if brand != "null" else True),
         )
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n

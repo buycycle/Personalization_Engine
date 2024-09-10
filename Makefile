@@ -11,7 +11,7 @@ juypter:
 
 test:
 	## run integration test
-	pytest -v tests/test_fastapi.py
+	pytest -s tests/test_fastapi.py
 test_unit:
 	## run test cases in tests directory
 	python -m unittest discover

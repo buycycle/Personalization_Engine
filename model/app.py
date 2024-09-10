@@ -139,6 +139,9 @@ class RecommendationRequest(BaseModel):
     rider_height_max: int = 195
     rider_height: int = 180
     category: str = "road"
+    is_ebike: int = 0
+    is_frameset: int = 0
+    brand: str = "null"
     n: int = 12
     strategy: str = "product_page"
 
@@ -172,6 +175,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     rider_height_max = request_data.rider_height_max
     rider_height = request_data.rider_height
     category = request_data.category
+    is_ebike = request_data.is_ebike
+    is_frameset = request_data.is_frameset
+    brand = request_data.brand
     n = request_data.n
     strategy_name = request_data.strategy
 
@@ -273,6 +279,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 category,
                 price,
                 rider_height,
+                is_ebike,
+                is_frameset,
+                brand,
                 preference_mask,
                 n,
             )
