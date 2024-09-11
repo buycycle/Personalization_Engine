@@ -217,7 +217,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 ("continent_id", lambda df: df["continent_id"] == 1),
                 ("motor", lambda df: df["motor"] == 0),
             )
-            ebike_preference_mask = get_preference_mask_condition_list(data_store_content.df_preference, ebike_sending_preferences)
+            ebike_preference_mask = get_preference_mask_condition(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
 
