@@ -212,7 +212,7 @@ class QualityFilter(RecommendationStrategy):
     ) -> Tuple[str, List[int], Optional[str]]:
         preference_mask_set = set(preference_mask)
         # Define the quality_features tuple with filter conditions
-        quality_features = (
+        quality_features = [
             ("category", lambda df: df["category"] == category),
             ("rider_height_max", lambda df: df["rider_height_max"] >= rider_height),
             ("rider_height_min", lambda df: df["rider_height_min"] <= rider_height),
@@ -220,11 +220,14 @@ class QualityFilter(RecommendationStrategy):
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
-            ("is_ebike", lambda df: df["is_ebike"] == is_ebike),  # Assuming is_ebike is a boolean or similar
-            ("is_frameset", lambda df: df["is_frameset"] == is_frameset),  # Assuming is_frameset is a boolean or similar
-            # Only apply the brand filter if brand is not the string "null"
-            ("brand", lambda df: (df["brand"] == brand) if brand != "null" else True),
-        )
+            ("is_ebike", lambda df: df["is_ebike"] == is_ebike),
+            ("is_frameset", lambda df: df["is_frameset"] == is_frameset),
+        ]
+# Only add the brand filter if brand is not "null"
+        if brand != "null":
+            quality_features.append(("brand", lambda df: df["brand"] == brand))
+# Convert the list to a tuple if necessary
+        quality_features = tuple(quality_features)
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n
         )
