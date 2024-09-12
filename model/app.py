@@ -252,7 +252,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             # Filter preference_mask for user specific preferences
             preference_mask_set = set(preference_mask)
             preference_mask_user_set = set(preference_mask_user)
-            combined_mask = preference_mask_set & preference_mask_user_set
+            combined_mask = preference_mask_set.intersection(preference_mask_user_set)
             # Convert the set back to a sorted list
             preference_mask = sorted(list(combined_mask))
 
