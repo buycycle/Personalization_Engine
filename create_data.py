@@ -26,7 +26,7 @@ path = sys.argv[1] if len(sys.argv) > 1 else "./data/"
 # Check if the second command line argument is 'test' and set a flag accordingly
 is_test_mode = len(sys.argv) > 2 and sys.argv[2] == "test"
 # Add limits to the queries if in test mode
-main_query_limit = " LIMIT 1000" if is_test_mode else ""
+main_query_limit = " LIMIT 8000" if is_test_mode else ""
 collaborative_query_limit = " LIMIT 20000" if is_test_mode else ""
 
 create_data_model_content(
