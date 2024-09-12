@@ -222,18 +222,39 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             preference_mask = preference_mask + ebike_preference_mask
 
         # user specific preferences
-        # get_preference_mask needs to be able to deal with conditions
-        if 0==1 and user_id != 0 and user_id in data_store_content.df_preference_user.user_id:
-            specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user['user_id'] == user_id]
+        if user_id != 0 and user_id in data_store_content.df_preference_user.index:
+            specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
 
+# Create a list to hold all the combined conditions for each row of preferences
+            combined_conditions = []
+# Iterate over each row in the specific_user_preferences DataFrame
+            for index, row in specific_user_preferences.iterrows():
+                # Get the numeric frame size for the current row
+                numeric_frame_size = get_numeric_frame_size(row['frame_size'])
+
+                # Create a lambda function that checks all conditions for the current row
+                combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
+                    (df["price"] <= max_price) &
+                    (df["bike_category_id"] == category_id) &
+                    (df["frame_size_code"] >= frame_size - 3) &
+                    (df["frame_size_code"] <= frame_size + 3)
+                )
+
+                # Add the condition to the list
+                combined_conditions.append(combined_condition)
+# Define the preference_user tuple with a single entry and the list of combined conditions
             preference_user = (
-                ("price", [lambda df, max_price=value: df["price"] <= max_price for value in specific_user_preferences.max_price]),
-                ("category_id", [lambda df, category_id=value: df["category_id"] == category_id for value in specific_user_preferences.category_id]),
-                ("frame_size_code", [lambda df, frame_size=value: (df["frame_size_code"] >= frame_size * 0.8) & (df["frame_size_code"] <= frame_size * 1.2) for value in get_numeric_frame_size(specific_user_preferences.frame_size)]),
+                ("combined", combined_conditions),
             )
             preference_mask_user = get_preference_mask_condition_list(data_store_content.df_preference, preference_user)
 
-            preference_mask = preference_mask + preference_mask_user
+            # Convert both masks to sets and perform an intersection (logical AND)
+            # Filter preference_mask for user specific preferences
+            preference_mask_set = set(preference_mask)
+            preference_mask_user_set = set(preference_mask_user)
+            combined_mask = preference_mask_set & preference_mask_user_set
+            # Convert the set back to a sorted list
+            preference_mask = sorted(list(combined_mask))
 
         strategy_factory = StrategyFactory(strategy_dict)
 

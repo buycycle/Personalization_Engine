@@ -280,11 +280,7 @@ def get_data(
     df_quality['rider_height_max'] = df_quality['rider_height_max'].fillna(195).astype('int64')
 
 
-    #df_preference_user = snowflake_sql_db_read(query=user_preference_query, DB="DB_EVENTS", driver="snowflake", index_col="user_id")
-    #clean up the DB formattting mess
-    #df_preference_user['max_price'] = df_preference_user['max_price'].replace('null', '20000')
-    #df_preference_user['max_price'] = df_preference_user['max_price'].str.replace('"', '').str.replace('.','').astype(int)
-    df_preference_user = df_quality
+    df_preference_user = snowflake_sql_db_read(query=user_preference_query, DB="DB_EVENTS", driver="snowflake", index_col="user_id")
 
     return df, df_quality, df_preference_user
 

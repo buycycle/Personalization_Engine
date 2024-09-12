@@ -5,7 +5,7 @@ import pandas as pd
 # however not sure if that makes sense, maybe .any for family and family_model
 
 # available for filtering at each request
-preference_features = ["continent_id", "motor","price", "frame_size_code"]
+preference_features = ["continent_id", "motor","price", "frame_size_code","bike_category_id"]
 # for content based
 prefilter_features = ["family_id", "bike_type"]
 
@@ -129,6 +129,7 @@ quality_query = """SELECT
     bike_type_id as bike_type,
     bikes.slug as slug,
     bike_categories.slug as category,
+    bikes.bike_category_id as bike_category_id,
     bike_additional_infos.rider_height_min as rider_height_min,
     bike_additional_infos.rider_height_max as rider_height_max,
     COALESCE(bike_template_additional_infos.is_ebike, 0) as is_ebike,
@@ -154,6 +155,7 @@ GROUP BY
     bike_type,
     slug,
     category,
+    bike_category_id,
     rider_height_min,
     rider_height_max
 ORDER BY
@@ -170,6 +172,7 @@ quality_query_dtype = {
     "quality_score": pd.Int64Dtype(),
     "slug": pd.StringDtype(),
     "category": pd.StringDtype(),
+    "bike_category_id": pd.Int64Dtype(),
     "rider_height_min": pd.Float64Dtype(),
     "rider_height_max": pd.Float64Dtype(),
     "is_ebike": pd.Int64Dtype(),
@@ -182,7 +185,7 @@ user_preference_query= """
 WITH preference_table AS (
     SELECT
         USER_BIKE_PREFERENCES.USER_ID,
-        PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['max_price'] AS max_price,
+        COALESCE(PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['max_price']::NUMBER, 20000) AS max_price,
         CATEGORY.VALUE::STRING AS category,
         FRAME_SIZE.VALUE::STRING AS frame_size
     FROM
@@ -199,7 +202,7 @@ LEFT JOIN BUYCYCLE.PUBLIC.bike_categories ON category = LOWER(bike_categories.na
 """
 user_preference_query_dtype = {
     "user_id": pd.Int64Dtype(),
-    "max_price": pd.Float64Dtype(),
+    "max_price": pd.Int64Dtype(),
     "category_id": pd.Int64Dtype(),
     "frame_size_code": pd.StringDtype(),
     }
