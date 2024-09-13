@@ -399,66 +399,8 @@ def get_top_n_collaborative(
         return top_n_item_ids, error
 
 
+
 def get_top_n_collaborative_randomized(
-    model,
-    user_id: str,
-    preference_mask_set: set,
-    n: int,
-    sample: int,
-    dataset,
-    status_masked_set: set,
-    logger,
-) -> Tuple[List, Optional[str]]:
-    """
-    Retrieve the top k item ids for a given user_id by using model.predict()
-    Randomized from a sample of top_item_ids
-    Args:
-        model (LightFM): Trained LightFM model.
-        user_id (str): user_id for which to retrieve top k items.
-        preference_mask_set (set): Set of bike indices matching preferences.
-        n (int): Number of top items to retrieve.
-        sample (int): number of samples to randomize on.
-        dataset (Dataset): LightFM dataset object containing mapping between internal and external ids.
-        status_masked_set (set): Set of item ids that are in df_status_masked.
-        logger (Logger): Logger object.
-    Returns:
-        list: List of top n item ids for the given user.
-        str: Error message if any.
-    """
-    error = None
-    top_n_item_ids = []
-    try:
-        if user_id not in dataset.mapping()[0]:
-            return (
-                top_n_item_ids,
-                error,
-            )  # Return immediately with an empty list and error message
-        # map user_id to user_id in dataset
-        user_id_index = dataset.mapping()[0][user_id]
-        n_items = dataset.interactions_shape()[1]
-        item_ids = np.arange(n_items)
-        scores = model.predict(user_id_index, item_ids)
-        top_items = np.argsort(-scores)
-        # Map internal item index back to external item ids
-        item_index_id_map = {v: c for c, v in dataset.mapping()[2].items()}
-        # Combine filtering steps and use sets for faster membership checking
-        filtered_item_ids = [
-            item_index_id_map[item_id]
-            for item_id in top_items
-            if item_index_id_map[item_id] in status_masked_set
-            and item_index_id_map[item_id] in preference_mask_set
-        ]
-        # Randomly sample from the filtered_item_ids to introduce some variance
-        random.shuffle(filtered_item_ids)
-        top_n_item_ids = filtered_item_ids[: min(n, sample)]
-        return top_n_item_ids, error
-    except Exception as e:
-        error = str(e)
-        logger.error(f"Error in get_top_n_collaborative_randomized: {error}")
-        return top_n_item_ids, error
-
-
-def get_top_n_collaborative_randomized_legacy(
     model,
     user_id: str,
     preference_mask_set: set,
