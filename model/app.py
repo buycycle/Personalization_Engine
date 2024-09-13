@@ -338,6 +338,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 frame_size_code,
                 n,
             )
+# Check if strategy_instance is not an instance of QualityFilter and recommendation is not empty
+        if not isinstance(strategy_instance, QualityFilter) and len(recommendation) > 0:
+            # Convert the recommendation to int
+            recommendation = [int(i) for i in recommendation]
 
         logger.info(
             "successful recommendation",
