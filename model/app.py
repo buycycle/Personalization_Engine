@@ -43,6 +43,19 @@ from src.strategies import (
 )
 from src.strategies import strategy_dict
 
+import numpy as np
+import json
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
+
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
 config.read(config_paths)
@@ -370,13 +383,19 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
         else:
             # Return success response with recommendation data
-            return {
+            response_data = {
                 "status": "success",
                 "strategy": strategy,
                 "recommendation": recommendation,
                 "app_name": app_name,
                 "app_version": app_version,
             }
+
+            # Serialize the response data using the custom NumpyEncoder
+            json_compatible_response_data = json.dumps(response_data, cls=NumpyEncoder)
+
+            # Return a JSONResponse object with the serialized data
+            return JSONResponse(content=json.loads(json_compatible_response_data), media_type="application/json")
 
 
 @app.exception_handler(RequestValidationError)
