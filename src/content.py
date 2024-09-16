@@ -7,17 +7,14 @@ from src.helper import interveave
 
 
 def get_top_n_quality_prefiltered_bot(
-    df_quality: pd.DataFrame,
-    preference_mask_set: set,
-    quality_features: tuple,
-    n: int = 16,
+        df_quality: pd.DataFrame, preference_mask_set: set, filter_features: tuple, n: int = 16
 ) -> Tuple[List[str], Optional[str]]:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
         df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
         preference_mask_set (set): bike indices matching preferences
-        quality_features (tuple): filtering features and filter condition
+        filter_features (tuple): filtering features and filter condition
         n (int): number of recommendations to return
     Returns:
         Tuple[List[str], Optional[str]]: list of top n bike ids by quality and an error message if any
@@ -26,9 +23,10 @@ def get_top_n_quality_prefiltered_bot(
     try:
         # Apply preference mask filter
         df_filtered = df_quality[df_quality.index.isin(preference_mask_set)]
+        df_filtered = df_filtered.sample(frac=0.5)
         last_valid_df = df_filtered  # Keep track of the last valid DataFrame
         # Apply additional filters progressively
-        for feature, condition in quality_features:
+        for feature, condition in filter_features:
             df_temp = df_filtered[condition(df_filtered)]
             # introduce some variance
             if len(df_temp) >= n*2:
@@ -176,6 +174,7 @@ def get_top_n_recommendations_prefiltered(
 def get_top_n_recommendations_mix(
     bike_id: int,
     preference_mask: list,
+    filter_features: tuple,
     bike_type: int,
     family_id: int,
     price: int,

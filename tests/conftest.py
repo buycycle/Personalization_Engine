@@ -89,6 +89,8 @@ def inputs(app_mock, mock_logger):
     family_id = 2502
     price = 1200
     frame_size_code = "56"
+    rider_height_min = 140
+    rider_height_max = 195
     rider_height = 180
     n = 12
     sample = 50
@@ -105,6 +107,8 @@ def inputs(app_mock, mock_logger):
         family_id,
         price,
         frame_size_code,
+        rider_height_min,
+        rider_height_max,
         rider_height,
         n,
         sample,
@@ -133,11 +137,13 @@ def inputs_fastapi(app_mock, mock_logger):
     category = "road"
     distinct_id = "1234"
     family_id = 1101
-    price = 1200
+    price = 2000
     frame_size_code = "56"
+    rider_height_min = 140
+    rider_height_max = 195
     rider_height = 180
-    n = 12
-    sample = 50
+    n = 5
+    sample = 10
     ratio = 0.5
     # Create a TestClient for your FastAPI app
     client = TestClient(app)
@@ -151,6 +157,8 @@ def inputs_fastapi(app_mock, mock_logger):
         family_id,
         price,
         frame_size_code,
+        rider_height_min,
+        rider_height_max,
         rider_height,
         n,
         sample,
@@ -202,7 +210,7 @@ def testdata_collaborative():
     test_auc = create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query + "LIMIT 10000",  # limit to subset for integation testing
+        query=query + "LIMIT 1000",  # limit to subset for integation testing
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,

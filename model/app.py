@@ -19,7 +19,7 @@ import configparser
 # get loggers
 import logging
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size, get_preference_mask
+from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition, get_preference_mask_condition_list
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -43,6 +43,19 @@ from src.strategies import (
     QualityFilter,
 )
 from src.strategies import strategy_dict
+
+import numpy as np
+import json
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
 
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
@@ -132,8 +145,13 @@ class RecommendationRequest(BaseModel):
     family_id: int = 1101
     price: int = 1200
     frame_size_code: str = "56"
+    rider_height_min: int = 150
+    rider_height_max: int = 195
     rider_height: int = 180
     category: str = "road"
+    is_ebike: int = 0
+    is_frameset: int = 0
+    brand: str = "null"
     n: int = 12
     strategy: str = "product_page"
 
@@ -163,8 +181,13 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     frame_size_code = get_numeric_frame_size(
         request_data.frame_size_code, bike_type, default_value=56
     )
+    rider_height_min = request_data.rider_height_min
+    rider_height_max = request_data.rider_height_max
     rider_height = request_data.rider_height
     category = request_data.category
+    is_ebike = request_data.is_ebike
+    is_frameset = request_data.is_frameset
+    brand = request_data.brand
     n = request_data.n
     strategy_name = request_data.strategy
 
@@ -186,26 +209,62 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
+
+        # apply filtering logic that results in preference_mask that is applied to all the recommendations
+        # combine user specific stated preference, and company logic preference
+
+
         # filter recommendations for preferences
-        preferences = {
-            "continent_id": continent_id,
-        }
-        preference_mask = get_preference_mask(
-            data_store_content.df_preference, preferences
+        preferences = (
+            ("continent_id", lambda df: df["continent_id"] == continent_id),
         )
+        preference_mask = get_preference_mask_condition(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
         # merge with preferences above with OR condition
         if continent_id in [4, 7]:
-            ebike_sending_preferences = {
-                "continent_id": 1,
-                "motor": 0,
-            }
-            ebike_preference_mask = get_preference_mask(
-                data_store_content.df_preference, ebike_sending_preferences
+            ebike_sending_preferences = (
+                ("continent_id", lambda df: df["continent_id"] == 1),
+                ("motor", lambda df: df["motor"] == 0),
             )
+            ebike_preference_mask = get_preference_mask_condition(data_store_content.df_preference, ebike_sending_preferences)
 
             preference_mask = preference_mask + ebike_preference_mask
+
+        # user specific preferences
+        if user_id != 0 and 0==1 and user_id in data_store_content.df_preference_user.index:
+            specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
+
+# Create a list to hold all the combined conditions for each row of preferences
+            combined_conditions = []
+# Iterate over each row in the specific_user_preferences DataFrame
+            for index, row in specific_user_preferences.iterrows():
+                # Get the numeric frame size for the current row
+                numeric_frame_size = get_numeric_frame_size(row['frame_size'])
+
+                # Create a lambda function that checks all conditions for the current row
+                combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
+                    (df["price"] <= max_price) &
+                    (df["bike_category_id"] == category_id) &
+                    (df["frame_size_code"] >= frame_size - 3) &
+                    (df["frame_size_code"] <= frame_size + 3)
+                )
+
+                # Add the condition to the list
+                combined_conditions.append(combined_condition)
+# Define the preference_user tuple with a single entry and the list of combined conditions
+            preference_user = (
+                ("combined", combined_conditions),
+            )
+            preference_mask_user = get_preference_mask_condition_list(data_store_content.df_preference, preference_user)
+
+            # Convert both masks to sets and perform an intersection (logical AND)
+            # Filter preference_mask for user specific preferences
+            preference_mask_set = set(preference_mask)
+            preference_mask_user_set = set(preference_mask_user)
+            combined_mask = preference_mask_set.intersection(preference_mask_user_set)
+            # Convert the set back to a sorted list
+            preference_mask = sorted(list(combined_mask))
 
         strategy_factory = StrategyFactory(strategy_dict)
 
@@ -251,6 +310,9 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 category,
                 price,
                 rider_height,
+                is_ebike,
+                is_frameset,
+                brand,
                 preference_mask,
                 n,
             )
@@ -286,6 +348,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 frame_size_code,
                 n,
             )
+# Check if strategy_instance is not an instance of QualityFilter and recommendation is not empty
+        if not isinstance(strategy_instance, QualityFilter) and len(recommendation) > 0:
+            # Convert the recommendation to int
+            recommendation = [int(i) for i in recommendation]
 
         logger.info(
             "successful recommendation",
@@ -314,13 +380,19 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
         else:
             # Return success response with recommendation data
-            return {
+            response_data = {
                 "status": "success",
                 "strategy": strategy,
                 "recommendation": recommendation,
                 "app_name": app_name,
                 "app_version": app_version,
             }
+
+            # Serialize the response data using the custom NumpyEncoder
+            json_compatible_response_data = json.dumps(response_data, cls=NumpyEncoder)
+
+            # Return a JSONResponse object with the serialized data
+            return JSONResponse(content=json.loads(json_compatible_response_data), media_type="application/json")
 
 
 @app.exception_handler(RequestValidationError)

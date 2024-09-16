@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
 from src.content import get_top_n_quality_prefiltered_bot
-from src.content import get_top_n_quality_prefiltered
 from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import (
@@ -59,13 +58,19 @@ class FallbackContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(
-            self.similarity_matrix, bike_id
+        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+
+        filter_features = (
+            ("bike_type", lambda df: df["bike_type"] == bike_type),
+            ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+            ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
+            ("family_id", lambda df: df["family_id"] == family_id)
         )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
             preference_mask,
+            filter_features,
             bike_type,
             family_id,
             price,
@@ -106,13 +111,18 @@ class ContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(
-            self.similarity_matrix, bike_id
+        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        filter_features = (
+            ("bike_type", lambda df: df["bike_type"] == bike_type),
+            ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+            ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
+            ("family_id", lambda df: df["family_id"] == family_id)
         )
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
             preference_mask,
+            filter_features,
             bike_type,
             family_id,
             price,
@@ -140,9 +150,7 @@ class Collaborative(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(
-        self, user_id: str, preference_mask: list, n: int
-    ) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(self, user_id: str, preference_mask: list, n: int) -> Tuple[str, List, Optional[str]]:
         recommendations, error = get_top_n_collaborative(
             self.model,
             preference_mask,
@@ -196,20 +204,30 @@ class QualityFilter(RecommendationStrategy):
         category: str,
         price: int,
         rider_height: int,
+        is_ebike: int,
+        is_frameset: int,
+        brand: str,
         preference_mask: List[int],
         n: int,
     ) -> Tuple[str, List[int], Optional[str]]:
         preference_mask_set = set(preference_mask)
         # Define the quality_features tuple with filter conditions
-        quality_features = (
+        quality_features = [
             ("category", lambda df: df["category"] == category),
+            ("rider_height_max", lambda df: df["rider_height_max"] >= rider_height),
+            ("rider_height_min", lambda df: df["rider_height_min"] <= rider_height),
             (
                 "price",
                 lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
             ),
-            ("rider_height_max", lambda df: df["rider_height_max"] >= rider_height),
-            ("rider_height_min", lambda df: df["rider_height_min"] <= rider_height),
-        )
+            ("is_ebike", lambda df: df["is_ebike"] == is_ebike),
+            ("is_frameset", lambda df: df["is_frameset"] == is_frameset),
+        ]
+# Only add the brand filter if brand is not "null"
+        if brand != "null":
+            quality_features.append(("brand", lambda df: df["brand"] == brand))
+# Convert the list to a tuple if necessary
+        quality_features = tuple(quality_features)
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n
         )

@@ -23,6 +23,8 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
         family_id,
         price,
         frame_size_code,
+        rider_height_min,
+        rider_height_max,
         rider_height,
         n,
         sample,
@@ -76,6 +78,8 @@ def test_integration_fast_time_len_strats_input(inputs_fastapi, limit=100):
         assert (
             len(recommendation) == n
         ), f"expected {n} recommendations for strategy {strategy}, got {len(recommendation)}"
+        assert all(isinstance(item, int) for item in recommendation), \
+            f"expected all recommendations to be integers for strategy {strategy}, got {recommendation}"
         # ... (other assertions or checks based on the response)
 
 
@@ -92,6 +96,8 @@ def test_integration_fast_time_len_strats_collab_users(
         family_id,
         price,
         frame_size_code,
+        rider_height_min,
+        rider_height_max,
         rider_height,
         n,
         sample,
@@ -159,6 +165,8 @@ def test_integration_fast_time_len_strats_collab_users(
             assert (
                 len(recommendation) == n
             ), f"expected {n} recommendations for strategy {strategy}, got {len(recommendation)}"
+            assert all(isinstance(item, int) for item in recommendation), \
+                f"expected all recommendations to be integers for strategy {strategy}, got {recommendation}"
             # ... (other assertions or checks based on the response)
 
 
@@ -173,6 +181,8 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
         family_id,
         price,
         frame_size_code,
+        rider_height_min,
+        rider_height_max,
         rider_height,
         n,
         sample,
@@ -235,4 +245,69 @@ def test_integration_fast_time_len_strats_bikes(inputs_fastapi, limit=50, n_test
             assert (
                 len(recommendation) == n
             ), f"expected {n} recommendations for strategy {strategy}, got {len(recommendation)}"
+            assert all(isinstance(item, int) for item in recommendation), \
+                f"expected all recommendations to be integers for strategy {strategy}, got {recommendation}"
             # ... (other assertions or checks based on the response)
+def test_integration_bot_strategy(inputs_fastapi, limit=100):
+    """Test the 'bot' strategy of the fastapi app to ensure it returns a list of size n with string elements."""
+    (
+        bike_id,
+        continent_id,
+        bike_type,
+        category,
+        distinct_id,
+        family_id,
+        price,
+        frame_size_code,
+        rider_height_min,
+        rider_height_max,
+        rider_height,
+        n,
+        sample,
+        ratio,
+        client,
+        logger,
+        strategy_dict,
+    ) = inputs_fastapi
+    # Prepare the request payload with the 'bot' strategy
+    payload = {
+        "bike_id": bike_id,
+        "continent_id": continent_id,
+        "bike_type": bike_type,
+        "category": category,
+        "distinct_id": distinct_id,
+        "family_id": family_id,
+        "price": price,
+        "frame_size_code": frame_size_code,
+        "rider_height": rider_height,
+        "n": n,
+        "strategy": "bot",  # Set the strategy to 'bot'
+    }
+    # Simulate a post request to the recommendation endpoint
+    start_time = time.time()
+    response = client.post("/recommendation", json=payload)
+    end_time = time.time()
+    # Ensure the request was successful
+    assert (
+        response.status_code == 200
+    ), f"request failed with status code {response.status_code} for strategy 'bot'"
+    # Parse the response data
+    data = response.json()
+    recommendation = data.get("recommendation")
+    strategy_used = data.get("strategy")
+    # Print the output of the returned model
+    print(f"Strategy used: {strategy_used}")
+    print(f"Recommendation: {recommendation}")
+    # Check the time taken for the recommendation
+    assert (
+        end_time - start_time < limit
+    ), f"'bot' strategy took {(end_time - start_time)*1000} ms, limit is {limit*1000} ms"
+    # Assert that the response has the expected length n
+    assert (
+        len(recommendation) == n
+    ), f"expected {n} recommendations for strategy 'bot', got {len(recommendation)}"
+    # Assert that all elements in the recommendation list are strings
+    assert all(isinstance(item, str) for item in recommendation), \
+        f"expected all recommendations to be strings for strategy 'bot', got {recommendation}"
+    # ... (other assertions or checks based on the response)
+

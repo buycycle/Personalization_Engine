@@ -5,7 +5,7 @@ import pandas as pd
 # however not sure if that makes sense, maybe .any for family and family_model
 
 # available for filtering at each request
-preference_features = ["continent_id", "motor"]
+preference_features = ["continent_id", "motor","price", "frame_size_code","bike_category_id"]
 # for content based
 prefilter_features = ["family_id", "bike_type"]
 
@@ -114,6 +114,9 @@ quality_features = [
     "rider_height_min",
     "family_id",
     "slug",
+    "is_ebike",
+    "is_frameset",
+    "brand",
 ]
 
 
@@ -126,13 +129,22 @@ quality_query = """SELECT
     bike_type_id as bike_type,
     bikes.slug as slug,
     bike_categories.slug as category,
+    bikes.bike_category_id as bike_category_id,
     bike_additional_infos.rider_height_min as rider_height_min,
-    bike_additional_infos.rider_height_max as rider_height_max
+    bike_additional_infos.rider_height_max as rider_height_max,
+    COALESCE(bike_template_additional_infos.is_ebike, 0) as is_ebike,
+    COALESCE(bike_template_additional_infos.is_frameset, 0) as is_frameset,
+    brands.slug as brand
 FROM
     bikes
     join quality_scores on bikes.id = quality_scores.bike_id
     join bike_categories on bikes.bike_category_id = bike_categories.id
     join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
+    join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.bike_template_id
+    join brands on bikes.brand_id = brands.id
+
+
+
 WHERE
     status = 'active'
 GROUP BY
@@ -143,11 +155,11 @@ GROUP BY
     bike_type,
     slug,
     category,
+    bike_category_id,
     rider_height_min,
     rider_height_max
 ORDER BY
     quality_score DESC
-
 """
 
 quality_query_dtype = {
@@ -160,6 +172,38 @@ quality_query_dtype = {
     "quality_score": pd.Int64Dtype(),
     "slug": pd.StringDtype(),
     "category": pd.StringDtype(),
+    "bike_category_id": pd.Int64Dtype(),
     "rider_height_min": pd.Float64Dtype(),
     "rider_height_max": pd.Float64Dtype(),
+    "is_ebike": pd.Int64Dtype(),
+    "is_frameset": pd.Int64Dtype(),
+    "brand": pd.StringDtype(),
 }
+
+
+user_preference_query= """
+WITH preference_table AS (
+    SELECT
+        USER_BIKE_PREFERENCES.USER_ID,
+        COALESCE(PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['max_price']::NUMBER, 20000) AS max_price,
+        CATEGORY.VALUE::STRING AS category,
+        FRAME_SIZE.VALUE::STRING AS frame_size
+    FROM
+        BUYCYCLE.PUBLIC.USER_BIKE_PREFERENCES,
+        LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['categories']) CATEGORY,
+        LATERAL FLATTEN(input => PARSE_JSON(USER_BIKE_PREFERENCES.PREFERENCES)['frame_sizes']) FRAME_SIZE
+)
+SELECT user_id,
+    max_price,
+    bike_categories.id as category_id,
+    frame_size
+FROM preference_table
+LEFT JOIN BUYCYCLE.PUBLIC.bike_categories ON category = LOWER(bike_categories.name)
+"""
+user_preference_query_dtype = {
+    "user_id": pd.Int64Dtype(),
+    "max_price": pd.Int64Dtype(),
+    "category_id": pd.Int64Dtype(),
+    "frame_size_code": pd.StringDtype(),
+    }
+
