@@ -242,10 +242,17 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 # Get the numeric frame size for the current row
                 numeric_frame_size = get_numeric_frame_size(row['frame_size'])
 
-                # Create a lambda function that checks all conditions for the current row
+            if strategy_name != 'product_page':
                 combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
                     (df["price"] <= max_price) &
                     (df["bike_category_id"] == category_id) &
+                    (df["frame_size_code"] >= frame_size - 3) &
+                    (df["frame_size_code"] <= frame_size + 3)
+                )
+# for product_page do not filter for bike_category_id user preferences
+            else:
+                combined_condition = lambda df, max_price=row['max_price'], frame_size=numeric_frame_size: (
+                    (df["price"] <= max_price) &
                     (df["frame_size_code"] >= frame_size - 3) &
                     (df["frame_size_code"] <= frame_size + 3)
                 )
