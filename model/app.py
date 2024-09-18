@@ -44,6 +44,7 @@ from src.strategies import (
 )
 from src.strategies import strategy_dict
 
+#custom json encoder of the response
 import numpy as np
 import json
 class NumpyEncoder(json.JSONEncoder):
