@@ -232,7 +232,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             preference_mask = preference_mask + ebike_preference_mask
 
         # user specific preferences
-        if user_id != 0 and 0==1 and user_id in data_store_content.df_preference_user.index:
+        if user_id != 0 and user_id in data_store_content.df_preference_user.index:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
 
 # Create a list to hold all the combined conditions for each row of preferences
