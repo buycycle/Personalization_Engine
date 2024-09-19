@@ -203,7 +203,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         id = str(user_id)
 
     # randomize over the top n * x
-    sample = n * 5
+    sample = n * 2
 
     # Instantiate strategy
     strategy_target = strategy_name
@@ -235,29 +235,24 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # user specific preferences
         if user_id != 0 and user_id in data_store_content.df_preference_user.index:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
-
-# Create a list to hold all the combined conditions for each row of preferences
+            # Create a list to hold all the combined conditions for each row of preferences
             combined_conditions = []
-# Iterate over each row in the specific_user_preferences DataFrame
+            # Iterate over each row in the specific_user_preferences DataFrame
             for index, row in specific_user_preferences.iterrows():
                 # Get the numeric frame size for the current row
                 numeric_frame_size = get_numeric_frame_size(row['frame_size'])
-
-            if strategy_name != 'product_page':
-                combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
-                    (df["price"] <= max_price) &
-                    (df["bike_category_id"] == category_id) &
-                    (df["frame_size_code"] >= frame_size - 3) &
-                    (df["frame_size_code"] <= frame_size + 3)
-                )
-# for product_page do not filter for bike_category_id user preferences
-            else:
-                combined_condition = lambda df, max_price=row['max_price'], frame_size=numeric_frame_size: (
-                    (df["price"] <= max_price) &
-                    (df["frame_size_code"] >= frame_size - 3) &
-                    (df["frame_size_code"] <= frame_size + 3)
-                )
-
+                if strategy_name != 'product_page':
+                    combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
+                        (df["price"] <= max_price) &
+                        ((category_id == 0) | (df["bike_category_id"] == category_id)) &
+                        ((frame_size == 1) | ((df["frame_size_code"] >= frame_size - 3) & (df["frame_size_code"] <= frame_size + 3)))
+                    )
+                # for product_page do not filter for bike_category_id user preferences
+                else:
+                    combined_condition = lambda df, max_price=row['max_price'], frame_size=numeric_frame_size: (
+                        (df["price"] <= max_price) &
+                        ((frame_size == 1) | ((df["frame_size_code"] >= frame_size - 3) & (df["frame_size_code"] <= frame_size + 3)))
+                    )
                 # Add the condition to the list
                 combined_conditions.append(combined_condition)
 # Define the preference_user tuple with a single entry and the list of combined conditions
