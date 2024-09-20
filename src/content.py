@@ -114,9 +114,8 @@ def get_top_n_recommendations(
 
     """
 
-    bike_similarity_df = bike_similarity_df[
-        bike_similarity_df.index.isin(preference_mask)
-    ]
+    filtered_columns = bike_similarity_df.columns[bike_similarity_df.columns.isin(preference_mask)]
+    bike_similarity_df  = bike_similarity_df[filtered_columns]
 
     # squeeze to convert pd.DataFrame into pd.Series
     return bike_similarity_df.loc[bike_id].squeeze().nsmallest(n + 1).index.tolist()
@@ -265,7 +264,7 @@ def get_top_n_recommendations_mix(
                 pass
 
             # if prefiltered recommendations exist
-            if top_n_recommendations_prefiltered:
+            if len(top_n_recommendations_prefiltered) > 1:
                 # interveave prefiltered and generic recommendations
                 if interveave_prefilter_general:
                     top_n_recommendations = interveave(
