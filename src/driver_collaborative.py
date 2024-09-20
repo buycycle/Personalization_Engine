@@ -33,6 +33,8 @@ implicit_feedback = {
     "recom_bike_view": 3,  # recommended_bike_id
     "request_leasing": 20,
     "share_bike": 10,
+    "show_recommendation": -1,
+    "engaged_bike": 1,
 }
 
 test_query = """
@@ -84,6 +86,10 @@ WITH user_mapping AS (
     SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM request_leasing
     UNION
     SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM share_bike
+    UNION
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM show_recommendations
+    UNION
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM engaged_bike_view
 )
 SELECT
     user_mapping.user_id,
@@ -119,6 +125,8 @@ FROM (
                 WHEN event_type = 'recom_bike_view' THEN 5
                 WHEN event_type = 'request_leasing' THEN 20
                 WHEN event_type = 'share_bike' THEN 10
+                WHEN event_type = 'show_recommendation' THEN -1
+                WHEN event_type = 'engaged_bike' THEN 1
                 ELSE 0
             END *
             CASE
@@ -166,6 +174,10 @@ FROM (
         SELECT 'request_leasing', anonymous_id, bike_id, timestamp FROM request_leasing WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
         SELECT 'share_bike', anonymous_id, bike_id, timestamp FROM share_bike WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
+        UNION ALL
+        SELECT 'show_recommendation' AS event_type, anonymous_id, CAST(value AS INTEGER) AS bike_id, timestamp FROM show_recommendations, LATERAL FLATTEN(input => SPLIT(recommendation_product_ids, ',')) WHERE timestamp >= CURRENT_DATE - INTERVAL '1 months'
+        UNION ALL
+        SELECT 'engaged_bike', anonymous_id, bike_id, timestamp FROM engaged_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
     ) AS subquery
     GROUP BY anonymous_id, bike_id HAVING feedback > 1
 ) AS implicit_feedback
