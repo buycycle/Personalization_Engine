@@ -71,7 +71,7 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "canary-009-preference"
 
-logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
+logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.INFO)
 logger.info("FastAPI app started")
 
 # create data store
