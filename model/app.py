@@ -19,7 +19,7 @@ import configparser
 # get loggers
 import logging
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition, get_preference_mask_condition_list
+from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition, get_preference_mask_condition_list, NumpyEncoder
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -44,19 +44,7 @@ from src.strategies import (
 )
 from src.strategies import strategy_dict
 
-#custom json encoder of the response
-import numpy as np
 import json
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return super(NumpyEncoder, self).default(obj)
 
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
@@ -234,6 +222,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         # user specific preferences
         if user_id != 0 and user_id in data_store_content.df_preference_user.index:
+            logger.info("user preferences applied")
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
             # Create a list to hold all the combined conditions for each row of preferences
             combined_conditions = []
@@ -268,6 +257,8 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             combined_mask = preference_mask_set.intersection(preference_mask_user_set)
             # Convert the set back to a sorted list
             preference_mask = sorted(list(combined_mask))
+        else:
+            logger.info("user not in preference df, no preferences applies")
 
         strategy_factory = StrategyFactory(strategy_dict)
 
