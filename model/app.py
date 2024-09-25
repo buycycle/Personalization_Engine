@@ -57,9 +57,9 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "canary-009-preference"
+app_version = "canary-010-preference"
 
-logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.INFO)
+logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
 logger.info("FastAPI app started")
 
 # create data store
@@ -222,7 +222,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         # user specific preferences
         if user_id != 0 and user_id in data_store_content.df_preference_user.index:
-            logger.info("user preferences applied")
+            logger.debug("user preferences applied")
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
             # Create a list to hold all the combined conditions for each row of preferences
             combined_conditions = []
@@ -258,7 +258,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             # Convert the set back to a sorted list
             preference_mask = sorted(list(combined_mask))
         else:
-            logger.info("user not in preference df, no preferences applies")
+            logger.debug("user not in preference df, no preferences applies")
 
         strategy_factory = StrategyFactory(strategy_dict)
 
