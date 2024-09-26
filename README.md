@@ -116,7 +116,9 @@ The data generation condenses all click data of unique user_id (distinct_id in t
 Same as above but draw from a sample of more recommendations and randomize.
 
 ## Preference filter
-To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id.
+To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id. Currently this is used to avoid cross continent ebike shipping.
+We also filter the recommendations by the user specified preferenes in the df_user_preferences.
+These two filters are combined into the preference_mask.
 
 ## Bot
 The chat bot buyers guide is relying on the QualityFilter strategy that returns slugs of progressivly prefiltered bikes in desc order of quality_score.
