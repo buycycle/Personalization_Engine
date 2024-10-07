@@ -168,6 +168,18 @@ class RecommendationRequest(BaseModel):
                 # If conversion fails, return the default value
                 return 0
         return value
+    @validator("family_id", pre=True)
+    def validate_user_id(cls, value):
+        if value is None:
+            return 1101
+        if isinstance(value, str):
+            try:
+                # Attempt to convert the string to an integer
+                return int(value)
+            except ValueError:
+                # If conversion fails, return the default value
+                return 1101
+        return value
 
 
 @app.post("/recommendation")
