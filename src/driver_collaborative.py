@@ -125,7 +125,7 @@ FROM (
                 WHEN event_type = 'recom_bike_view' THEN 5
                 WHEN event_type = 'request_leasing' THEN 20
                 WHEN event_type = 'share_bike' THEN 10
-                WHEN event_type = 'show_recommendation' THEN -1
+                WHEN event_type = 'show_recommendation' THEN 0
                 WHEN event_type = 'engaged_bike' THEN 1
                 ELSE 0
             END *

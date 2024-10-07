@@ -69,7 +69,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "canary-009-rerank"
+app_version = "canary-009-preference"
 
 logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
 logger.info("FastAPI app started")
@@ -245,7 +245,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             preference_mask = preference_mask + ebike_preference_mask
 
         # user specific preferences
-        if user_id != 0 and 1 == 0 and user_id in data_store_content.df_preference_user.index:
+        if user_id != 0 and user_id in data_store_content.df_preference_user.index:
             specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
             # Create a list to hold all the combined conditions for each row of preferences
             combined_conditions = []
