@@ -10,7 +10,6 @@ import pickle
 
 import datetime
 
-from buycycle.data import aws_client
 
 
 
