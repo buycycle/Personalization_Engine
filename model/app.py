@@ -169,7 +169,7 @@ class RecommendationRequest(BaseModel):
                 return 0
         return value
     @validator("family_id", pre=True)
-    def validate_user_id(cls, value):
+    def validate_family_id(cls, value):
         if value is None:
             return 1101
         if isinstance(value, str):
@@ -179,6 +179,18 @@ class RecommendationRequest(BaseModel):
             except ValueError:
                 # If conversion fails, return the default value
                 return 1101
+        return value
+    @validator("bike_type", pre=True)
+    def validate_bike_type(cls, value):
+        if value is None:
+            return 1
+        if isinstance(value, str):
+            try:
+                # Attempt to convert the string to an integer
+                return int(value)
+            except ValueError:
+                # If conversion fails, return the default value
+                return 1
         return value
 
 
