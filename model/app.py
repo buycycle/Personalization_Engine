@@ -19,7 +19,12 @@ import configparser
 # get loggers
 import logging
 from buycycle.logger import Logger
-from buycycle.data import get_numeric_frame_size, get_preference_mask, get_preference_mask_condition, get_preference_mask_condition_list
+from buycycle.data import (
+    get_numeric_frame_size,
+    get_preference_mask,
+    get_preference_mask_condition,
+    get_preference_mask_condition_list,
+)
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
@@ -44,9 +49,11 @@ from src.strategies import (
 )
 from src.strategies import strategy_dict
 
-#custom json encoder of the response
+# custom json encoder of the response
 import numpy as np
 import json
+
+
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -57,6 +64,7 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyEncoder, self).default(obj)
+
 
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
@@ -71,7 +79,9 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "canary-009-preference"
 
-logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
+logger = Logger.configure_logger(
+    environment, ab, app_name, app_version, log_level=logging.INFO
+)
 logger.info("FastAPI app started")
 
 # create data store
@@ -125,6 +135,7 @@ def home():
 def health_check():
     return {"status": "ok"}
 
+
 @app.get("/health_model")
 def health_model_check():
     if data_store_content_available and data_store_collaborative_available:
@@ -133,7 +144,10 @@ def health_model_check():
         # Return a 503 Service Unavailable status code with a message
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"status": "error", "message": "One or more data stores are not loaded with data."},
+            content={
+                "status": "error",
+                "message": "One or more data stores are not loaded with data.",
+            },
         )
 
 
@@ -168,6 +182,7 @@ class RecommendationRequest(BaseModel):
                 # If conversion fails, return the default value
                 return 0
         return value
+
     @validator("family_id", pre=True)
     def validate_family_id(cls, value):
         if value is None:
@@ -180,6 +195,7 @@ class RecommendationRequest(BaseModel):
                 # If conversion fails, return the default value
                 return 1101
         return value
+
     @validator("bike_type", pre=True)
     def validate_bike_type(cls, value):
         if value is None:
@@ -234,16 +250,14 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
-
         # apply filtering logic that results in preference_mask that is applied to all the recommendations
         # combine user specific stated preference, and company logic preference
 
-
         # filter recommendations for preferences
-        preferences = (
-            ("continent_id", lambda df: df["continent_id"] == continent_id),
+        preferences = (("continent_id", lambda df: df["continent_id"] == continent_id),)
+        preference_mask = get_preference_mask_condition(
+            data_store_content.df_preference, preferences
         )
-        preference_mask = get_preference_mask_condition(data_store_content.df_preference, preferences)
 
         # if US or UK, also allow non-ebikes from EU
         # merge with preferences above with OR condition
@@ -252,38 +266,58 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 ("continent_id", lambda df: df["continent_id"] == 1),
                 ("motor", lambda df: df["motor"] == 0),
             )
-            ebike_preference_mask = get_preference_mask_condition(data_store_content.df_preference, ebike_sending_preferences)
+            ebike_preference_mask = get_preference_mask_condition(
+                data_store_content.df_preference, ebike_sending_preferences
+            )
 
             preference_mask = preference_mask + ebike_preference_mask
 
         # user specific preferences
         if user_id != 0 and user_id in data_store_content.df_preference_user.index:
-            specific_user_preferences = data_store_content.df_preference_user[data_store_content.df_preference_user.index == user_id]
+            specific_user_preferences = data_store_content.df_preference_user[
+                data_store_content.df_preference_user.index == user_id
+            ]
             # Create a list to hold all the combined conditions for each row of preferences
             combined_conditions = []
             # Iterate over each row in the specific_user_preferences DataFrame
             for index, row in specific_user_preferences.iterrows():
                 # Get the numeric frame size for the current row
-                numeric_frame_size = get_numeric_frame_size(row['frame_size'])
-                if strategy_name != 'product_page':
-                    combined_condition = lambda df, max_price=row['max_price'], category_id=row['category_id'], frame_size=numeric_frame_size: (
-                        (df["price"] <= max_price) &
-                        ((category_id == 0) | (df["bike_category_id"] == category_id)) &
-                        ((frame_size == 1) | ((df["frame_size_code"] >= frame_size - 3) & (df["frame_size_code"] <= frame_size + 3)))
+                numeric_frame_size = get_numeric_frame_size(row["frame_size"])
+                if strategy_name != "product_page":
+                    combined_condition = lambda df, max_price=row[
+                        "max_price"
+                    ], category_id=row["category_id"], frame_size=numeric_frame_size: (
+                        (df["price"] <= max_price)
+                        & ((category_id == 0) | (df["bike_category_id"] == category_id))
+                        & (
+                            (frame_size == 1)
+                            | (
+                                (df["frame_size_code"] >= frame_size - 3)
+                                & (df["frame_size_code"] <= frame_size + 3)
+                            )
+                        )
                     )
                 # for product_page do not filter for bike_category_id user preferences
                 else:
-                    combined_condition = lambda df, max_price=row['max_price'], frame_size=numeric_frame_size: (
-                        (df["price"] <= max_price) &
-                        ((frame_size == 1) | ((df["frame_size_code"] >= frame_size - 3) & (df["frame_size_code"] <= frame_size + 3)))
+                    combined_condition = lambda df, max_price=row[
+                        "max_price"
+                    ], frame_size=numeric_frame_size: (
+                        (df["price"] <= max_price)
+                        & (
+                            (frame_size == 1)
+                            | (
+                                (df["frame_size_code"] >= frame_size - 3)
+                                & (df["frame_size_code"] <= frame_size + 3)
+                            )
+                        )
                     )
                 # Add the condition to the list
                 combined_conditions.append(combined_condition)
-# Define the preference_user tuple with a single entry and the list of combined conditions
-            preference_user = (
-                ("combined", combined_conditions),
+            # Define the preference_user tuple with a single entry and the list of combined conditions
+            preference_user = (("combined", combined_conditions),)
+            preference_mask_user = get_preference_mask_condition_list(
+                data_store_content.df_preference, preference_user
             )
-            preference_mask_user = get_preference_mask_condition_list(data_store_content.df_preference, preference_user)
 
             # Convert both masks to sets and perform an intersection (logical AND)
             # Filter preference_mask for user specific preferences
@@ -366,11 +400,13 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            #only apply continent filtering if recommendation != n
+            # only apply continent filtering if recommendation != n
             preferences = (
                 ("continent_id", lambda df: df["continent_id"] == continent_id),
             )
-            preference_mask = get_preference_mask_condition(data_store_content.df_preference, preferences)
+            preference_mask = get_preference_mask_condition(
+                data_store_content.df_preference, preferences
+            )
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 bike_id,
                 preference_mask,
@@ -380,7 +416,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 frame_size_code,
                 n,
             )
-# Check if strategy_instance is not an instance of QualityFilter and recommendation is not empty
+        # Check if strategy_instance is not an instance of QualityFilter and recommendation is not empty
         if not isinstance(strategy_instance, QualityFilter) and len(recommendation) > 0:
             # Convert the recommendation to int
             recommendation = [int(i) for i in recommendation]
@@ -424,7 +460,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             json_compatible_response_data = json.dumps(response_data, cls=NumpyEncoder)
 
             # Return a JSONResponse object with the serialized data
-            return JSONResponse(content=json.loads(json_compatible_response_data), media_type="application/json")
+            return JSONResponse(
+                content=json.loads(json_compatible_response_data),
+                media_type="application/json",
+            )
 
 
 @app.exception_handler(RequestValidationError)
