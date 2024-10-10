@@ -400,13 +400,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 data_store_collaborative=data_store_collaborative,
                 data_store_content=data_store_content,
             )
-            # only apply continent filtering if recommendation != n
-            preferences = (
-                ("continent_id", lambda df: df["continent_id"] == continent_id),
-            )
-            preference_mask = get_preference_mask_condition(
-                data_store_content.df_preference, preferences
-            )
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 bike_id,
                 preference_mask,
