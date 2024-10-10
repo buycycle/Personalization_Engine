@@ -21,13 +21,12 @@ import logging
 from buycycle.logger import Logger
 from buycycle.data import (
     get_numeric_frame_size,
-    get_preference_mask,
-    get_preference_mask_condition,
-    get_preference_mask_condition_list,
+    validate_integer_field,
 )
 
 # sql queries and feature selection
 from src.driver_content import prefilter_features
+from src.content import get_mask_continent, get_user_preference_mask
 from src.driver_collaborative import (
     bike_id,
     features,
@@ -172,42 +171,15 @@ class RecommendationRequest(BaseModel):
 
     @validator("user_id", pre=True)
     def validate_user_id(cls, value):
-        if value is None:
-            return 0
-        if isinstance(value, str):
-            try:
-                # Attempt to convert the string to an integer
-                return int(value)
-            except ValueError:
-                # If conversion fails, return the default value
-                return 0
-        return value
+        return validate_integer_field(value, 0)
 
     @validator("family_id", pre=True)
     def validate_family_id(cls, value):
-        if value is None:
-            return 1101
-        if isinstance(value, str):
-            try:
-                # Attempt to convert the string to an integer
-                return int(value)
-            except ValueError:
-                # If conversion fails, return the default value
-                return 1101
-        return value
+        return validate_integer_field(value, 1101)
 
     @validator("bike_type", pre=True)
     def validate_bike_type(cls, value):
-        if value is None:
-            return 1
-        if isinstance(value, str):
-            try:
-                # Attempt to convert the string to an integer
-                return int(value)
-            except ValueError:
-                # If conversion fails, return the default value
-                return 1
-        return value
+        return validate_integer_field(value, 1)
 
 
 @app.post("/recommendation")
@@ -250,81 +222,16 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
-        # apply filtering logic that results in preference_mask that is applied to all the recommendations
-        # combine user specific stated preference, and company logic preference
-
-        # filter recommendations for preferences
-        preferences = (("continent_id", lambda df: df["continent_id"] == continent_id),)
-        preference_mask = get_preference_mask_condition(
-            data_store_content.df_preference, preferences
+        # Get general and user-specific preference masks
+        preference_mask = get_mask_continent(data_store_content, continent_id)
+        preference_mask_user = get_user_preference_mask(
+            data_store_content, user_id, strategy_name
         )
-
-        # if US or UK, also allow non-ebikes from EU
-        # merge with preferences above with OR condition
-        if continent_id in [4, 7]:
-            ebike_sending_preferences = (
-                ("continent_id", lambda df: df["continent_id"] == 1),
-                ("motor", lambda df: df["motor"] == 0),
-            )
-            ebike_preference_mask = get_preference_mask_condition(
-                data_store_content.df_preference, ebike_sending_preferences
-            )
-
-            preference_mask = preference_mask + ebike_preference_mask
-
-        # user specific preferences
-        if user_id != 0 and user_id in data_store_content.df_preference_user.index:
-            specific_user_preferences = data_store_content.df_preference_user[
-                data_store_content.df_preference_user.index == user_id
-            ]
-            # Create a list to hold all the combined conditions for each row of preferences
-            combined_conditions = []
-            # Iterate over each row in the specific_user_preferences DataFrame
-            for index, row in specific_user_preferences.iterrows():
-                # Get the numeric frame size for the current row
-                numeric_frame_size = get_numeric_frame_size(row["frame_size"])
-                if strategy_name != "product_page":
-                    combined_condition = lambda df, max_price=row[
-                        "max_price"
-                    ], category_id=row["category_id"], frame_size=numeric_frame_size: (
-                        (df["price"] <= max_price)
-                        & ((category_id == 0) | (df["bike_category_id"] == category_id))
-                        & (
-                            (frame_size == 1)
-                            | (
-                                (df["frame_size_code"] >= frame_size - 3)
-                                & (df["frame_size_code"] <= frame_size + 3)
-                            )
-                        )
-                    )
-                # for product_page do not filter for bike_category_id user preferences
-                else:
-                    combined_condition = lambda df, max_price=row[
-                        "max_price"
-                    ], frame_size=numeric_frame_size: (
-                        (df["price"] <= max_price)
-                        & (
-                            (frame_size == 1)
-                            | (
-                                (df["frame_size_code"] >= frame_size - 3)
-                                & (df["frame_size_code"] <= frame_size + 3)
-                            )
-                        )
-                    )
-                # Add the condition to the list
-                combined_conditions.append(combined_condition)
-            # Define the preference_user tuple with a single entry and the list of combined conditions
-            preference_user = (("combined", combined_conditions),)
-            preference_mask_user = get_preference_mask_condition_list(
-                data_store_content.df_preference, preference_user
-            )
-
-            # Convert both masks to sets and perform an intersection (logical AND)
-            # Filter preference_mask for user specific preferences
+        # Combine general and user-specific preference masks
+        if preference_mask_user:
             preference_mask_set = set(preference_mask)
             preference_mask_user_set = set(preference_mask_user)
             combined_mask = preference_mask_set.intersection(preference_mask_user_set)
-            # Convert the set back to a sorted list
             preference_mask = sorted(list(combined_mask))
 
         strategy_factory = StrategyFactory(strategy_dict)
@@ -332,7 +239,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # if strategy_name not in list, use FallbackContentMixed
         strategy_instance = strategy_factory.get_strategy(
             strategy_name=strategy_name,
-            fallback_strategy=CollaborativeRandomized,
+            fallback_strategy=FallbackContentMixed,
             logger=logger,
             data_store_collaborative=data_store_collaborative,
             data_store_content=data_store_content,
@@ -360,7 +267,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
         elif isinstance(strategy_instance, Collaborative):
             strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, preference_mask, n
+                id, preference_mask, n, n
             )
         elif isinstance(strategy_instance, CollaborativeRandomized):
             strategy, recommendation, error = strategy_instance.get_recommendations(
@@ -390,7 +297,6 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 f"Not enough recommendations generated by strategy '{strategy_name}'. "
                 f"Expected: {n}, produced: {len(recommendation)}. Using fallback_strategy 'FallbackContentMixed'."
             )
-
 
         # Fall back strategy if not enough recommendations were generated for the product_page
         if len(recommendation) != n and strategy_name == "product_page":

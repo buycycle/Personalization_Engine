@@ -276,11 +276,19 @@ def get_data(
 
     df_quality = frame_size_code_to_numeric(df_quality, bike_type_id_column="bike_type")
     df_quality.dropna(inplace=True)
-    df_quality['rider_height_min'] = df_quality['rider_height_min'].fillna(150).astype('int64')
-    df_quality['rider_height_max'] = df_quality['rider_height_max'].fillna(195).astype('int64')
+    df_quality["rider_height_min"] = (
+        df_quality["rider_height_min"].fillna(150).astype("int64")
+    )
+    df_quality["rider_height_max"] = (
+        df_quality["rider_height_max"].fillna(195).astype("int64")
+    )
 
-
-    df_preference_user = snowflake_sql_db_read(query=user_preference_query, DB="DB_EVENTS", driver="snowflake", index_col="user_id")
+    df_preference_user = snowflake_sql_db_read(
+        query=user_preference_query,
+        DB="DB_EVENTS",
+        driver="snowflake",
+        index_col="user_id",
+    )
 
     return df, df_quality, df_preference_user
 
@@ -315,7 +323,14 @@ def create_data_model_content(
 
     """
 
-    df, df_quality, df_preference_user = get_data(main_query, main_query_dtype, quality_query, quality_query_dtype, user_preference_query, user_preference_query_dtype)
+    df, df_quality, df_preference_user = get_data(
+        main_query,
+        main_query_dtype,
+        quality_query,
+        quality_query_dtype,
+        user_preference_query,
+        user_preference_query_dtype,
+    )
 
     df = frame_size_code_to_numeric(df, bike_type_id_column="bike_type")
     df_preference = df[preference_features]
@@ -374,7 +389,14 @@ def read_data_content(path: str = "data/"):
         path + "similarity_matrix.pkl"
     )
 
-    return df, df_preference, df_preference_user, df_status_masked, df_quality, similarity_matrix
+    return (
+        df,
+        df_preference,
+        df_preference_user,
+        df_status_masked,
+        df_quality,
+        similarity_matrix,
+    )
 
 
 class DataStoreContent(DataStoreBase):
@@ -391,7 +413,14 @@ class DataStoreContent(DataStoreBase):
 
     def read_data(self):
         with self._lock:  # acquire lock
-            self.df, self.df_preference, self.df_preference_user, self.df_status_masked, self.df_quality, self.similarity_matrix = read_data_content()
+            (
+                self.df,
+                self.df_preference,
+                self.df_preference_user,
+                self.df_status_masked,
+                self.df_quality,
+                self.similarity_matrix,
+            ) = read_data_content()
 
     def get_logging_info(self):
         return {

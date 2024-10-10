@@ -11,9 +11,6 @@ import pickle
 import datetime
 
 
-
-
-
 def unpack_data(file_name):
     """unpack the data from the .gz file"""
 
@@ -175,8 +172,6 @@ def combine_data(
     return df
 
 
-
-
 def write_data(df, metadata, path):
     df.to_pickle(path + "df_collaborative.pkl")
     # write the metadata str to metadata.pkl
@@ -189,5 +184,3 @@ def read_data_collaborative(path):
     with open(path + "metadata.pkl", "rb") as f:
         metadata = pickle.load(f)
     return df, metadata
-
-

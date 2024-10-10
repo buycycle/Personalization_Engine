@@ -26,6 +26,8 @@ from src.driver_content import (
     numerical_features_overweight_factor,
     categorical_features_to_overweight,
     categorical_features_overweight_factor,
+    user_preference_query,
+    user_preference_query_dtype,
 )
 from src.driver_collaborative import (
     user_id,
@@ -42,16 +44,16 @@ BIKE_ID = 18894
 CONTINENT_ID = 1
 BIKE_TYPE = 1
 CATEGORY = "road"
-DISTINCT_ID = "1234"
+USER_ID = 32744
 FAMILY_ID = 2502
 PRICE = 1200
 FRAME_SIZE_CODE = "56"
 RIDER_HEIGHT_MIN = 140
 RIDER_HEIGHT_MAX = 195
 RIDER_HEIGHT = 180
-N = 12
-SAMPLE = 50
-RATIO = 0.5
+N = 2
+SAMPLE = 2
+RATIO = 1
 
 
 @pytest.fixture(scope="package")
@@ -73,52 +75,30 @@ def app_mock(mock_logger):
 
 @pytest.fixture(scope="package")
 def inputs(app_mock, mock_logger):
-    """Inputs for the function unit tests."""
+    """Unified inputs for both function unit tests and FastAPI function tests."""
+    # if data folder is empty create input data
+    if os.path.isdir(DATA_PATH) and not os.listdir(DATA_PATH):
+        subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
     client = TestClient(app_mock)
-    return (
-        BIKE_ID,
-        CONTINENT_ID,
-        BIKE_TYPE,
-        CATEGORY,
-        DISTINCT_ID,
-        FAMILY_ID,
-        PRICE,
-        FRAME_SIZE_CODE,
-        RIDER_HEIGHT_MIN,
-        RIDER_HEIGHT_MAX,
-        RIDER_HEIGHT,
-        N,
-        SAMPLE,
-        RATIO,
-        client,
-        mock_logger,
-    )
-
-
-@pytest.fixture(scope="package")
-def inputs_fastapi(app_mock, mock_logger):
-    """Inputs for the FastAPI function test."""
-    subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
-    client = TestClient(app_mock)
-    return (
-        14394,
-        CONTINENT_ID,
-        BIKE_TYPE,
-        CATEGORY,
-        DISTINCT_ID,
-        1101,
-        2000,
-        FRAME_SIZE_CODE,
-        RIDER_HEIGHT_MIN,
-        RIDER_HEIGHT_MAX,
-        RIDER_HEIGHT,
-        5,
-        10,
-        RATIO,
-        client,
-        mock_logger,
-        strategy_dict,
-    )
+    return {
+        "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
+        "continent_id": CONTINENT_ID,
+        "bike_type": BIKE_TYPE,
+        "category": CATEGORY,
+        "user_id": USER_ID,
+        "family_id": FAMILY_ID,  # or FAMILY_ID
+        "price": PRICE,  # or PRICE
+        "frame_size_code": FRAME_SIZE_CODE,
+        "rider_height_min": RIDER_HEIGHT_MIN,
+        "rider_height_max": RIDER_HEIGHT_MAX,
+        "rider_height": RIDER_HEIGHT,
+        "n": N,  # or N
+        "sample": SAMPLE,  # or SAMPLE
+        "ratio": RATIO,
+        "client": client,
+        "logger": mock_logger,
+        "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests
+    }
 
 
 @pytest.fixture(scope="package")
@@ -130,6 +110,8 @@ def testdata_content():
         main_query_dtype,
         quality_query,
         quality_query_dtype,
+        user_preference_query,
+        user_preference_query_dtype,
         categorical_features,
         numerical_features,
         preference_features,

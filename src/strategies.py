@@ -9,7 +9,6 @@ from src.content import get_top_n_quality_prefiltered_bot
 from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import (
-    get_top_n_collaborative,
     get_top_n_collaborative_randomized,
     read_data_model,
 )
@@ -58,13 +57,18 @@ class FallbackContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
 
         filter_features = (
             ("bike_type", lambda df: df["bike_type"] == bike_type),
-            ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+            (
+                "price",
+                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+            ),
             ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-            ("family_id", lambda df: df["family_id"] == family_id)
+            ("family_id", lambda df: df["family_id"] == family_id),
         )
 
         recommendations, error = get_top_n_recommendations_mix(
@@ -111,12 +115,17 @@ class ContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
-        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
+        bike_similarity_df, error = construct_dense_similarity_row(
+            self.similarity_matrix, bike_id
+        )
         filter_features = (
             ("bike_type", lambda df: df["bike_type"] == bike_type),
-            ("price", lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2)),
+            (
+                "price",
+                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+            ),
             ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-            ("family_id", lambda df: df["family_id"] == family_id)
+            ("family_id", lambda df: df["family_id"] == family_id),
         )
 
         recommendations, error = get_top_n_recommendations_mix(
@@ -144,23 +153,29 @@ class Collaborative(RecommendationStrategy):
     """Try Collaborative filtering, fail silently and return an empty list"""
 
     def __init__(self, logger, data_store_collaborative, data_store_content):
-        self.strategy = "Collaborative"
+        self.strategy = "CollaborativeStrategyRandomized"
         self.model = data_store_collaborative.model
         self.dataset = data_store_collaborative.dataset
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(self, user_id: str, preference_mask: list, n: int) -> Tuple[str, List, Optional[str]]:
-        recommendations, error = get_top_n_collaborative(
+    def get_recommendations(
+        self, user_id: str, preference_mask: list, n: int, sample: int
+    ) -> Tuple[str, List, Optional[str]]:
+        preference_mask_set = set(preference_mask)
+        df_status_masked_set = set(self.df_status_masked.index)
+
+        recommendations, error = get_top_n_collaborative_randomized(
             self.model,
-            preference_mask,
             user_id,
+            preference_mask_set,
             n,
+            sample,
             self.dataset,
-            self.df_status_masked,
+            df_status_masked_set,
             self.logger,
         )
-        return self.strategy, recommendations, None
+        return self.strategy, recommendations, error
 
 
 class CollaborativeRandomized(RecommendationStrategy):
@@ -223,10 +238,10 @@ class QualityFilter(RecommendationStrategy):
             ("is_ebike", lambda df: df["is_ebike"] == is_ebike),
             ("is_frameset", lambda df: df["is_frameset"] == is_frameset),
         ]
-# Only add the brand filter if brand is not "null"
+        # Only add the brand filter if brand is not "null"
         if brand != "null":
             quality_features.append(("brand", lambda df: df["brand"] == brand))
-# Convert the list to a tuple if necessary
+        # Convert the list to a tuple if necessary
         quality_features = tuple(quality_features)
         recommendations, error = get_top_n_quality_prefiltered_bot(
             self.df_quality, preference_mask_set, quality_features, n

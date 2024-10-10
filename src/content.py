@@ -5,9 +5,19 @@ from typing import Tuple, List, Optional
 
 from src.helper import interveave
 
+from buycycle.data import (
+    get_numeric_frame_size,
+    get_preference_mask,
+    get_preference_mask_condition,
+    get_preference_mask_condition_list,
+)
+
 
 def get_top_n_quality_prefiltered_bot(
-        df_quality: pd.DataFrame, preference_mask_set: set, filter_features: tuple, n: int = 16
+    df_quality: pd.DataFrame,
+    preference_mask_set: set,
+    filter_features: tuple,
+    n: int = 16,
 ) -> Tuple[List[str], Optional[str]]:
     """
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
@@ -21,21 +31,25 @@ def get_top_n_quality_prefiltered_bot(
     """
     error = None
     try:
-        # Apply preference mask filter
-        df_filtered = df_quality[df_quality.index.isin(preference_mask_set)]
-        df_filtered = df_filtered.sample(frac=0.5)
+        # Check if the filtered DataFrame has at least n rows
+        filtered_df = df_quality[df_quality.index.isin(preference_mask_set)]
+        if len(filtered_df) >= n:
+            df_filtered = filtered_df.sample(frac=0.5)
+        else:
+            df_filtered = df_quality
+
         last_valid_df = df_filtered  # Keep track of the last valid DataFrame
         # Apply additional filters progressively
         for feature, condition in filter_features:
             df_temp = df_filtered[condition(df_filtered)]
             # introduce some variance
-            if len(df_temp) >= n*2:
+            if len(df_temp) >= n * 2:
                 last_valid_df = df_temp  # Update the last valid DataFrame
             else:
                 break  # Stop filtering if we have less than n elements
             df_filtered = df_temp  # Apply the current filter
         # Return the top n*2 from the last valid filtered DataFrame
-        df_top_n = last_valid_df.head(n*2)
+        df_top_n = last_valid_df.head(n * 2)
         # to introduce some variance in the results, sample n from the top n*2
         df_sampled = df_top_n.sample(n=n)
         top_n_recommendations = df_sampled.slug.tolist()
@@ -43,6 +57,7 @@ def get_top_n_quality_prefiltered_bot(
     except Exception as e:
         error = str(e)
         return [], error  # Return an empty list if an exception occurs
+
 
 def get_top_n_quality_prefiltered(
     df_quality: pd.DataFrame,
@@ -114,9 +129,10 @@ def get_top_n_recommendations(
 
     """
 
-    bike_similarity_df = bike_similarity_df[
-        bike_similarity_df.index.isin(preference_mask)
-    ]
+    filtered_df = bike_similarity_df[bike_similarity_df.index.isin(preference_mask)]
+    # Check if the filtered DataFrame has at least n rows using df.shape[0]
+    if filtered_df.shape[0] >= n:
+        bike_similarity_df = filtered_df
 
     # squeeze to convert pd.DataFrame into pd.Series
     return bike_similarity_df.loc[bike_id].squeeze().nsmallest(n + 1).index.tolist()
@@ -145,6 +161,11 @@ def get_top_n_recommendations_prefiltered(
     Returns:
         list: list of top n recommendations for bike_id, skipping the bike_id itself
     """
+
+    # Check if the filtered DataFrame has at least n rows
+    filtered_df = df_status_masked[df_status_masked.index.isin(preference_mask)]
+    if len(filtered_df) >= n:
+        df_status_masked = filtered_df
 
     # get the values of the prefilter_features for the bike_id
     df_status_masked = df_status_masked[df_status_masked.index.isin(preference_mask)]
@@ -223,7 +244,6 @@ def get_top_n_recommendations_mix(
 
     try:
         if bike_id not in df.index:
-
             top_n_quality = get_top_n_quality_prefiltered(
                 df_quality,
                 preference_mask,
@@ -290,3 +310,81 @@ def get_top_n_recommendations_mix(
     except Exception as e:
         error = str(e)
         return top_n_recommendations, error
+
+
+def get_mask_continent(data_store_content, continent_id):
+    """
+    Generate a mask based on continent-specific logic.
+    Parameters:
+    - data_store_content: The data store containing preference data.
+    - continent_id: The ID of the continent to apply specific logic.
+    Returns:
+    - A list representing the combined preference mask.
+    """
+    # Filter recommendations for general preferences
+    condition = (("continent_id", lambda df: df["continent_id"] == continent_id),)
+    mask = get_preference_mask_condition(data_store_content.df_preference, condition)
+    # If US or UK, also allow non-ebikes from EU
+    if continent_id in [4, 7]:
+        ebike_condition = (
+            ("continent_id", lambda df: df["continent_id"] == 1),
+            ("motor", lambda df: df["motor"] == 0),
+        )
+        ebike_mask = get_preference_mask_condition(
+            data_store_content.df_preference, ebike_condition
+        )
+        mask = mask + ebike_mask
+    return mask
+
+
+def get_user_preference_mask(data_store_content, user_id, strategy_name):
+    """
+    Generate a preference mask based on user-specific preferences.
+    Parameters:
+    - data_store_content: The data store containing user-specific preference data.
+    - user_id: The ID of the user to apply specific preferences.
+    - strategy_name: The name of the strategy to determine filtering logic.
+    Returns:
+    - A list representing the user-specific preference mask.
+    """
+    if user_id != 0 and user_id in data_store_content.df_preference_user.index:
+        specific_user_preferences = data_store_content.df_preference_user[
+            data_store_content.df_preference_user.index == user_id
+        ]
+        combined_conditions = []
+        for index, row in specific_user_preferences.iterrows():
+            numeric_frame_size = get_numeric_frame_size(row["frame_size"])
+            if strategy_name != "product_page":
+                combined_condition = lambda df, max_price=row[
+                    "max_price"
+                ], category_id=row["category_id"], frame_size=numeric_frame_size: (
+                    (df["price"] <= max_price)
+                    & ((category_id == 0) | (df["bike_category_id"] == category_id))
+                    & (
+                        (frame_size == 1)
+                        | (
+                            (df["frame_size_code"] >= frame_size - 3)
+                            & (df["frame_size_code"] <= frame_size + 3)
+                        )
+                    )
+                )
+            else:
+                combined_condition = lambda df, max_price=row[
+                    "max_price"
+                ], frame_size=numeric_frame_size: (
+                    (df["price"] <= max_price)
+                    & (
+                        (frame_size == 1)
+                        | (
+                            (df["frame_size_code"] >= frame_size - 3)
+                            & (df["frame_size_code"] <= frame_size + 3)
+                        )
+                    )
+                )
+            combined_conditions.append(combined_condition)
+        preference_user = (("combined", combined_conditions),)
+        preference_mask_user = get_preference_mask_condition_list(
+            data_store_content.df_preference, preference_user
+        )
+        return preference_mask_user
+    return []
