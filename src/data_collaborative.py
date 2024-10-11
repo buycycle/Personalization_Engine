@@ -1,7 +1,6 @@
 import pandas as pd
 
 
-import boto3
 import gzip
 
 import os
@@ -10,47 +9,6 @@ import configparser
 import pickle
 
 import datetime
-
-from buycycle.data import aws_client
-
-
-def s3_credentials(config_paths: str = "config/config.ini"):
-    """read the config file and return the s3 credentials"""
-
-    config = configparser.ConfigParser()
-    config.read(config_paths)
-
-    Bucket = config["S3"]["bucket"]
-    Key = config["S3"]["key"]
-    Filename = config["S3"]["file"]
-
-    return Bucket, Key, Filename
-
-
-def download_s3(
-    client: boto3.client,
-    Bucket: str,
-    Key: str,
-    filename: str,
-    path: str,
-    newFilename: str,
-):
-    """download a file from s3 and move it to a folder and rename it
-    Args:
-        client (boto3.client): s3 client
-        Bucket (str): s3 bucket
-        Key (str): s3 key
-        filename (str): filename to download
-        path (str): path to download to
-        newFilename (str): new filename of download_file
-
-    """
-
-    Key = Key + filename
-    client.download_file(Bucket, Key, filename)
-
-    # move the file to the folder and rename with NewFilename
-    os.rename(filename, path + newFilename)
 
 
 def unpack_data(file_name):
@@ -214,79 +172,6 @@ def combine_data(
     return df
 
 
-def get_multi_day_data(
-    start_date: datetime,
-    end_date: datetime,
-    implicit_feedback: dict,
-    features: list[str],
-    user_features: list[str],
-    item_features: list[str],
-    user_id: str,
-    bike_id: str,
-    Bucket: str,
-    keysbase: str = "2892805/",
-    inclusive: str = "both",
-    fraction: float = 0.8,
-):
-    """
-    Generate the multi-day test dataset using data from specified start to end dates.
-
-    Args:
-        start_date (datetime): The start date for the test data.
-        end_date (datetime): The end date for the test data.
-        features (list): The feature list for the dataset.
-        user_features (list): The list of user features for the dataset.
-        item_features (list): The list of item features for the dataset.
-        inclusive (str, optional): Whether to include the start and end dates in the dataset, defaults to 'both'.
-        fraction (float, optional): A parameter used somewhere in your function, defaults to 0.3.
-
-    Returns:
-        df (pd.DataFrame): Pandas DataFrame containing event and features data.
-        metadata (datetime): Latest date of the dataset
-    """
-
-    client = aws_client()
-
-    datelist = pd.date_range(
-        start=start_date, end=end_date, freq="D", inclusive=inclusive
-    )
-    # generate Keys in the following format '2892805/2023/06/18/full_day/'
-    Keys = [keysbase + date.strftime("%Y/%m/%d/full_day/") for date in datelist]
-
-    df = pd.DataFrame()
-
-    for Key in Keys:
-        download_s3(
-            client,
-            Bucket,
-            Key,
-            filename="export.json.gz",
-            path="data/",
-            newFilename="export.json.gz",
-        )
-
-        df = pd.concat(
-            [
-                df,
-                read_extract_local_data(
-                    implicit_feedback,
-                    features,
-                    user_features,
-                    item_features,
-                    user_id,
-                    bike_id,
-                    fraction=fraction,
-                ),
-            ],
-            axis=0,
-        )
-        df = aggreate(df, user_id, bike_id, user_features, item_features)
-
-    metadata = end_date
-
-    return df, metadata
-
-
 def write_data(df, metadata, path):
     df.to_pickle(path + "df_collaborative.pkl")
     # write the metadata str to metadata.pkl
@@ -299,49 +184,3 @@ def read_data_collaborative(path):
     with open(path + "metadata.pkl", "rb") as f:
         metadata = pickle.load(f)
     return df, metadata
-
-
-def get_last_date_local(path, limit=10):
-    """get last date as saved to metadata.pkl, if the metadata.pkl does not exist, return current date minus limit
-    Args:
-        path (str): path to metadata.pkl
-        limit (int): limit in days to subtract from current date
-    Returns:
-        last_date (datetime): last date as saved to metadata.pkl or current date minus limit
-    """
-    if os.path.isfile(path + "metadata.pkl"):
-        with open(path + "metadata.pkl", "rb") as f:
-            metadata = pickle.load(f)
-
-        return metadata
-    else:
-        return datetime.date.today() - datetime.timedelta(days=limit)
-
-
-def get_last_date_S3(
-    client: aws_client, Bucket: str, filename: str = "export.json.gz"
-) -> datetime.date:
-    """get last date of data in S3, determined by last modified minus one day
-    Args:
-        client (boto3.client): boto3 client
-        Bucket (str): name of S3 bucket
-        filename (str): name of file to look for
-    Returns:
-        last_date (datetime): last date of data in S3
-    """
-
-    response = client.list_objects_v2(Bucket=Bucket)
-    if "Contents" in response:
-        # Filter objects so it only contains those end with 'export.json.gz'
-        contents = [
-            obj for obj in response["Contents"] if obj["Key"].endswith(filename)
-        ]
-        # Get the max 'LastModified' among the filtered objects
-        if contents:
-            latest_obj = max(contents, key=lambda x: x["LastModified"])
-        else:
-            return None
-    # subtract one day from the last modified date since the data is updated the following day
-    last_date = latest_obj["LastModified"].date() - datetime.timedelta(days=1)
-
-    return last_date

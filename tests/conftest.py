@@ -1,21 +1,18 @@
-"""test fixutres used in the tests"""
-
 import os
-import pytest
 import subprocess
-
 from unittest.mock import Mock, patch
-
+import pytest
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
-
-from src.data_content import read_data_content
-
-# for create_data
-from src.data_content import create_data_model_content
-from src.data_content import DataStoreContent
-from src.collaborative import DataStoreCollaborative
-
+from src.data_content import (
+    read_data_content,
+    create_data_model_content,
+    DataStoreContent,
+)
+from src.collaborative import (
+    DataStoreCollaborative,
+    create_data_model_collaborative,
+    update_model,
+)
 from src.driver_content import (
     main_query,
     main_query_dtype,
@@ -29,8 +26,9 @@ from src.driver_content import (
     numerical_features_overweight_factor,
     categorical_features_to_overweight,
     categorical_features_overweight_factor,
+    user_preference_query,
+    user_preference_query_dtype,
 )
-
 from src.driver_collaborative import (
     user_id,
     bike_id,
@@ -38,148 +36,82 @@ from src.driver_collaborative import (
     user_features,
     query,
 )
-
-from src.collaborative import (
-    create_data_model_collaborative,
-    update_model,
-    read_data_model,
-)
-from src.data_collaborative import write_data, read_data_collaborative
-
 from src.strategies import strategy_dict
-
-# get loggers
 from buycycle.logger import Logger
+
+DATA_PATH = "./data/"
+BIKE_ID = 18894
+CONTINENT_ID = 1
+BIKE_TYPE = 1
+CATEGORY = "road"
+USER_ID = 32744
+FAMILY_ID = 2502
+PRICE = 1200
+FRAME_SIZE_CODE = "56"
+RIDER_HEIGHT_MIN = 140
+RIDER_HEIGHT_MAX = 195
+RIDER_HEIGHT = 180
+N = 2
+SAMPLE = 2
+RATIO = 1
 
 
 @pytest.fixture(scope="package")
 def mock_logger():
-    "mock the KafkaLogger"
-    # Create a mock KafkaLogger instance
-    mock_logger = Mock(spec=Logger)
-
-    return mock_logger
+    """Mock the KafkaLogger."""
+    return Mock(spec=Logger)
 
 
 @pytest.fixture(scope="package")
 def app_mock(mock_logger):
-    "patch the model with the logger mock version and prevent threads from starting"
-
+    """Patch the model with the logger mock version and prevent threads from starting."""
     with patch("buycycle.logger.Logger", return_value=mock_logger), patch(
         "src.data_content.DataStoreContent.read_data_periodically"
     ), patch("src.collaborative.DataStoreCollaborative.read_data_periodically"):
-        # The above patches will replace the actual methods with mocks that do nothing
-        from model.app import app  # Import inside the patch context to apply the mock
+        from model.app import app
 
-        yield app  # Use yield to make it a fixture
+        yield app
 
 
 @pytest.fixture(scope="package")
 def inputs(app_mock, mock_logger):
-    "inputs for the function unit tests"
-
-    logger = mock_logger
-    app = app_mock
-
-    bike_id = 18894
-    continent_id = 1
-    bike_type = 1
-    category = "road"
-    distinct_id = "1234"
-    family_id = 2502
-    price = 1200
-    frame_size_code = "56"
-    rider_height_min = 140
-    rider_height_max = 195
-    rider_height = 180
-    n = 12
-    sample = 50
-    ratio = 0.5
-    # Create a TestClient for your FastAPI app
-    client = TestClient(app)
-
-    return (
-        bike_id,
-        continent_id,
-        bike_type,
-        category,
-        distinct_id,
-        family_id,
-        price,
-        frame_size_code,
-        rider_height_min,
-        rider_height_max,
-        rider_height,
-        n,
-        sample,
-        ratio,
-        client,
-        logger,
-    )
-
-
-@pytest.fixture(scope="package")
-def inputs_fastapi(app_mock, mock_logger):
-    "inputs for the fastapi function test"
-
-    # Run the create_data.py script to generate test data
-    subprocess.run(["python", "create_data.py", "./data/", "test"], check=True)
-
-    logger = mock_logger
-
-    app = app_mock
-
-    strategy = strategy_dict
-
-    bike_id = 14394
-    continent_id = 1
-    bike_type = 1
-    category = "road"
-    distinct_id = "1234"
-    family_id = 1101
-    price = 2000
-    frame_size_code = "56"
-    rider_height_min = 140
-    rider_height_max = 195
-    rider_height = 180
-    n = 5
-    sample = 10
-    ratio = 0.5
-    # Create a TestClient for your FastAPI app
-    client = TestClient(app)
-
-    return (
-        bike_id,
-        continent_id,
-        bike_type,
-        category,
-        distinct_id,
-        family_id,
-        price,
-        frame_size_code,
-        rider_height_min,
-        rider_height_max,
-        rider_height,
-        n,
-        sample,
-        ratio,
-        client,
-        logger,
-        strategy,
-    )
+    """Unified inputs for both function unit tests and FastAPI function tests."""
+    # if data folder is empty create input data
+    if os.path.isdir(DATA_PATH) and not os.listdir(DATA_PATH):
+        subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
+    client = TestClient(app_mock)
+    return {
+        "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
+        "continent_id": CONTINENT_ID,
+        "bike_type": BIKE_TYPE,
+        "category": CATEGORY,
+        "user_id": USER_ID,
+        "family_id": FAMILY_ID,  # or FAMILY_ID
+        "price": PRICE,  # or PRICE
+        "frame_size_code": FRAME_SIZE_CODE,
+        "rider_height_min": RIDER_HEIGHT_MIN,
+        "rider_height_max": RIDER_HEIGHT_MAX,
+        "rider_height": RIDER_HEIGHT,
+        "n": N,  # or N
+        "sample": SAMPLE,  # or SAMPLE
+        "ratio": RATIO,
+        "client": client,
+        "logger": mock_logger,
+        "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests
+    }
 
 
 @pytest.fixture(scope="package")
 def testdata_content():
-    # make folder data if not exists
-    if not os.path.exists("./data/"):
-        os.makedirs("./data/")
-
+    """Create and return a DataStoreContent instance for testing."""
+    os.makedirs(DATA_PATH, exist_ok=True)
     create_data_model_content(
-        main_query + "LIMIT 2000",  # limit to subset for integation testing
+        main_query + "LIMIT 500",
         main_query_dtype,
         quality_query,
         quality_query_dtype,
+        user_preference_query,
+        user_preference_query_dtype,
         categorical_features,
         numerical_features,
         preference_features,
@@ -190,37 +122,28 @@ def testdata_content():
         categorical_features_overweight_factor,
         status=["active"],
         metric="euclidean",
-        path="./data/",
+        path=DATA_PATH,
     )
-
-    # create data stores
     data_store_content = DataStoreContent(prefilter_features=prefilter_features)
-
     data_store_content.read_data()
-
     return data_store_content
 
 
 @pytest.fixture(scope="package")
 def testdata_collaborative():
-    # make folder data if not exists
-    if not os.path.exists("./data/"):
-        os.makedirs("./data/")
-
-    test_auc = create_data_model_collaborative(
+    """Create and return a DataStoreCollaborative instance for testing."""
+    os.makedirs(DATA_PATH, exist_ok=True)
+    create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query + "LIMIT 1000",  # limit to subset for integation testing
+        query=query + "LIMIT 1000",
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,
         item_features=item_features,
         update_model=update_model,
-        path="./data/",
+        path=DATA_PATH,
     )
-
     data_store_collaborative = DataStoreCollaborative()
-
     data_store_collaborative.read_data()
-
     return data_store_collaborative

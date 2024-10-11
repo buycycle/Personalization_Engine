@@ -7,11 +7,16 @@ else
   echo "Error: Please specify 'live' or 'test' as the first argument."
   exit 1
 fi
+
+
+app_version=$2
+
+
 data_template='{
   "strategy": "product_page",
   "bike_id": 21091,
   "continent_id": 1,
-  "user_id": 18742,
+  "user_id": 32744,
   "device_id": "bccd547b-6736-41a2-8543-677b724fb2a1",
   "frame_size_code":"58",
   "price": 2750,
@@ -38,7 +43,7 @@ for i in $(seq 1 $total_requests); do
   start_time=$(date +%s%N)
 
   # Execute the curl command and capture the headers
-  response=$(curl -s -i -X POST "$url" -H "Content-Type: application/json" -d "$data_template")
+  response=$(curl -s -i -X POST "$url" -H "Content-Type: application/json" --header "version: $app_version" -d "$data_template")
 
   # End the timer
   end_time=$(date +%s%N)
@@ -51,8 +56,8 @@ for i in $(seq 1 $total_requests); do
 
   # Extract the HTTP status code from the response
   http_code=$(echo "$response" | grep HTTP | tail -1 | awk '{print $2}')
-  version=$(echo "$response" | grep -i "^version:" | awk '{print $2}' | tr -d '\r')
   ((status_code_count[$http_code]++))
+  version=$(echo "$response" | grep -i "^version:" | awk '{print $2}' | tr -d '\r')
   ((version_count[$version]++))
 done
 # Calculate the mean response time in milliseconds

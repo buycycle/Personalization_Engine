@@ -5,7 +5,13 @@ import pandas as pd
 # however not sure if that makes sense, maybe .any for family and family_model
 
 # available for filtering at each request
-preference_features = ["continent_id", "motor","price", "frame_size_code","bike_category_id"]
+preference_features = [
+    "continent_id",
+    "motor",
+    "price",
+    "frame_size_code",
+    "bike_category_id",
+]
 # for content based
 prefilter_features = ["family_id", "bike_type"]
 
@@ -181,7 +187,7 @@ quality_query_dtype = {
 }
 
 
-user_preference_query= """
+user_preference_query = """
 WITH preference_table AS (
     SELECT
         USER_BIKE_PREFERENCES.USER_ID,
@@ -205,5 +211,4 @@ user_preference_query_dtype = {
     "max_price": pd.Int64Dtype(),
     "category_id": pd.Int64Dtype(),
     "frame_size": pd.StringDtype(),
-    }
-
+}
