@@ -81,10 +81,9 @@ def get_top_n_quality_prefiltered(
     Returns:
         list: list of top n bike ids by quality
     """
-    df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
     # Filter for 20% higher and lower price
-    df_filtered_bike_type = df_quality_preference[
-        df_quality_preference["bike_type"] == bike_type
+    df_filtered_bike_type = df_quality[
+        df_quality["bike_type"] == bike_type
     ]
     # Filter for 20% higher and lower price
     df_filtered_price = df_filtered_bike_type[

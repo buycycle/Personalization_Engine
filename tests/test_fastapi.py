@@ -21,14 +21,7 @@ def create_payload(inputs, strategy, bike_id=None, user_id=None):
     """Create a payload for the recommendation request."""
     return {
         "bike_id": bike_id or inputs["bike_id"],
-        "continent_id": inputs["continent_id"],
-        "bike_type": inputs["bike_type"],
-        "category": inputs["category"],
         "user_id": user_id or inputs["user_id"],
-        "family_id": inputs["family_id"],
-        "price": inputs["price"],
-        "frame_size_code": inputs["frame_size_code"],
-        "rider_height": inputs["rider_height"],
         "n": inputs["n"],
         "strategy": strategy,
     }
@@ -94,7 +87,7 @@ def test_integration_fast_time_strats_collab_users(
             )
 
 
-def test_integration_fast_time_len_strats_bikes(
+def test_integration_fast_time_len_strats_random_bikes(
     inputs, limit=LIMIT_MS, n_test=N_TEST_BIKES
 ):
     """Test time and length of return for all strategies and a random sample of bike_ids."""
@@ -103,12 +96,50 @@ def test_integration_fast_time_len_strats_bikes(
     for bike_id in random_bike_ids:
         for strategy in strategies:
             payload = create_payload(inputs, strategy, bike_id=bike_id)
+
+            # Print the JSON payload
+            print("Payload:", payload)
+
             response, elapsed_time = post_request(inputs["client"], payload)
+
+            # Print the response
+            print("Response:", response.json())
+
             assert_response(response, strategy, elapsed_time, limit)
             assert_recommendation_length(
                 response.json().get("recommendation"), strategy, inputs["n"]
             )
 
+
+def test_integration_fast_time_len_strats_bikes(
+    inputs, testdata_content, limit=LIMIT_MS, n_test=N_TEST_BIKES
+):
+    """Test time and length of return for all strategies and a sample of bike_ids."""
+    strategies = PRODUCT_PAGE_STRATEGY
+    bike_ids = testdata_content.df_status_masked.index.tolist()
+
+    # Ensure we don't exceed the number of available bike IDs
+    n_test = min(n_test, len(bike_ids))
+
+    # Use the first n_test bike IDs from the DataFrame
+    test_bike_ids = bike_ids[:n_test]
+
+    for bike_id in test_bike_ids:
+        for strategy in strategies:
+            payload = create_payload(inputs, strategy, bike_id=bike_id)
+
+            # Print the JSON payload
+            print("Payload:", payload)
+
+            response, elapsed_time = post_request(inputs["client"], payload)
+
+            # Print the response
+            print("Response:", response.json())
+
+            assert_response(response, strategy, elapsed_time, limit)
+            assert_recommendation_length(
+                response.json().get("recommendation"), strategy, inputs["n"]
+            )
 
 def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
     """Test the 'bot' strategy of the FastAPI app to ensure it returns a list of size n with string elements."""

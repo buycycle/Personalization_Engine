@@ -52,8 +52,6 @@ RIDER_HEIGHT_MIN = 140
 RIDER_HEIGHT_MAX = 195
 RIDER_HEIGHT = 180
 N = 2
-SAMPLE = 2
-RATIO = 1
 
 
 @pytest.fixture(scope="package")
@@ -82,19 +80,9 @@ def inputs(app_mock, mock_logger):
     client = TestClient(app_mock)
     return {
         "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
-        "continent_id": CONTINENT_ID,
-        "bike_type": BIKE_TYPE,
-        "category": CATEGORY,
         "user_id": USER_ID,
-        "family_id": FAMILY_ID,  # or FAMILY_ID
-        "price": PRICE,  # or PRICE
-        "frame_size_code": FRAME_SIZE_CODE,
-        "rider_height_min": RIDER_HEIGHT_MIN,
-        "rider_height_max": RIDER_HEIGHT_MAX,
-        "rider_height": RIDER_HEIGHT,
-        "n": N,  # or N
-        "sample": SAMPLE,  # or SAMPLE
-        "ratio": RATIO,
+        "n": N,
+        "continent_id": CONTINENT_ID,
         "client": client,
         "logger": mock_logger,
         "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests

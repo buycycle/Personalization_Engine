@@ -1,7 +1,7 @@
 """Personalization Engine"""
 import random
 from fastapi import Body
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import os
 import time
 
@@ -157,15 +157,13 @@ class RecommendationRequest(BaseModel):
     n: int = 12
     strategy: str = "product_page"
 
-    @validator("user_id", pre=True)
+    @field_validator("user_id", mode='before')
     def validate_user_id(cls, value):
         return validate_integer_field(value, 0)
-
-    @validator("family_id", pre=True)
+    @field_validator("family_id", mode='before')
     def validate_family_id(cls, value):
         return validate_integer_field(value, 1101)
-
-    @validator("bike_type", pre=True)
+    @field_validator("bike_type", mode='before')
     def validate_bike_type(cls, value):
         return validate_integer_field(value, 1)
 
@@ -337,7 +335,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             logger.error("Error no recommendation available, exception: " + error)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Error no recommendation available",
+                detail=f"Error no recommendation available: {error}",
             )
         else:
             # Return success response with recommendation data
