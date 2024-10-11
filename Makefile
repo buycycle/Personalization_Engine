@@ -47,7 +47,7 @@ all: install lint test
 
 # Deployment
 
-APP_NAME := recommendation
+APP_NAME := recommendation-api-ab-test
 VALUES_FILE = values.yaml
 CLONE_DIR := /tmp/$(APP_NAME)/$(ENV)
 REPO_NAME := buycycle-helm
