@@ -22,6 +22,7 @@ from buycycle.logger import Logger
 from buycycle.data import (
     get_numeric_frame_size,
     validate_integer_field,
+    NumpyEncoder,
 )
 
 # sql queries and feature selection
@@ -51,19 +52,6 @@ from src.strategies import strategy_dict
 # custom json encoder of the response
 import numpy as np
 import json
-
-
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return super(NumpyEncoder, self).default(obj)
-
 
 config_paths = "config/config.ini"
 config = configparser.ConfigParser()
