@@ -97,13 +97,9 @@ def test_integration_fast_time_len_strats_random_bikes(
         for strategy in strategies:
             payload = create_payload(inputs, strategy, bike_id=bike_id)
 
-            # Print the JSON payload
-            print("Payload:", payload)
 
             response, elapsed_time = post_request(inputs["client"], payload)
 
-            # Print the response
-            print("Response:", response.json())
 
             assert_response(response, strategy, elapsed_time, limit)
             assert_recommendation_length(
@@ -112,14 +108,14 @@ def test_integration_fast_time_len_strats_random_bikes(
 
 
 def test_integration_fast_time_len_strats_bikes(
-    inputs, testdata_content, limit=LIMIT_MS, n_test=N_TEST_BIKES
+    inputs, testdata_content, limit=LIMIT_MS, n_test_bikes=N_TEST_BIKES
 ):
     """Test time and length of return for all strategies and a sample of bike_ids."""
     strategies = PRODUCT_PAGE_STRATEGY
     bike_ids = testdata_content.df_status_masked.index.tolist()
 
     # Ensure we don't exceed the number of available bike IDs
-    n_test = min(n_test, len(bike_ids))
+    n_test = min(n_test_bikes, len(bike_ids))
 
     # Use the first n_test bike IDs from the DataFrame
     test_bike_ids = bike_ids[:n_test]
@@ -128,13 +124,8 @@ def test_integration_fast_time_len_strats_bikes(
         for strategy in strategies:
             payload = create_payload(inputs, strategy, bike_id=bike_id)
 
-            # Print the JSON payload
-            print("Payload:", payload)
-
             response, elapsed_time = post_request(inputs["client"], payload)
 
-            # Print the response
-            print("Response:", response.json())
 
             assert_response(response, strategy, elapsed_time, limit)
             assert_recommendation_length(
@@ -161,27 +152,96 @@ def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
     ), f"Expected all recommendations to be strings for strategy 'bot', got {recommendation}"
 
 
-def test_recommendations_fit_preference_mask_with_user_preferences(
+def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     inputs,
     testdata_content,
     testdata_collaborative,
     n_test_users=N_TEST_USERS,
     n_test_bikes=N_TEST_BIKES,
 ):
-    """Test that recommendations fit the preference mask, including user-specific preferences."""
+    """Test that recommendations for known bikes fit the preference mask, including user-specific preferences."""
     data_store_content = testdata_content
     strategies = PRODUCT_PAGE_STRATEGY + COLLAB_STRATEGY
-    # Filter users to include only those with IDs shorter than 10 characters
-    users = [
-        user_id
-        for user_id in testdata_collaborative.dataset.mapping()[0].keys()
-        if len(user_id) < 10
-    ]
-    # add here to filter out users that we also have preferences for
-    sampled_users = random.sample(users, n_test_users)
+    # Filter users to include are in the collaborative model and have preference
+    preference_user_ids = set(data_store_content.df_preference_user.index)
+    collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
+    # Find the intersection of both sets
+    valid_user_ids = preference_user_ids.intersection(collaborative_user_ids)
+    # Sample users from the intersection
+    sampled_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
+    test_users = [inputs['user_id']] + sampled_users
+    # active bikes
+    bike_ids = testdata_content.df_status_masked.index.tolist()
+
+    # Ensure we don't exceed the number of available bike IDs
+    n_test = min(n_test_bikes, len(bike_ids))
+
+    # Use the first n_test bike IDs from the DataFrame
+    test_bike_ids = bike_ids[:n_test]
+    for user_id in test_users:
+        for bike_id in test_bike_ids:
+            for strategy in strategies:
+                payload = create_payload(
+                    inputs, strategy, bike_id=bike_id, user_id=user_id
+                )
+                # Simulate a POST request to the recommendation endpoint
+                response, _ = post_request(inputs["client"], payload)
+                # Ensure the request was successful
+                assert (
+                    response.status_code == 200
+                ), f"Request failed with status code {response.status_code}"
+                # Get the recommendations from the response
+                data = response.json()
+                recommendations = data.get("recommendation")
+                # Assert the length of the recommendations
+                assert_recommendation_length(recommendations, strategy, inputs["n"])
+                # Recreate the preference mask logic from the model using testdata_content
+                # Get general and user-specific preference masks
+                preference_mask = get_mask_continent(
+                    data_store_content, inputs["continent_id"]
+                )
+                preference_mask_user = get_user_preference_mask(
+                    data_store_content, user_id, strategy
+                )
+                # Combine general and user-specific preference masks
+                if preference_mask_user:
+                    preference_mask_set = set(preference_mask)
+                    preference_mask_user_set = set(preference_mask_user)
+                    combined_mask = preference_mask_set.intersection(
+                        preference_mask_user_set
+                    )
+                    preference_mask = sorted(list(combined_mask))
+                    for recommendation in recommendations:
+                        assert (
+                            recommendation in preference_mask
+                        ), (
+                            f"Recommendation {recommendation} does not fit the preference mask.\n"
+                            f"payload: {payload}\n"
+                            f"Preference Mask: {preference_mask}\n"
+                            f"Recommendations: {recommendations}"
+                        )
+
+def test_recommendations_fit_preference_mask_with_user_preferences_random_bikes(
+    inputs,
+    testdata_content,
+    testdata_collaborative,
+    n_test_users=N_TEST_USERS,
+    n_test_bikes=N_TEST_BIKES,
+):
+    """Test that recommendations for random bikes fit the preference mask, including user-specific preferences."""
+    data_store_content = testdata_content
+    strategies = PRODUCT_PAGE_STRATEGY + COLLAB_STRATEGY
+    # Filter users to include are in the collaborative model and have preference
+    preference_user_ids = set(data_store_content.df_preference_user.index)
+    collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
+    # Find the intersection of both sets
+    valid_user_ids = preference_user_ids.intersection(collaborative_user_ids)
+    # Sample users from the intersection
+    sampled_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
+    test_users = [inputs['user_id']] + sampled_users
     # Get a random sample of bike_ids
     random_bike_ids = np.random.choice(50000, size=n_test_bikes, replace=False).tolist()
-    for user_id in sampled_users:
+    for user_id in test_users:
         for bike_id in random_bike_ids:
             for strategy in strategies:
                 payload = create_payload(
@@ -214,8 +274,12 @@ def test_recommendations_fit_preference_mask_with_user_preferences(
                         preference_mask_user_set
                     )
                     preference_mask = sorted(list(combined_mask))
-                    # Check that all recommendations fit the combined preference mask
                     for recommendation in recommendations:
                         assert (
                             recommendation in preference_mask
-                        ), f"Recommendation {recommendation} does not fit the preference mask"
+                        ), (
+                            f"Recommendation {recommendation} does not fit the preference mask.\n"
+                            f"payload: {payload}\n"
+                            f"Preference Mask: {preference_mask}\n"
+                            f"Recommendations: {recommendations}"
+                        )
