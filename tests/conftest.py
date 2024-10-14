@@ -94,7 +94,7 @@ def testdata_content():
     """Create and return a DataStoreContent instance for testing."""
     os.makedirs(DATA_PATH, exist_ok=True)
     create_data_model_content(
-        main_query + "LIMIT 500",
+        main_query + "LIMIT 1000",
         main_query_dtype,
         quality_query,
         quality_query_dtype,
@@ -124,7 +124,7 @@ def testdata_collaborative():
     create_data_model_collaborative(
         DB="DB_EVENTS",
         driver="snowflake",
-        query=query + "LIMIT 1000",
+        query=query + "LIMIT 4000",
         user_id=user_id,
         bike_id=bike_id,
         user_features=user_features,
