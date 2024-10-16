@@ -35,24 +35,32 @@ def post_request(client, payload):
     return response, end_time - start_time
 
 
-def assert_response(response, strategy, elapsed_time, limit):
-    """Assert the response status, time."""
-    assert (
-        response.status_code == 200
-    ), f"Request failed with status code {response.status_code} for strategy {strategy}. Response: {response.text}"
+def assert_response(response, payload, elapsed_time, limit):
+    """Assert the response status and time."""
+    assert response.status_code == 200, (
+        f"Request failed with status code {response.status_code}.\n"
+        f"Payload: {payload}\n"
+        f"Response: {response.text}"
+    )
+
     data = response.json()
     recommendation = data.get("recommendation")
-    assert (
-        elapsed_time < limit
-    ), f"{strategy} took {elapsed_time * 1000} ms, limit is {limit * 1000} ms"
+
+    assert elapsed_time < limit, (
+        f"Request exceeded time limit.\n"
+        f"Payload: {payload}\n"
+        f"Elapsed Time: {elapsed_time * 1000:.2f} ms\n"
+        f"Time Limit: {limit * 1000:.2f} ms"
+    )
 
 
-def assert_recommendation_length(recommendation, strategy, expected_length):
-    """Assert the length."""
-    assert (
-        len(recommendation) == expected_length
-    ), f"Expected {expected_length} recommendations for strategy {strategy}, got {len(recommendation)}"
-
+def assert_recommendation_length(recommendation, payload, expected_length):
+    """Assert the length of the recommendation list."""
+    assert len(recommendation) == expected_length, (
+        f"Expected {expected_length} recommendations "
+        f"but got {len(recommendation)}.\n"
+        f"Payload: {payload}"
+    )
 
 def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
     """Test time and length of return for all strategies of the FastAPI app."""
@@ -63,7 +71,7 @@ def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
     for strategy in strategies:
         payload = create_payload(inputs, strategy)
         response, elapsed_time = post_request(inputs["client"], payload)
-        assert_response(response, strategy, elapsed_time, limit)
+        assert_response(response, payload, elapsed_time, limit)
 
 
 def test_integration_fast_time_strats_collab_users(
@@ -79,11 +87,12 @@ def test_integration_fast_time_strats_collab_users(
     ]
     for user_id in random.sample(users, n_test):
         for strategy in strategies:
+            user_id = int(user_id)
             payload = create_payload(inputs, strategy, user_id=user_id)
             response, elapsed_time = post_request(inputs["client"], payload)
-            assert_response(response, strategy, elapsed_time, limit)
+            assert_response(response, payload, elapsed_time, limit)
             assert_recommendation_length(
-                response.json().get("recommendation"), strategy, inputs["n"]
+                response.json().get("recommendation"), payload, inputs["n"]
             )
 
 
@@ -101,10 +110,11 @@ def test_integration_fast_time_len_strats_random_bikes(
             response, elapsed_time = post_request(inputs["client"], payload)
 
 
-            assert_response(response, strategy, elapsed_time, limit)
+            assert_response(response, payload, elapsed_time, limit)
             assert_recommendation_length(
-                response.json().get("recommendation"), strategy, inputs["n"]
+                response.json().get("recommendation"), payload, inputs["n"]
             )
+
 
 
 def test_integration_fast_time_len_strats_bikes(
@@ -126,9 +136,9 @@ def test_integration_fast_time_len_strats_bikes(
 
             response, elapsed_time = post_request(inputs["client"], payload)
 
-            assert_response(response, strategy, elapsed_time, limit)
+            assert_response(response, payload, elapsed_time, limit)
             assert_recommendation_length(
-                response.json().get("recommendation"), strategy, inputs["n"]
+                response.json().get("recommendation"), payload, inputs["n"]
             )
 
 def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
@@ -159,17 +169,20 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     n_test_bikes=N_TEST_BIKES,
     limit=LIMIT_MS,
 ):
-    """Test that recommendations for known bikes fit the preference mask, including user-specific preferences."""
+    """
+    Test that recommendations for known bikes fit the preference mask, including user-specific preferences.
+    Test on the intersection of users we have preferences for and a colloaborative filtering strategy.
+
+    """
     data_store_content = testdata_content
     strategies = PRODUCT_PAGE_STRATEGY + COLLAB_STRATEGY
     # Filter users to include are in the collaborative model and have preference
     preference_user_ids = set(data_store_content.df_preference_user.index)
     collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
     # Find the intersection of both sets
-    valid_user_ids = preference_user_ids.intersection(collaborative_user_ids)
+    valid_user_ids = collaborative_user_ids.intersection(preference_user_ids)
     # Sample users from the intersection
-    sampled_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
-    test_users = [inputs['user_id']] + sampled_users
+    test_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
     # active bikes
     bike_ids = testdata_content.df_status_masked.index.tolist()
 
@@ -181,79 +194,20 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     for user_id in test_users:
         for bike_id in test_bike_ids:
             for strategy in strategies:
+                user_id = int(user_id)
                 payload = create_payload(
                     inputs, strategy, bike_id=bike_id, user_id=user_id
                 )
                 response, elapsed_time = post_request(inputs["client"], payload)
 
-                assert_response(response, strategy, elapsed_time, limit)
+                assert_response(response, payload, elapsed_time, limit)
                 # Get the recommendations from the response
                 data = response.json()
                 recommendations = data.get("recommendation")
                 # Assert the length of the recommendations
-                assert_recommendation_length(recommendations, strategy, inputs["n"])
-                # Recreate the preference mask logic from the model using testdata_content
-                # Get general and user-specific preference masks
-                preference_mask = get_mask_continent(
-                    data_store_content, inputs["continent_id"]
+                assert_recommendation_length(
+                    response.json().get("recommendation"), payload, inputs["n"]
                 )
-                preference_mask_user = get_user_preference_mask(
-                    data_store_content, user_id, strategy
-                )
-                # Combine general and user-specific preference masks
-                if preference_mask_user:
-                    preference_mask_set = set(preference_mask)
-                    preference_mask_user_set = set(preference_mask_user)
-                    combined_mask = preference_mask_set.intersection(
-                        preference_mask_user_set
-                    )
-                    preference_mask = sorted(list(combined_mask))
-                    for recommendation in recommendations:
-                        assert (
-                            recommendation in preference_mask
-                        ), (
-                            f"Recommendation {recommendation} does not fit the preference mask.\n"
-                            f"payload: {payload}\n"
-                            f"Preference Mask: {preference_mask}\n"
-                            f"Recommendations: {recommendations}"
-                        )
-
-def test_recommendations_fit_preference_mask_with_user_preferences_random_bikes(
-    inputs,
-    testdata_content,
-    testdata_collaborative,
-    n_test_users=N_TEST_USERS,
-    n_test_bikes=N_TEST_BIKES,
-    limit=LIMIT_MS,
-):
-    """Test that recommendations for random bikes fit the preference mask, including user-specific preferences."""
-    data_store_content = testdata_content
-    strategies = PRODUCT_PAGE_STRATEGY + COLLAB_STRATEGY
-    # Filter users to include are in the collaborative model and have preference
-    preference_user_ids = set(data_store_content.df_preference_user.index)
-    collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
-    # Find the intersection of both sets
-    valid_user_ids = preference_user_ids.intersection(collaborative_user_ids)
-    # Sample users from the intersection
-    sampled_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
-    test_users = [inputs['user_id']] + sampled_users
-    # Get a random sample of bike_ids
-    random_bike_ids = np.random.choice(50000, size=n_test_bikes, replace=False).tolist()
-    for user_id in test_users:
-        for bike_id in random_bike_ids:
-            for strategy in strategies:
-                payload = create_payload(
-                    inputs, strategy, bike_id=bike_id, user_id=user_id
-                )
-                # Simulate a POST request to the recommendation endpoint
-                response, elapsed_time = post_request(inputs["client"], payload)
-
-                assert_response(response, strategy, elapsed_time, limit)
-                # Get the recommendations from the response
-                data = response.json()
-                recommendations = data.get("recommendation")
-                # Assert the length of the recommendations
-                assert_recommendation_length(recommendations, strategy, inputs["n"])
                 # Recreate the preference mask logic from the model using testdata_content
                 # Get general and user-specific preference masks
                 preference_mask = get_mask_continent(
