@@ -64,7 +64,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "canary-009-preference"
+app_version = "canary-009-reranking"
 
 logger = Logger.configure_logger(
     environment, ab, app_name, app_version, log_level=logging.INFO
@@ -205,7 +205,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # randomize over the top n * x
     sample = n * 2
 
-    # Instantiate strategy
+    # log target strategy
     strategy_target = strategy_name
 
     # lock the data stores to prevent data from being updated while we are using it
@@ -220,7 +220,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             preference_mask_set = set(preference_mask)
             preference_mask_user_set = set(preference_mask_user)
             combined_mask = preference_mask_set.intersection(preference_mask_user_set)
-            preference_mask = sorted(list(combined_mask))
+            #preference_mask = sorted(list(combined_mask))
 
         strategy_factory = StrategyFactory(strategy_dict)
 
