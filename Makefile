@@ -11,7 +11,7 @@ juypter:
 
 test:
 	## run integration test
-	pytest -s tests/test_fastapi.py
+	pytest -v -s tests/test_fastapi.py
 integration:
 	## run integration tests
 	pytest tests/test_fastapi.py
