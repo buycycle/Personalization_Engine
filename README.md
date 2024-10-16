@@ -17,6 +17,7 @@ The model implements three algorithm for content based recommendation.
 
     Since the click data in the DB is discontinued, we randomized the order of the df until the new quality DB is red.
 	Currently this is relevant for the edge case that the bike_id is not yet in the constructed similarity matrix
+    The prefiltered features need to be send in the request.
 
 2. get_top_n_recommendations
 	Returns the top n recommendations for a bike_id
