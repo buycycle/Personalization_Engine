@@ -57,6 +57,7 @@ class FallbackContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
+        # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(
             self.similarity_matrix, bike_id
         )
@@ -115,6 +116,7 @@ class ContentMixed(RecommendationStrategy):
         frame_size_code: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
+        # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(
             self.similarity_matrix, bike_id
         )

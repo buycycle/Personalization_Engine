@@ -81,9 +81,10 @@ def get_top_n_quality_prefiltered(
     Returns:
         list: list of top n bike ids by quality
     """
+    df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
     # Filter for 20% higher and lower price
-    df_filtered_bike_type = df_quality[
-        df_quality["bike_type"] == bike_type
+    df_filtered_bike_type = df_quality_preference[
+        df_quality_preference["bike_type"] == bike_type
     ]
     # Filter for 20% higher and lower price
     df_filtered_price = df_filtered_bike_type[
@@ -128,9 +129,9 @@ def get_top_n_recommendations(
 
     """
 
-    filtered_df = bike_similarity_df[bike_similarity_df.index.isin(preference_mask)]
-    # Check if the filtered DataFrame has at least n rows using df.shape[0]
-    if filtered_df.shape[0] >= n:
+    filtered_df = bike_similarity_df.loc[:, bike_similarity_df.columns.isin(preference_mask)]
+
+    if filtered_df.shape[1] >= n:
         bike_similarity_df = filtered_df
 
     # squeeze to convert pd.DataFrame into pd.Series
@@ -166,8 +167,6 @@ def get_top_n_recommendations_prefiltered(
     if len(filtered_df) >= n:
         df_status_masked = filtered_df
 
-    # get the values of the prefilter_features for the bike_id
-    df_status_masked = df_status_masked[df_status_masked.index.isin(preference_mask)]
 
     prefilter_values = df.loc[bike_id, prefilter_features]
 

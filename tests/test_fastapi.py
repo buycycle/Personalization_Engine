@@ -39,7 +39,7 @@ def assert_response(response, strategy, elapsed_time, limit):
     """Assert the response status, time."""
     assert (
         response.status_code == 200
-    ), f"Request failed with status code {response.status_code} for strategy {strategy}"
+    ), f"Request failed with status code {response.status_code} for strategy {strategy}. Response: {response.text}"
     data = response.json()
     recommendation = data.get("recommendation")
     assert (
@@ -112,8 +112,7 @@ def test_integration_fast_time_len_strats_bikes(
 ):
     """Test time and length of return for all strategies and a sample of bike_ids."""
     strategies = PRODUCT_PAGE_STRATEGY
-    bike_ids = testdata_content.df_status_masked.index.tolist()
-
+    bike_ids = testdata_content.similarity_matrix.cols
     # Ensure we don't exceed the number of available bike IDs
     n_test = min(n_test_bikes, len(bike_ids))
 
@@ -122,10 +121,10 @@ def test_integration_fast_time_len_strats_bikes(
 
     for bike_id in test_bike_ids:
         for strategy in strategies:
-            payload = create_payload(inputs, strategy, bike_id=bike_id)
+            payload = create_payload(inputs, strategy, bike_id=int(bike_id))
+
 
             response, elapsed_time = post_request(inputs["client"], payload)
-
 
             assert_response(response, strategy, elapsed_time, limit)
             assert_recommendation_length(
@@ -158,6 +157,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     testdata_collaborative,
     n_test_users=N_TEST_USERS,
     n_test_bikes=N_TEST_BIKES,
+    limit=LIMIT_MS,
 ):
     """Test that recommendations for known bikes fit the preference mask, including user-specific preferences."""
     data_store_content = testdata_content
@@ -184,12 +184,9 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                 payload = create_payload(
                     inputs, strategy, bike_id=bike_id, user_id=user_id
                 )
-                # Simulate a POST request to the recommendation endpoint
-                response, _ = post_request(inputs["client"], payload)
-                # Ensure the request was successful
-                assert (
-                    response.status_code == 200
-                ), f"Request failed with status code {response.status_code}"
+                response, elapsed_time = post_request(inputs["client"], payload)
+
+                assert_response(response, strategy, elapsed_time, limit)
                 # Get the recommendations from the response
                 data = response.json()
                 recommendations = data.get("recommendation")
@@ -227,6 +224,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_random_bikes(
     testdata_collaborative,
     n_test_users=N_TEST_USERS,
     n_test_bikes=N_TEST_BIKES,
+    limit=LIMIT_MS,
 ):
     """Test that recommendations for random bikes fit the preference mask, including user-specific preferences."""
     data_store_content = testdata_content
@@ -248,11 +246,9 @@ def test_recommendations_fit_preference_mask_with_user_preferences_random_bikes(
                     inputs, strategy, bike_id=bike_id, user_id=user_id
                 )
                 # Simulate a POST request to the recommendation endpoint
-                response, _ = post_request(inputs["client"], payload)
-                # Ensure the request was successful
-                assert (
-                    response.status_code == 200
-                ), f"Request failed with status code {response.status_code}"
+                response, elapsed_time = post_request(inputs["client"], payload)
+
+                assert_response(response, strategy, elapsed_time, limit)
                 # Get the recommendations from the response
                 data = response.json()
                 recommendations = data.get("recommendation")
