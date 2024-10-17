@@ -16,6 +16,7 @@ LIMIT_MS = 200
 N_TEST_USERS = 2
 N_TEST_BIKES = 100
 
+random.seed(1)
 
 def create_payload(inputs, strategy, bike_id=None, user_id=None):
     """Create a payload for the recommendation request."""

@@ -343,6 +343,7 @@ def get_top_n_collaborative_randomized(
     """
     Retrieve the top k item ids for a given user_id by using model.predict()
     Randomized from a sample of top_item_ids
+    If no collaborative results are available return an empty list
 
     Args:
         model (LightFM): Trained LightFM model.
@@ -365,7 +366,7 @@ def get_top_n_collaborative_randomized(
             return (
                 top_n_item_ids,
                 error,
-            )  # Return immediately with an empty list and error message
+            )
         # map user_id to user_id in dataset
         user_id_index = dataset.mapping()[0][user_id]
 
