@@ -182,6 +182,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
     # Find the intersection of both sets
     valid_user_ids = collaborative_user_ids.intersection(preference_user_ids)
+    valid_user_ids = list(valid_user_ids)
     # Sample users from the intersection
     test_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
     # active bikes
