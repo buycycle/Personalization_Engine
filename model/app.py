@@ -329,7 +329,23 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         if error:
             # Return error response if it exists
-            logger.error("Error no recommendation available, exception: " + error)
+            logger.error("Error no recommendation available, exception: " + error,
+
+                extra={
+                    "strategy_target": strategy_target,
+                    "strategy_used": strategy,
+                    "user_id": user_id,
+                    "distinct_id": distinct_id,
+                    "continent_id": continent_id,
+                    "bike_id": bike_id,
+                    "bike_type": bike_type,
+                    "family_id": family_id,
+                    "price": price,
+                    "frame_size_code": frame_size_code,
+                    "n": n,
+                    "recommendation": recommendation,
+                },
+            )
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Error no recommendation available: {error}",
