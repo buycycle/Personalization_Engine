@@ -4,7 +4,6 @@ bike_id = "bike_id"
 
 item_features = [
     "family_id",
-    "bike_type_id",
     "bike_category_id",
     "rider_height_min",
     "rider_height_max",
@@ -34,7 +33,7 @@ implicit_feedback = {
     "request_leasing": 20,
     "share_bike": 10,
     "show_recommendation": -0.5,
-    "engaged_bike": 1,
+    "engaged_bike": 2,
 }
 
 test_query = """

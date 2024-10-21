@@ -203,7 +203,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         id = str(user_id)
 
     # randomize over the top n * x
-    sample = n * 2
+    sample = 100
 
     # log target strategy
     strategy_target = strategy_name

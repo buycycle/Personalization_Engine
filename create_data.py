@@ -27,7 +27,7 @@ path = sys.argv[1] if len(sys.argv) > 1 else "./data/"
 is_test_mode = len(sys.argv) > 2 and sys.argv[2] == "test"
 # Add limits to the queries if in test mode
 main_query_limit = " LIMIT 1000" if is_test_mode else ""
-collaborative_query_limit = " LIMIT 4000" if is_test_mode else ""
+collaborative_query_limit = " LIMIT 10000" if is_test_mode else ""
 
 create_data_model_content(
     main_query=main_query + main_query_limit,
@@ -50,7 +50,7 @@ create_data_model_content(
 )
 print("created_data_model_content")
 
-test_auc = create_data_model_collaborative(
+precision_at_k = create_data_model_collaborative(
     DB="DB_EVENTS",
     driver="snowflake",
     query=query + collaborative_query_limit,
@@ -62,7 +62,7 @@ test_auc = create_data_model_collaborative(
     path=path,
 )
 
-print(f"created_data_model_collaborative with Test AUC: {test_auc}")
+print(f"created_data_model_collaborative with precision_at_k: {precision_at_k}")
 
 # sleep to make sure the data saved
 time.sleep(4)

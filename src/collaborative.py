@@ -121,7 +121,7 @@ def construct_user_features(df, dataset, bike_id, user_features):
     return user_features_matrix
 
 
-def construct_train_test(interactions, interactions_weights, test_percentage=0.2):
+def construct_train_test(interactions, interactions_weights, test_percentage=0.05):
     train, test = random_train_test_split(
         interactions,
         test_percentage=test_percentage,
@@ -142,10 +142,10 @@ def construct_model(
     user_features_matrix,
     item_features_matrix,
     weights,
-    epochs=10,
-    num_components=30,
-    learning_rate=0.05,
-    loss="warp",
+    epochs,
+    num_components,
+    learning_rate,
+    loss,
     random_state=1,
 ):
     """Initialize a LightFM model instance and fit to the training data
@@ -183,12 +183,12 @@ def get_model(
     user_features,
     item_features,
     feedback="feedback",
-    k=4,
+    k=100,
     test_percentage=0.05,
     epochs=10,
     num_components=30,
     learning_rate=0.05,
-    loss="warp",
+    loss="bpr",
     random_state=1,
 ):
     """construct necessary datasets and fit model
@@ -240,7 +240,7 @@ def get_model(
         random_state,
     )
 
-    test_auc = auc(model, train, test, user_features_matrix, item_features_matrix)
+    precision = precision_at_k(model=model, test_interactions=test, train_interactions=train, k=k, user_features=user_features_matrix, item_features=item_features_matrix, num_threads=4).mean()
 
     return (
         model,
@@ -251,7 +251,7 @@ def get_model(
         interactions_weights,
         user_features_matrix,
         item_features_matrix,
-        test_auc,
+        precision,
     )
 
 
@@ -266,12 +266,12 @@ def update_model(df, user_id, bike_id, user_features, item_features, path):
         interactions_weights,
         user_features_matrix,
         item_features_matrix,
-        test_auc,
+        precision_at_k,
     ) = get_model(df, user_id, bike_id, user_features, item_features)
 
     write_model_data(model, dataset, path)
 
-    return test_auc
+    return precision_at_k
 
 
 def auc(model, train, test, user_features_matrix, item_features_matrix, num_threads=4):
@@ -440,9 +440,9 @@ def create_data_model_collaborative(
     df = df.dropna()
     df = df.reset_index()
 
-    test_auc = update_model(df, user_id, bike_id, user_features, item_features, path)
+    precision_at_k = update_model(df, user_id, bike_id, user_features, item_features, path)
 
-    return test_auc
+    return precision_at_k
 
 
 class DataStoreCollaborative(DataStoreBase):
