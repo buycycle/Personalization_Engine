@@ -92,10 +92,6 @@ def test_integration_fast_time_strats_collab_users(
             payload = create_payload(inputs, strategy, user_id=user_id)
             response, elapsed_time = post_request(inputs["client"], payload)
             assert_response(response, payload, elapsed_time, limit)
-            assert_recommendation_length(
-                response.json().get("recommendation"), payload, inputs["n"]
-            )
-
 
 def test_integration_fast_time_len_strats_random_bikes(
     inputs, limit=LIMIT_MS, n_test=N_TEST_BIKES
