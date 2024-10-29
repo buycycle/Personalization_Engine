@@ -64,7 +64,7 @@ app = FastAPI()
 environment = os.getenv("ENVIRONMENT")
 ab = os.getenv("AB")
 app_name = "recommender-system"
-app_version = "canary-011"
+app_version = "canary-012"
 
 logger = Logger.configure_logger(
     environment, ab, app_name, app_version, log_level=logging.INFO
@@ -218,7 +218,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         preference_mask= set(preference_mask)
         preference_mask_user = set(preference_mask_user)
         # Combine general and user-specific preference masks
-        preference_mask = preference_mask.intersection(preference_mask_user)
+        #preference_mask = preference_mask.intersection(preference_mask_user)
 
         strategy_factory = StrategyFactory(strategy_dict)
 
