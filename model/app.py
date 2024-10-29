@@ -211,14 +211,15 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
         # Get general and user-specific preference masks
+# Get general and user-specific preference masks
         preference_mask = get_mask_continent(data_store_content, continent_id)
-        preference_mask_user = get_user_preference_mask(
-            data_store_content, user_id, strategy_name
-        )
-        preference_mask= set(preference_mask)
+        preference_mask_user = get_user_preference_mask(data_store_content, user_id, strategy_name)
+# Convert lists to sets
+        preference_mask = set(preference_mask)
         preference_mask_user = set(preference_mask_user)
-        # Combine general and user-specific preference masks
-        #preference_mask = preference_mask.intersection(preference_mask_user)
+# Combine general and user-specific preference masks only if preference_mask_user is not empty
+        if preference_mask_user:
+            preference_mask = preference_mask.intersection(preference_mask_user)
 
         strategy_factory = StrategyFactory(strategy_dict)
 
