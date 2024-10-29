@@ -69,48 +69,64 @@ def get_top_n_quality_prefiltered(
     n: int = 16,
 ) -> list:
     """
-    Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
+    Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id.
     Args:
-        df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
-        preference_mask (set): bike indicies matching preferences
-        bike_type (int): bike_type of the bike
-        family_id (int): family_id of the bike
-        price (int): price of the bike
-        frame_size_code (str): frame_size_code of the bike
-        n (int): number of recommendations to return
+        df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality.
+        preference_mask (set): Bike indices matching preferences.
+        bike_type (int): Bike type of the bike.
+        family_id (int): Family ID of the bike.
+        price (int): Price of the bike.
+        frame_size_code (str): Frame size code of the bike.
+        n (int): Number of recommendations to return.
     Returns:
-        list: list of top n bike ids by quality
+        list: List of top n bike ids by quality.
     """
-    df_quality_preference = df_quality[df_quality.index.isin(preference_mask)]
-    # Filter for 20% higher and lower price
-    df_filtered_bike_type = df_quality_preference[
-        df_quality_preference["bike_type"] == bike_type
-    ]
-    # Filter for 20% higher and lower price
-    df_filtered_price = df_filtered_bike_type[
-        (df_filtered_bike_type["price"] >= price * 0.8)
-        & (df_filtered_bike_type["price"] <= price * 1.2)
-    ]
-    # Filter for same frame_size_code
-    df_filtered_size = df_filtered_price[
-        df_filtered_price["frame_size_code"] == frame_size_code
-    ]
-    # Filter for same family_id
-    df_filtered_family = df_filtered_size[df_filtered_size["family_id"] == family_id]
+    # Ensure preference_mask is a set for fast membership testing
+    if not isinstance(preference_mask, set):
+        preference_mask = set(preference_mask)
+    # Apply all filters at once
+    mask = (
+        df_quality.index.isin(preference_mask)
+        & (df_quality["bike_type"] == bike_type)
+        & (df_quality["price"] >= price * 0.8)
+        & (df_quality["price"] <= price * 1.2)
+        & (df_quality["frame_size_code"] == frame_size_code)
+        & (df_quality["family_id"] == family_id)
+    )
+    df_filtered = df_quality[mask]
     # Step-wise approach to get at least n elements
-    if len(df_filtered_family) >= n:
-        return df_filtered_family.head(n).index.tolist()
-    elif len(df_filtered_size) >= n:
+    if len(df_filtered) >= n:
+        return df_filtered.head(n).index.tolist()
+    # Relax filters progressively
+    mask_size = (
+        df_quality.index.isin(preference_mask)
+        & (df_quality["bike_type"] == bike_type)
+        & (df_quality["price"] >= price * 0.8)
+        & (df_quality["price"] <= price * 1.2)
+        & (df_quality["frame_size_code"] == frame_size_code)
+    )
+    df_filtered_size = df_quality[mask_size]
+    if len(df_filtered_size) >= n:
         return df_filtered_size.head(n).index.tolist()
-    elif len(df_filtered_price) >= n:
+    mask_price = (
+        df_quality.index.isin(preference_mask)
+        & (df_quality["bike_type"] == bike_type)
+        & (df_quality["price"] >= price * 0.8)
+        & (df_quality["price"] <= price * 1.2)
+    )
+    df_filtered_price = df_quality[mask_price]
+    if len(df_filtered_price) >= n:
         return df_filtered_price.head(n).index.tolist()
-    elif len(df_filtered_bike_type) >= n:
+    mask_bike_type = (
+        df_quality.index.isin(preference_mask)
+        & (df_quality["bike_type"] == bike_type)
+    )
+    df_filtered_bike_type = df_quality[mask_bike_type]
+    if len(df_filtered_bike_type) >= n:
         return df_filtered_bike_type.head(n).index.tolist()
-    elif len(df_quality_preference) >= n:
-        return df_quality_preference.head(n).index.tolist()
-    else:
+    if len(df_quality) >= n:
         return df_quality.head(n).index.tolist()
-
+    return df_quality.index.tolist()
 
 def get_top_n_recommendations(
     bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: set, n: int = 16
