@@ -51,7 +51,7 @@ FRAME_SIZE_CODE = "56"
 RIDER_HEIGHT_MIN = 140
 RIDER_HEIGHT_MAX = 195
 RIDER_HEIGHT = 180
-N = 2
+N = 20
 
 
 @pytest.fixture(scope="package")

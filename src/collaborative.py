@@ -355,99 +355,20 @@ def get_top_n_collaborative_randomized(
         item_index_id_map = {v: c for c, v in item_mapping.items()}
         # Combine masks and filter
         combined_mask = df_status_masked_set & preference_mask
-        filtered_top_item_ids = [
-            item_index_id_map[item_id]
-            for item_id in top_items
-            if item_index_id_map[item_id] in combined_mask
-        ]
+        top_item_ids = [item_index_id_map[item_id] for item_id in top_items]
+
+        # filter out items that are not in df_status_masked.index
+        top_item_ids = [item_id for item_id in top_item_ids if item_id in combined_mask]
         # Randomly sample from the top_item_ids to introduce some variance
-        top_item_ids = filtered_top_item_ids[:sample]
+        top_item_ids = top_item_ids[:sample]
         random.shuffle(top_item_ids)
         top_n_item_ids = top_item_ids[:n]
         return top_n_item_ids, None
+
     except Exception as e:
         logger.error(f"Error in get_top_n_collaborative_randomized: {str(e)}")
         return [], str(e)
 
-def get_top_n_collaborative_randomized(
-    model,
-    user_id: str,
-    preference_mask: set,
-    n: int,
-    sample: int,
-    dataset,
-    df_status_masked_set: set,
-    logger,
-) -> Tuple[List, Optional[str]]:
-    """
-    Retrieve the top k item ids for a given user_id by using model.predict()
-    Randomized from a sample of top_item_ids
-    If no collaborative results are available return an empty list
-
-    Args:
-        model (LightFM): Trained LightFM model.
-        user_id (str): user_id for which to retrieve top k items.
-        preference_mask(set): bike indicies matching preferences
-        n (int): Number of top items to retrieve.
-        sample (int): number of samples to randomize on
-        dataset (Dataset): LightFM dataset object containing mapping between internal and external ids.
-        df_status_masked_set (set): status masked dataframe
-        logger (Logger): Logger object.
-
-    Returns:
-        list: List of top n item ids for the given user.
-        str: Error message if any.
-    """
-    error = None
-    top_n_item_ids = []
-    try:
-        if user_id not in dataset.mapping()[0]:
-            return (
-                top_n_item_ids,
-                error,
-            )
-        # map user_id to user_id in dataset
-        user_id_index = dataset.mapping()[0][user_id]
-
-        n_items = dataset.interactions_shape()[1]
-
-        item_ids = np.arange(n_items)
-
-        scores = model.predict(user_id_index, item_ids)
-
-        top_items = np.argsort(-scores)
-
-        # Map internal item index back to external item ids
-        item_index_id_map = {v: c for c, v in dataset.mapping()[2].items()}
-
-        # apply status mask if it resturns enough items
-        filtered_top_item_ids = [
-            item_index_id_map[item_id]
-            for item_id in top_items
-            if item_index_id_map[item_id] in df_status_masked_set
-        ]
-        if len(filtered_top_item_ids) > n:
-            top_item_ids = filtered_top_item_ids
-
-        # apply preference mask if it resturns enough items
-        filtered_top_item_ids = [
-            item_index_id_map[item_id]
-            for item_id in top_items
-            if item_index_id_map[item_id] in preference_mask
-        ]
-        if len(filtered_top_item_ids) > n:
-            top_item_ids = filtered_top_item_ids
-
-        # randomly sample from the top_item_ids to introduce some variance
-        top_item_ids = top_item_ids[:sample]
-        random.shuffle(top_item_ids)
-        top_n_item_ids = top_item_ids[:n]
-
-        return top_n_item_ids, error
-
-    except Exception as e:
-        error = str(e)
-        return top_n_item_ids, error
 
 
 def create_data_model_collaborative(
