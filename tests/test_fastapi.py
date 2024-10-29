@@ -168,8 +168,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
 ):
     """
     Test that recommendations for known bikes fit the preference mask, including user-specific preferences.
-    Test on the intersection of users we have preferences for and a colloaborative filtering strategy.
-
+    Test on the intersection of users we have preferences for and a collaborative filtering strategy.
     """
     data_store_content = testdata_content
     strategies = PRODUCT_PAGE_STRATEGY + COLLAB_STRATEGY
@@ -183,10 +182,8 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
     test_users = random.sample(valid_user_ids, min(n_test_users, len(valid_user_ids)))
     # active bikes
     bike_ids = testdata_content.df_status_masked.index.tolist()
-
     # Ensure we don't exceed the number of available bike IDs
     n_test = min(n_test_bikes, len(bike_ids))
-
     # Use the first n_test bike IDs from the DataFrame
     test_bike_ids = bike_ids[:n_test]
     for user_id in test_users:
@@ -197,7 +194,6 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                     inputs, strategy, bike_id=bike_id, user_id=user_id
                 )
                 response, elapsed_time = post_request(inputs["client"], payload)
-
                 assert_response(response, payload, elapsed_time, limit)
                 # Get the recommendations from the response
                 data = response.json()
@@ -213,7 +209,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                 preference_mask_user = get_user_preference_mask(
                     data_store_content, user_id, strategy
                 )
-                preference_mask= set(preference_mask)
+                preference_mask = set(preference_mask)
                 preference_mask_user = set(preference_mask_user)
                 # Combine general and user-specific preference masks
                 preference_mask = preference_mask.intersection(preference_mask_user)
@@ -226,3 +222,12 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                         f"Preference Mask: {preference_mask}\n"
                         f"Recommendations: {recommendations}"
                     )
+                    # Assert that the recommendation is an active bike
+                    assert (
+                        recommendation in bike_ids
+                    ), (
+                        f"Recommendation {recommendation} is not an active bike.\n"
+                        f"Active Bikes: {bike_ids}\n"
+                        f"Recommendations: {recommendations}"
+                    )
+

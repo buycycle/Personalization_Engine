@@ -360,19 +360,6 @@ def get_top_n_collaborative_randomized(
             for item_id in top_items
             if item_index_id_map[item_id] in combined_mask
         ]
-        # If not enough items, fallback to individual masks
-        if len(filtered_top_item_ids) < n:
-            filtered_top_item_ids = [
-                item_index_id_map[item_id]
-                for item_id in top_items
-                if item_index_id_map[item_id] in df_status_masked_set
-            ]
-            if len(filtered_top_item_ids) < n:
-                filtered_top_item_ids = [
-                    item_index_id_map[item_id]
-                    for item_id in top_items
-                    if item_index_id_map[item_id] in preference_mask
-                ]
         # Randomly sample from the top_item_ids to introduce some variance
         top_item_ids = filtered_top_item_ids[:sample]
         random.shuffle(top_item_ids)
