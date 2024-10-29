@@ -329,11 +329,63 @@ def read_data_model(path="data/"):
         dataset = pickle.load(f)
     return model, dataset
 
+def get_top_n_collaborative_randomized(
+    model,
+    user_id: str,
+    preference_mask: set,
+    n: int,
+    sample: int,
+    dataset,
+    df_status_masked_set: set,
+    logger,
+) -> Tuple[List, Optional[str]]:
+    try:
+        user_mapping, _, item_mapping, _ = dataset.mapping()
+
+        if user_id not in user_mapping:
+            return [], None
+
+        # map user_id to user_id in dataset
+        user_id_index = user_mapping[user_id]
+        n_items = dataset.interactions_shape()[1]
+        item_ids = np.arange(n_items)
+        scores = model.predict(user_id_index, item_ids)
+        top_items = np.argsort(-scores)
+        # Map internal item index back to external item ids
+        item_index_id_map = {v: c for c, v in item_mapping.items()}
+        # Combine masks and filter
+        combined_mask = df_status_masked_set & preference_mask
+        filtered_top_item_ids = [
+            item_index_id_map[item_id]
+            for item_id in top_items
+            if item_index_id_map[item_id] in combined_mask
+        ]
+        # If not enough items, fallback to individual masks
+        if len(filtered_top_item_ids) < n:
+            filtered_top_item_ids = [
+                item_index_id_map[item_id]
+                for item_id in top_items
+                if item_index_id_map[item_id] in df_status_masked_set
+            ]
+            if len(filtered_top_item_ids) < n:
+                filtered_top_item_ids = [
+                    item_index_id_map[item_id]
+                    for item_id in top_items
+                    if item_index_id_map[item_id] in preference_mask
+                ]
+        # Randomly sample from the top_item_ids to introduce some variance
+        top_item_ids = filtered_top_item_ids[:sample]
+        random.shuffle(top_item_ids)
+        top_n_item_ids = top_item_ids[:n]
+        return top_n_item_ids, None
+    except Exception as e:
+        logger.error(f"Error in get_top_n_collaborative_randomized: {str(e)}")
+        return [], str(e)
 
 def get_top_n_collaborative_randomized(
     model,
     user_id: str,
-    preference_mask_set: set,
+    preference_mask: set,
     n: int,
     sample: int,
     dataset,
@@ -348,7 +400,7 @@ def get_top_n_collaborative_randomized(
     Args:
         model (LightFM): Trained LightFM model.
         user_id (str): user_id for which to retrieve top k items.
-        preference_mask_set (set): bike indicies matching preferences
+        preference_mask(set): bike indicies matching preferences
         n (int): Number of top items to retrieve.
         sample (int): number of samples to randomize on
         dataset (Dataset): LightFM dataset object containing mapping between internal and external ids.
@@ -394,7 +446,7 @@ def get_top_n_collaborative_randomized(
         filtered_top_item_ids = [
             item_index_id_map[item_id]
             for item_id in top_items
-            if item_index_id_map[item_id] in preference_mask_set
+            if item_index_id_map[item_id] in preference_mask
         ]
         if len(filtered_top_item_ids) > n:
             top_item_ids = filtered_top_item_ids

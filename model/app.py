@@ -215,12 +215,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         preference_mask_user = get_user_preference_mask(
             data_store_content, user_id, strategy_name
         )
+        preference_mask= set(preference_mask)
+        preference_mask_user = set(preference_mask_user)
         # Combine general and user-specific preference masks
-        if preference_mask_user:
-            preference_mask_set = set(preference_mask)
-            preference_mask_user_set = set(preference_mask_user)
-            combined_mask = preference_mask_set.intersection(preference_mask_user_set)
-            #preference_mask = sorted(list(combined_mask))
+        preference_mask = preference_mask.intersection(preference_mask_user)
 
         strategy_factory = StrategyFactory(strategy_dict)
 

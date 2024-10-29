@@ -209,25 +209,20 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                 # Recreate the preference mask logic from the model using testdata_content
                 # Get general and user-specific preference masks
                 preference_mask = get_mask_continent(
-                    data_store_content, inputs["continent_id"]
-                )
+                    data_store_content, inputs["continent_id"])
                 preference_mask_user = get_user_preference_mask(
                     data_store_content, user_id, strategy
                 )
+                preference_mask= set(preference_mask)
+                preference_mask_user = set(preference_mask_user)
                 # Combine general and user-specific preference masks
-                if preference_mask_user:
-                    preference_mask_set = set(preference_mask)
-                    preference_mask_user_set = set(preference_mask_user)
-                    combined_mask = preference_mask_set.intersection(
-                        preference_mask_user_set
+                preference_mask = preference_mask.intersection(preference_mask_user)
+                for recommendation in recommendations:
+                    assert (
+                        recommendation in preference_mask
+                    ), (
+                        f"Recommendation {recommendation} does not fit the preference mask.\n"
+                        f"payload: {payload}\n"
+                        f"Preference Mask: {preference_mask}\n"
+                        f"Recommendations: {recommendations}"
                     )
-                    preference_mask = sorted(list(combined_mask))
-                    for recommendation in recommendations:
-                        assert (
-                            recommendation in preference_mask
-                        ), (
-                            f"Recommendation {recommendation} does not fit the preference mask.\n"
-                            f"payload: {payload}\n"
-                            f"Preference Mask: {preference_mask}\n"
-                            f"Recommendations: {recommendations}"
-                        )

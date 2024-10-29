@@ -15,7 +15,7 @@ from buycycle.data import (
 
 def get_top_n_quality_prefiltered_bot(
     df_quality: pd.DataFrame,
-    preference_mask_set: set,
+    preference_mask: set,
     filter_features: tuple,
     n: int = 16,
 ) -> Tuple[List[str], Optional[str]]:
@@ -23,7 +23,7 @@ def get_top_n_quality_prefiltered_bot(
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
         df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
-        preference_mask_set (set): bike indices matching preferences
+        preference_mask(set): bike indices matching preferences
         filter_features (tuple): filtering features and filter condition
         n (int): number of recommendations to return
     Returns:
@@ -32,7 +32,7 @@ def get_top_n_quality_prefiltered_bot(
     error = None
     try:
         # Check if the filtered DataFrame has at least n rows
-        filtered_df = df_quality[df_quality.index.isin(preference_mask_set)]
+        filtered_df = df_quality[df_quality.index.isin(preference_mask)]
         if len(filtered_df) >= n:
             df_filtered = filtered_df.sample(frac=0.5)
         else:
@@ -61,7 +61,7 @@ def get_top_n_quality_prefiltered_bot(
 
 def get_top_n_quality_prefiltered(
     df_quality: pd.DataFrame,
-    preference_mask: list,
+    preference_mask: set,
     bike_type: int,
     family_id: int,
     price: int,
@@ -72,7 +72,7 @@ def get_top_n_quality_prefiltered(
     Returns the top n recommendations based on quality, progressively filtering for price, frame_size_code, and family_id
     Args:
         df_quality (pd.DataFrame): DataFrame with sorted bike ids by quality
-        preference_mask (list): bike indicies matching preferences
+        preference_mask (set): bike indicies matching preferences
         bike_type (int): bike_type of the bike
         family_id (int): family_id of the bike
         price (int): price of the bike
@@ -113,14 +113,14 @@ def get_top_n_quality_prefiltered(
 
 
 def get_top_n_recommendations(
-    bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: list, n: int = 16
+    bike_similarity_df: pd.DataFrame, bike_id: int, preference_mask: set, n: int = 16
 ) -> list:
     """
     Returns the top n recommendations for a bike_id, given a bike_similarity_df
     Args:
         bike_similarity_df (pd.DataFrame): bike similarity df
         bike_id (int): bike_id to get recommendations for
-        preference_mask (list): preference mask
+        preference_mask (set): preference mask
         n (int): number of recommendations to return
 
     Returns:
@@ -140,7 +140,7 @@ def get_top_n_recommendations(
 
 def get_top_n_recommendations_prefiltered(
     bike_similarity_df: pd.DataFrame,
-    preference_mask: list,
+    preference_mask: set,
     df: pd.DataFrame,
     df_status_masked: pd.DataFrame,
     bike_id: int,
@@ -153,7 +153,7 @@ def get_top_n_recommendations_prefiltered(
     empty list if only the bike_id itself or less match the prefilter
     Args:
         bike_similarity_df (pd.DataFrame): cosine bike similarity df
-        preference_mask (list): bike indicies matching preferences
+        preference_mask (set): bike indicies matching preferences
         df (pd.DataFrame): dataframe of bikes
         df_status_masked (pd.DataFrame): dataframe of bikes with the given status
         bike_id (int): bike_id to get recommendations for
@@ -192,7 +192,7 @@ def get_top_n_recommendations_prefiltered(
 
 def get_top_n_recommendations_mix(
     bike_id: int,
-    preference_mask: list,
+    preference_mask: set,
     filter_features: tuple,
     bike_type: int,
     family_id: int,
@@ -218,7 +218,7 @@ def get_top_n_recommendations_mix(
         4. Intervene or append the lists in the order of 2, 3, and append 1; ensuring that enough recommendations are returned.
     Args:
         bike_id (int): Bike ID to get recommendations for.
-        preference_mask (list): bike indicies matching preferences
+        preference_mask (set): bike indicies matching preferences
         bike_type (int): Bike type used for filtering quality recommendations.
         family_id (int): Family ID used for filtering quality recommendations.
         price (int): Price used for filtering quality recommendations.

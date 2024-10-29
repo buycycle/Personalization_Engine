@@ -109,7 +109,7 @@ class ContentMixed(RecommendationStrategy):
     def get_recommendations(
         self,
         bike_id: int,
-        preference_mask: list,
+        preference_mask: set,
         bike_type: int,
         family_id: int,
         price: int,
@@ -162,15 +162,14 @@ class Collaborative(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, user_id: str, preference_mask: list, n: int, sample: int
+        self, user_id: str, preference_mask: set, n: int, sample: int
     ) -> Tuple[str, List, Optional[str]]:
-        preference_mask_set = set(preference_mask)
         df_status_masked_set = set(self.df_status_masked.index)
 
         recommendations, error = get_top_n_collaborative_randomized(
             self.model,
             user_id,
-            preference_mask_set,
+            preference_mask,
             n,
             sample,
             self.dataset,
@@ -191,15 +190,14 @@ class CollaborativeRandomized(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-        self, user_id: str, preference_mask: list, n: int, sample: int
+        self, user_id: str, preference_mask: set, n: int, sample: int
     ) -> Tuple[str, List, Optional[str]]:
-        preference_mask_set = set(preference_mask)
         df_status_masked_set = set(self.df_status_masked.index)
 
         recommendations, error = get_top_n_collaborative_randomized(
             self.model,
             user_id,
-            preference_mask_set,
+            preference_mask,
             n,
             sample,
             self.dataset,
@@ -224,10 +222,9 @@ class QualityFilter(RecommendationStrategy):
         is_ebike: int,
         is_frameset: int,
         brand: str,
-        preference_mask: List[int],
+        preference_mask: set,
         n: int,
     ) -> Tuple[str, List[int], Optional[str]]:
-        preference_mask_set = set(preference_mask)
         # Define the quality_features tuple with filter conditions
         quality_features = [
             ("category", lambda df: df["category"] == category),
@@ -246,7 +243,7 @@ class QualityFilter(RecommendationStrategy):
         # Convert the list to a tuple if necessary
         quality_features = tuple(quality_features)
         recommendations, error = get_top_n_quality_prefiltered_bot(
-            self.df_quality, preference_mask_set, quality_features, n
+            self.df_quality, preference_mask, quality_features, n
         )
         return self.strategy, recommendations, error
 

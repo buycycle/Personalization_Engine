@@ -13,7 +13,7 @@ app_version=$2
 
 
 data_template='{
-  "strategy": "product_page",
+  "strategy": "homepage",
   "bike_id": 21091,
   "continent_id": 1,
   "user_id": 32744,
