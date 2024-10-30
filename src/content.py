@@ -138,13 +138,15 @@ def get_top_n_recommendations(
     Returns:
         list: list of top n recommendations for bike_id, skipping the bike_id itself
     """
-    # Filter columns based on preference_mask
-    filtered_df = bike_similarity_df.loc[:, bike_similarity_df.columns.intersection(preference_mask)]
-    # Use filtered_df if it has enough columns, otherwise use the original
-    if filtered_df.shape[1] >= n:
-        bike_similarity_df = filtered_df
-    # Get the top n+1 smallest values, skipping the bike_id itself
-    return bike_similarity_df.loc[bike_id].nsmallest(n + 1).index.difference([bike_id]).tolist()[:n]
+    # squeeze to convert pd.DataFrame into pd.Series
+    top_candidates = bike_similarity_df.loc[bike_id].squeeze().nsmallest(n*10 + 1).index.tolist()
+    recommendations = [candidate for candidate in top_candidates if candidate in preference_mask]
+    recommendations = recommendations[:n]
+
+    if len(recommendations) < n:
+        recommendations = bike_similarity_df.loc[bike_id].squeeze().nsmallest(n + 1).index.tolist()
+    return recommendations
+
 
 def get_top_n_recommendations_prefiltered(
     bike_similarity_df: pd.DataFrame,
@@ -169,21 +171,20 @@ def get_top_n_recommendations_prefiltered(
     Returns:
         list: list of top n recommendations for bike_id, skipping the bike_id itself
     """
-    # Filter df_status_masked based on preference_mask
-    filtered_df = df_status_masked.loc[df_status_masked.index.intersection(preference_mask)]
-    # Use filtered_df if it has enough rows, otherwise use the original
-    if len(filtered_df) >= n:
-        df_status_masked = filtered_df
-    # Get prefilter values for the given bike_id
+    # get the values of the prefilter_features for the bike_id
     prefilter_values = df.loc[bike_id, prefilter_features]
-    # Create a mask for rows where all prefilter_features match the prefilter_values
-    mask = (df_status_masked[prefilter_features] == prefilter_values).all(axis=1)
-    true_ids = mask.index[mask]
-    # Filter the similarity DataFrame for the given bike_id and true_ids
-    filtered_similarity_df = bike_similarity_df.loc[bike_id, true_ids]
-    # Return the top n smallest values' indices, excluding the bike_id itself
-    return filtered_similarity_df.nsmallest(n + 1).index.difference([bike_id]).tolist()[:n]
+    df_filtered = bike_similarity_df.loc[bike_id, (df_status_masked[prefilter_features] == prefilter_values).values]
+    if len(df_filtered) > 1:
+        # Get the top n*10 smallest values
+        top_candidates = df_filtered.squeeze().nsmallest(n*10).index.tolist()
 
+        # Filter the candidates based on the preference mask
+        recommendations = [candidate for candidate in top_candidates if candidate in preference_mask]
+
+        # Return the top n filtered candidates
+        return recommendations[:n]
+    else:
+        return []
 
 def get_top_n_recommendations_mix(
     bike_id: int,
