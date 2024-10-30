@@ -138,7 +138,8 @@ def get_top_n_recommendations(
     Returns:
         list: list of top n recommendations for bike_id, skipping the bike_id itself
     """
-    # squeeze to convert pd.DataFrame into pd.Series
+    # get n*10 and apply preference filter
+    # does not ensure optimality but is computationally very efficient
     top_candidates = bike_similarity_df.loc[bike_id].squeeze().nsmallest(n*10 + 1).index.tolist()
     recommendations = [candidate for candidate in top_candidates if candidate in preference_mask]
     recommendations = recommendations[:n]
@@ -174,6 +175,8 @@ def get_top_n_recommendations_prefiltered(
     # get the values of the prefilter_features for the bike_id
     prefilter_values = df.loc[bike_id, prefilter_features]
     df_filtered = bike_similarity_df.loc[bike_id, (df_status_masked[prefilter_features] == prefilter_values).values]
+    # get n*10 and apply preference filter
+    # does not ensure optimality but is computationally very efficient
     if len(df_filtered) > 1:
         # Get the top n*10 smallest values
         top_candidates = df_filtered.squeeze().nsmallest(n*10).index.tolist()
