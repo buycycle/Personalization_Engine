@@ -67,7 +67,7 @@ app_name = "recommender-system"
 app_version = "canary-012"
 
 logger = Logger.configure_logger(
-    environment, ab, app_name, app_version, log_level=logging.INFO
+    environment, ab, app_name, app_version, log_level=logging.ERROR
 )
 logger.info("FastAPI app started")
 
