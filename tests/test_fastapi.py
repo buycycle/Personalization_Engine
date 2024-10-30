@@ -12,7 +12,7 @@ from src.strategies import ContentMixed
 EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
-LIMIT_MS = 150
+LIMIT_MS = 50
 N_TEST_USERS =10
 N_TEST_BIKES = 10
 
@@ -103,11 +103,9 @@ def test_integration_fast_time_len_strats_bikes(
     """Test time and length of return for all strategies and a sample of bike_ids."""
     strategies = PRODUCT_PAGE_STRATEGY
     bike_ids = testdata_content.similarity_matrix.cols
-    # Ensure we don't exceed the number of available bike IDs
-    n_test = min(n_test_bikes, len(bike_ids))
 
     # Use the first n_test bike IDs from the DataFrame
-    test_bike_ids = bike_ids[:n_test]
+    test_bike_ids = bike_ids[:n_test_bikes]
 
     for bike_id in test_bike_ids:
         for strategy in strategies:

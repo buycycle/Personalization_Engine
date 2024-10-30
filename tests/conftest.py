@@ -92,26 +92,6 @@ def inputs(app_mock, mock_logger):
 @pytest.fixture(scope="package")
 def testdata_content():
     """Create and return a DataStoreContent instance for testing."""
-    os.makedirs(DATA_PATH, exist_ok=True)
-    create_data_model_content(
-        main_query + "LIMIT 1000",
-        main_query_dtype,
-        quality_query,
-        quality_query_dtype,
-        user_preference_query,
-        user_preference_query_dtype,
-        categorical_features,
-        numerical_features,
-        preference_features,
-        prefilter_features,
-        numerical_features_to_overweight,
-        numerical_features_overweight_factor,
-        categorical_features_to_overweight,
-        categorical_features_overweight_factor,
-        status=["active"],
-        metric="euclidean",
-        path=DATA_PATH,
-    )
     data_store_content = DataStoreContent(prefilter_features=prefilter_features)
     data_store_content.read_data()
     return data_store_content
@@ -120,18 +100,6 @@ def testdata_content():
 @pytest.fixture(scope="package")
 def testdata_collaborative():
     """Create and return a DataStoreCollaborative instance for testing."""
-    os.makedirs(DATA_PATH, exist_ok=True)
-    create_data_model_collaborative(
-        DB="DB_EVENTS",
-        driver="snowflake",
-        query=query + "LIMIT 4000",
-        user_id=user_id,
-        bike_id=bike_id,
-        user_features=user_features,
-        item_features=item_features,
-        update_model=update_model,
-        path=DATA_PATH,
-    )
     data_store_collaborative = DataStoreCollaborative()
     data_store_collaborative.read_data()
     return data_store_collaborative
