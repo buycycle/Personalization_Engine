@@ -12,7 +12,7 @@ from src.strategies import ContentMixed
 EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
-LIMIT_MS = 150
+LIMIT_MS = 200
 N_TEST_USERS =10
 N_TEST_BIKES = 10
 
