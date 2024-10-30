@@ -75,23 +75,6 @@ def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
         assert_response(response, payload, elapsed_time, limit)
 
 
-def test_integration_fast_time_strats_collab_users(
-    inputs, testdata_collaborative, limit=LIMIT_MS, n_test=N_TEST_USERS
-):
-    """Test time and length of return for all strategies and a random subsample of collaborative users."""
-    strategies = COLLAB_STRATEGY
-    # Filter users to include only those with IDs shorter than 10 characters
-    users = [
-        user_id
-        for user_id in testdata_collaborative.dataset.mapping()[0].keys()
-        if len(user_id) < 10
-    ]
-    for user_id in random.sample(users, n_test):
-        for strategy in strategies:
-            user_id = int(user_id)
-            payload = create_payload(inputs, strategy, user_id=user_id)
-            response, elapsed_time = post_request(inputs["client"], payload)
-            assert_response(response, payload, elapsed_time, limit)
 
 def test_integration_fast_time_len_strats_random_bikes(
     inputs, limit=LIMIT_MS, n_test=N_TEST_BIKES
@@ -231,3 +214,20 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                         f"Recommendations: {recommendations}"
                     )
 
+def test_integration_fast_time_strats_collab_users(
+    inputs, testdata_collaborative, limit=LIMIT_MS, n_test=N_TEST_USERS
+):
+    """Test time and length of return for all strategies and a random subsample of collaborative users."""
+    strategies = COLLAB_STRATEGY
+    # Filter users to include only those with IDs shorter than 10 characters
+    users = [
+        user_id
+        for user_id in testdata_collaborative.dataset.mapping()[0].keys()
+        if len(user_id) < 10
+    ]
+    for user_id in random.sample(users, n_test):
+        for strategy in strategies:
+            user_id = int(user_id)
+            payload = create_payload(inputs, strategy, user_id=user_id)
+            response, elapsed_time = post_request(inputs["client"], payload)
+            assert_response(response, payload, elapsed_time, limit)
