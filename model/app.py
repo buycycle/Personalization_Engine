@@ -162,26 +162,41 @@ class RecommendationRequest(BaseModel):
     is_ebike: Optional[int] = 0
     is_frameset: Optional[int] = 0
     brand: Optional[str] = "null"
-    @field_validator("user_id", mode='before')
+
+    @field_validator("user_id", mode="before")
     def validate_user_id(cls, value):
         return validate_integer_field(value, 0)
-    @field_validator("family_id", mode='before')
+
+    @field_validator("family_id", mode="before")
     def validate_family_id(cls, value):
         return validate_integer_field(value, 1101)
-    @field_validator("bike_type", mode='before')
+
+    @field_validator("bike_type", mode="before")
     def validate_bike_type(cls, value):
         return validate_integer_field(value, 1)
 
-    @model_validator(mode='after')
-    def check_required_fields_based_on_strategy(self) -> 'RecommendationRequest':
+    @model_validator(mode="after")
+    def check_required_fields_based_on_strategy(self) -> "RecommendationRequest":
         if self.strategy == "CollaborativeRerank" and self.bike_rerank_id is None:
-            raise ValueError("bike_rerank_id is required for CollaborativeRerank strategy")
-        elif self.strategy in ["ContentMixed", "FallbackContentMixed"] and self.bike_id == 0:
-            raise ValueError("bike_id is required for ContentMixed and FallbackContentMixed strategies")
-        elif self.strategy in ["Collaborative", "CollaborativeRandomized"] and self.user_id == 0 and self.distinct_id == "NA":
-            raise ValueError("user_id or distinct_id required for Collaborative and CollaborativeRandomized strategies")
+            raise ValueError(
+                "bike_rerank_id is required for CollaborativeRerank strategy"
+            )
+        elif (
+            self.strategy in ["ContentMixed", "FallbackContentMixed"]
+            and self.bike_id == 0
+        ):
+            raise ValueError(
+                "bike_id is required for ContentMixed and FallbackContentMixed strategies"
+            )
+        elif (
+            self.strategy in ["Collaborative", "CollaborativeRandomized"]
+            and self.user_id == 0
+            and self.distinct_id == "NA"
+        ):
+            raise ValueError(
+                "user_id or distinct_id required for Collaborative and CollaborativeRandomized strategies"
+            )
         return self
-
 
 
 @app.post("/recommendation")
@@ -226,13 +241,15 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     # lock the data stores to prevent data from being updated while we are using it
     with data_store_collaborative._lock and data_store_content._lock:
         # Get general and user-specific preference masks
-# Get general and user-specific preference masks
+        # Get general and user-specific preference masks
         preference_mask = get_mask_continent(data_store_content, continent_id)
-        preference_mask_user = get_user_preference_mask(data_store_content, user_id, strategy_name)
-# Convert lists to sets
+        preference_mask_user = get_user_preference_mask(
+            data_store_content, user_id, strategy_name
+        )
+        # Convert lists to sets
         preference_mask = set(preference_mask)
         preference_mask_user = set(preference_mask_user)
-# Combine general and user-specific preference masks only if preference_mask_user is not empty
+        # Combine general and user-specific preference masks only if preference_mask_user is not empty
         if preference_mask_user:
             preference_mask = preference_mask.intersection(preference_mask_user)
 
@@ -347,8 +364,8 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
 
         if error:
             # Return error response if it exists
-            logger.error("Error no recommendation available, exception: " + error,
-
+            logger.error(
+                "Error no recommendation available, exception: " + error,
                 extra={
                     "strategy_target": strategy_target,
                     "strategy_used": strategy,

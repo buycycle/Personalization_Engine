@@ -207,6 +207,7 @@ class CollaborativeRandomized(RecommendationStrategy):
         )
         return self.strategy, recommendations, error
 
+
 class CollaborativeRerank(RecommendationStrategy):
     """Try Collaborative filtering, fail silently and return an empty list"""
 
@@ -217,9 +218,8 @@ class CollaborativeRerank(RecommendationStrategy):
         self.logger = logger
 
     def get_recommendations(
-            self, user_id: str, bike_rerank_id: list
+        self, user_id: str, bike_rerank_id: list
     ) -> Tuple[str, List, Optional[str]]:
-
         recommendations, error = get_top_n_collaborative_rerank(
             self.model,
             user_id,
@@ -228,6 +228,7 @@ class CollaborativeRerank(RecommendationStrategy):
             self.logger,
         )
         return self.strategy, recommendations, error
+
 
 class QualityFilter(RecommendationStrategy):
     """Apply filters and sort by quality score"""

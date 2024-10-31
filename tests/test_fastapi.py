@@ -14,10 +14,11 @@ PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
 RERANK_STRATEGY = ["rerank"]
 LIMIT_MS = 150
-N_TEST_USERS =10
+N_TEST_USERS = 10
 N_TEST_BIKES = 10
 
 random.seed(1)
+
 
 def create_payload(inputs, strategy, bike_id=None, user_id=None, bike_rerank_id=None):
     """Create a payload for the recommendation request."""
@@ -66,33 +67,33 @@ def assert_recommendation_length(response, payload, expected_length):
         f"but got {len(recommendation)}.\n"
         f"Payload: {payload}"
     )
+
+
 def assert_recommendation_in(response, payload, filter):
     """Assert the length of the recommendation list."""
     data = response.json()
     recommendations = data.get("recommendation")
     for recommendation in recommendations:
-        assert (
-            recommendation in filter
-        ), (
+        assert recommendation in filter, (
             f"Recommendation {recommendation} does not fit the filter.\n"
             f"payload: {payload}\n"
             f"filter: {filter}\n"
             f"Recommendations: {recommendations}"
         )
 
+
 def assert_recommendation_active(response, payload, filter):
     """Assert the length of the recommendation list."""
     data = response.json()
     recommendations = data.get("recommendation")
     for recommendation in recommendations:
-        assert (
-            recommendation in filter
-        ), (
+        assert recommendation in filter, (
             f"Recommendation {recommendation} does not fit the filter.\n"
             f"payload: {payload}\n"
             f"filter: {filter}\n"
             f"Recommendations: {recommendations}"
         )
+
 
 def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
     """Test time and length of return for all strategies of the FastAPI app."""
@@ -106,7 +107,6 @@ def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
         assert_response(response, payload, elapsed_time, limit)
 
 
-
 def test_integration_fast_time_len_strats_random_bikes(
     inputs, limit=LIMIT_MS, n_test=N_TEST_BIKES
 ):
@@ -117,15 +117,10 @@ def test_integration_fast_time_len_strats_random_bikes(
         for strategy in strategies:
             payload = create_payload(inputs, strategy, bike_id=bike_id)
 
-
             response, elapsed_time = post_request(inputs["client"], payload)
 
-
             assert_response(response, payload, elapsed_time, limit)
-            assert_recommendation_length(
-                response, payload, inputs["n"]
-            )
-
+            assert_recommendation_length(response, payload, inputs["n"])
 
 
 def test_integration_fast_time_len_strats_bikes(
@@ -142,13 +137,11 @@ def test_integration_fast_time_len_strats_bikes(
         for strategy in strategies:
             payload = create_payload(inputs, strategy, bike_id=int(bike_id))
 
-
             response, elapsed_time = post_request(inputs["client"], payload)
 
             assert_response(response, payload, elapsed_time, limit)
-            assert_recommendation_length(
-                response, payload, inputs["n"]
-            )
+            assert_recommendation_length(response, payload, inputs["n"])
+
 
 def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
     """Test the 'bot' strategy of the FastAPI app to ensure it returns a list of size n with string elements."""
@@ -211,13 +204,12 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                 data = response.json()
                 recommendations = data.get("recommendation")
                 # Assert the length of the recommendations
-                assert_recommendation_length(
-                    response, payload, inputs["n"]
-                )
+                assert_recommendation_length(response, payload, inputs["n"])
                 # Recreate the preference mask logic from the model using testdata_content
                 # Get general and user-specific preference masks
                 preference_mask = get_mask_continent(
-                    data_store_content, inputs["continent_id"])
+                    data_store_content, inputs["continent_id"]
+                )
                 preference_mask_user = get_user_preference_mask(
                     data_store_content, user_id, strategy
                 )
@@ -228,6 +220,7 @@ def test_recommendations_fit_preference_mask_with_user_preferences_active_bikes(
                 assert_recommendation_in(response, payload, preference_mask)
                 # active bikes
                 assert_recommendation_in(response, payload, bike_ids)
+
 
 def test_integration_fast_time_strats_collab_users(
     inputs, testdata_collaborative, limit=LIMIT_MS, n_test=N_TEST_USERS
@@ -247,16 +240,22 @@ def test_integration_fast_time_strats_collab_users(
             response, elapsed_time = post_request(inputs["client"], payload)
             assert_response(response, payload, elapsed_time, limit)
 
+
 def test_integration_fast_time_strats_rerank(
-    inputs, testdata_content, testdata_collaborative, limit=LIMIT_MS, n_test=N_TEST_USERS
+    inputs,
+    testdata_content,
+    testdata_collaborative,
+    limit=LIMIT_MS,
+    n_test=N_TEST_USERS,
 ):
     """Test time and length of return for all strategies and a random subsample of collaborative users."""
     strategies = RERANK_STRATEGY
     # Filter users to include only those with IDs shorter than 10 characters
     collaborative_user_ids = set(testdata_collaborative.dataset.mapping()[0].keys())
     collaborative_user_ids = list(collaborative_user_ids)
-    filtered_user_ids = [user_id for user_id in collaborative_user_ids if len(user_id) < 10]
-
+    filtered_user_ids = [
+        user_id for user_id in collaborative_user_ids if len(user_id) < 10
+    ]
 
     bike_ids = testdata_content.df_status_masked.index.tolist()
     for user_id in random.sample(filtered_user_ids, n_test):
@@ -264,7 +263,9 @@ def test_integration_fast_time_strats_rerank(
             # Generate a random length for the list, e.g., between 5 and 20
             list_length = random.randint(5, 20)
             bike_rerank_id = random.sample(bike_ids, list_length)
-            payload = create_payload(inputs, strategy, user_id=user_id, bike_rerank_id=bike_rerank_id)
+            payload = create_payload(
+                inputs, strategy, user_id=user_id, bike_rerank_id=bike_rerank_id
+            )
             response, elapsed_time = post_request(inputs["client"], payload)
             assert_response(response, payload, elapsed_time, limit)
             assert_recommendation_length(response, payload, list_length)

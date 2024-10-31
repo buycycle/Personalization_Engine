@@ -79,13 +79,13 @@ def inputs(app_mock, mock_logger):
         subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
     client = TestClient(app_mock)
     return {
-        "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
+        "bike_id": BIKE_ID,
         "user_id": USER_ID,
         "n": N,
         "continent_id": CONTINENT_ID,
         "client": client,
         "logger": mock_logger,
-        "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests
+        "strategy_dict": strategy_dict,
     }
 
 
