@@ -177,21 +177,21 @@ class RecommendationRequest(BaseModel):
 
     @model_validator(mode="before")
     def check_required_fields_based_on_strategy(self) -> "RecommendationRequest":
-        if self.strategy == "CollaborativeRerank" and self.bike_rerank_id is None:
+        if self["strategy"] in ["CollaborativeRerank"] and self["bike_rerank_id"] is None:
             raise ValueError(
                 "bike_rerank_id is required for CollaborativeRerank strategy"
             )
         elif (
-            self.strategy in ["ContentMixed", "FallbackContentMixed"]
-            and self.bike_id == 0 or self.bike_id == None
+            self["strategy"] in ["ContentMixed", "FallbackContentMixed"]
+            and (self["bike_id"] == 0 or self["bike_id"] is None or self["bike_id"] == "NA")
         ):
             raise ValueError(
                 "bike_id is required for ContentMixed and FallbackContentMixed strategies"
             )
         elif (
-            self.strategy in ["Collaborative", "CollaborativeRandomized"]
-            and self.user_id == 0
-            and self.distinct_id == "NA"
+            self["strategy"] in ["Collaborative", "CollaborativeRandomized"]
+            and (self["user_id"] == 0 or self["user_id"] is None)
+            and (self["distinct_id"] == "NA" or self["distinct_id"] is None)
         ):
             raise ValueError(
                 "user_id or distinct_id required for Collaborative and CollaborativeRandomized strategies"
