@@ -143,6 +143,7 @@ class RecommendationRequest(BaseModel):
     distinct_id: str = "NA"
     continent_id: int = 1
     bike_id: int = 0
+    bike_rerank= list
     n: int = 12
     strategy: str = "product_page"
     # for quality filtering
@@ -176,6 +177,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     distinct_id = request_data.distinct_id
     continent_id = request_data.continent_id
     bike_id = request_data.bike_id
+    bike_rerank_id = request_data.bike_rank_id
     bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
@@ -259,6 +261,10 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         elif isinstance(strategy_instance, CollaborativeRandomized):
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 id, preference_mask, n, sample
+            )
+        elif isinstance(strategy_instance, CollaborativeRerank):
+            strategy, recommendation, error = strategy_instance.get_recommendations(
+                id, bike_rank_id
             )
         elif isinstance(strategy_instance, QualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(

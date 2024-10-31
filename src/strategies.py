@@ -206,6 +206,31 @@ class CollaborativeRandomized(RecommendationStrategy):
         )
         return self.strategy, recommendations, error
 
+class CollaborativeRerank(RecommendationStrategy):
+    """Try Collaborative filtering, fail silently and return an empty list"""
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = "CollaborativeRerank"
+        self.model = data_store_collaborative.model
+        self.dataset = data_store_collaborative.dataset
+        self.df_status_masked = data_store_content.df_status_masked
+        self.logger = logger
+
+    def get_recommendations(
+            self, user_id: str, bike_rerank_id: list
+    ) -> Tuple[str, List, Optional[str]]:
+
+        recommendations, error = get_top_n_collaborative_randomized(
+            self.model,
+            user_id,
+            preference_mask,
+            n,
+            sample,
+            self.dataset,
+            df_status_masked_set,
+            self.logger,
+        )
+        return self.strategy, recommendations, error
 
 class QualityFilter(RecommendationStrategy):
     """Apply filters and sort by quality score"""
@@ -253,6 +278,7 @@ strategy_dict = {
     "product_page": ContentMixed,
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
+    "rerank": CollaborativeRerank,
     "FallbackContentMixed": FallbackContentMixed,
     "bot": QualityFilter,
 }
