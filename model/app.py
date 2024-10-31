@@ -175,7 +175,7 @@ class RecommendationRequest(BaseModel):
     def validate_bike_type(cls, value):
         return validate_integer_field(value, 1)
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
     def check_required_fields_based_on_strategy(self) -> "RecommendationRequest":
         if self.strategy == "CollaborativeRerank" and self.bike_rerank_id is None:
             raise ValueError(
@@ -183,7 +183,7 @@ class RecommendationRequest(BaseModel):
             )
         elif (
             self.strategy in ["ContentMixed", "FallbackContentMixed"]
-            and self.bike_id == 0
+            and self.bike_id == 0 or self.bike_id == None
         ):
             raise ValueError(
                 "bike_id is required for ContentMixed and FallbackContentMixed strategies"
