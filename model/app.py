@@ -1,7 +1,7 @@
 """Personalization Engine"""
 import random
 from fastapi import Body
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 import os
 import time
 
@@ -9,6 +9,8 @@ import time
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+
+from typing import Optional, Union
 
 # periodical data read-in
 from threading import Thread
@@ -45,6 +47,7 @@ from src.strategies import (
     ContentMixed,
     Collaborative,
     CollaborativeRandomized,
+    CollaborativeRerank,
     QualityFilter,
 )
 from src.strategies import strategy_dict
@@ -139,27 +142,26 @@ def health_model_check():
 
 
 class RecommendationRequest(BaseModel):
-    user_id: int = 0
-    distinct_id: str = "NA"
-    continent_id: int = 1
-    bike_id: int = 0
-    bike_rerank= list
-    n: int = 12
-    strategy: str = "product_page"
+    user_id: Union[int, str] = 0  # Use Union to allow both int and str
+    distinct_id: Optional[str] = "NA"
+    continent_id: Optional[int] = 1
+    bike_id: Optional[int] = 0
+    bike_rerank_id: Optional[list[int]] = None
+    n: Optional[int] = 12
+    strategy: Optional[str] = "product_page"
     # for quality filtering
-    bike_type: int = 1
-    family_id: int = 1101
-    price: int = 1200
+    bike_type: Optional[int] = 1
+    family_id: Optional[int] = 1101
+    price: Optional[int] = 1200
     # for bot
-    frame_size_code: str = "56"
-    rider_height_min: int = 150
-    rider_height_max: int = 195
-    rider_height: int = 180
-    category: str = "road"
-    is_ebike: int = 0
-    is_frameset: int = 0
-    brand: str = "null"
-
+    frame_size_code: Optional[str] = "56"
+    rider_height_min: Optional[int] = 150
+    rider_height_max: Optional[int] = 195
+    rider_height: Optional[int] = 180
+    category: Optional[str] = "road"
+    is_ebike: Optional[int] = 0
+    is_frameset: Optional[int] = 0
+    brand: Optional[str] = "null"
     @field_validator("user_id", mode='before')
     def validate_user_id(cls, value):
         return validate_integer_field(value, 0)
@@ -170,6 +172,17 @@ class RecommendationRequest(BaseModel):
     def validate_bike_type(cls, value):
         return validate_integer_field(value, 1)
 
+    @model_validator(mode='after')
+    def check_required_fields_based_on_strategy(self) -> 'RecommendationRequest':
+        if self.strategy == "CollaborativeRerank" and self.bike_rerank_id is None:
+            raise ValueError("bike_rerank_id is required for CollaborativeRerank strategy")
+        elif self.strategy in ["ContentMixed", "FallbackContentMixed"] and self.bike_id == 0:
+            raise ValueError("bike_id is required for ContentMixed and FallbackContentMixed strategies")
+        elif self.strategy in ["Collaborative", "CollaborativeRandomized"] and self.user_id == 0 and self.distinct_id == "NA":
+            raise ValueError("user_id or distinct_id required for Collaborative and CollaborativeRandomized strategies")
+        return self
+
+
 
 @app.post("/recommendation")
 def recommendation(request_data: RecommendationRequest = Body(...)):
@@ -177,7 +190,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     distinct_id = request_data.distinct_id
     continent_id = request_data.continent_id
     bike_id = request_data.bike_id
-    bike_rerank_id = request_data.bike_rank_id
+    bike_rerank_id = request_data.bike_rerank_id
     bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
@@ -264,7 +277,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
             )
         elif isinstance(strategy_instance, CollaborativeRerank):
             strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, bike_rank_id
+                id, bike_rerank_id
             )
         elif isinstance(strategy_instance, QualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(

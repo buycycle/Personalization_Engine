@@ -10,6 +10,7 @@ from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import (
     get_top_n_collaborative_randomized,
+    get_top_n_collaborative_rerank,
     read_data_model,
 )
 from src.data_content import construct_dense_similarity_row
@@ -213,21 +214,17 @@ class CollaborativeRerank(RecommendationStrategy):
         self.strategy = "CollaborativeRerank"
         self.model = data_store_collaborative.model
         self.dataset = data_store_collaborative.dataset
-        self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
     def get_recommendations(
             self, user_id: str, bike_rerank_id: list
     ) -> Tuple[str, List, Optional[str]]:
 
-        recommendations, error = get_top_n_collaborative_randomized(
+        recommendations, error = get_top_n_collaborative_rerank(
             self.model,
             user_id,
-            preference_mask,
-            n,
-            sample,
+            bike_rerank_id,
             self.dataset,
-            df_status_masked_set,
             self.logger,
         )
         return self.strategy, recommendations, error

@@ -115,7 +115,8 @@ The data generation condenses all click data of unique user_id (distinct_id in t
                          }
 ## CollaborativeRandomized
 Same as above but draw from a sample of more recommendations and randomize.
-
+## CollaborativeRerank
+Rerank a given list of bike_rerank_id according to collaborative filtering model.
 ## Preference filter
 To account for business logic we introduce a preference dict that applies custom user specific filters such as continent_id. Currently this is used to avoid cross continent ebike shipping.
 We also filter the recommendations by the user specified preferenes in the df_user_preferences.
