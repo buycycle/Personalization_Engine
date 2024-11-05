@@ -79,19 +79,19 @@ def inputs(app_mock, mock_logger):
         subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
     client = TestClient(app_mock)
     return {
-        "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
+        "bike_id": BIKE_ID,
         "user_id": USER_ID,
         "n": N,
         "continent_id": CONTINENT_ID,
         "client": client,
         "logger": mock_logger,
-        "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests
+        "strategy_dict": strategy_dict,
     }
 
 
 @pytest.fixture(scope="package")
 def testdata_content():
-    """Create and return a DataStoreContent instance for testing."""
+    """Read data for testing."""
     data_store_content = DataStoreContent(prefilter_features=prefilter_features)
     data_store_content.read_data()
     return data_store_content
@@ -99,7 +99,7 @@ def testdata_content():
 
 @pytest.fixture(scope="package")
 def testdata_collaborative():
-    """Create and return a DataStoreCollaborative instance for testing."""
+    """Read data for testing."""
     data_store_collaborative = DataStoreCollaborative()
     data_store_collaborative.read_data()
     return data_store_collaborative
