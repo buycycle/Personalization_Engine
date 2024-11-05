@@ -172,22 +172,27 @@ class RecommendationRequest(BaseModel):
         return validate_integer_field(value, 1)
 
     @model_validator(mode="before")
-    def check_required_fields_based_on_strategy(self) -> "RecommendationRequest":
-        if self["strategy"] in ["rerank"] and self["bike_rerank_id"] is None:
+    def check_required_fields_based_on_strategy(cls, values):
+        strategy = values.get("strategy")
+        bike_rerank_id = values.get("bike_rerank_id")
+        bike_id = values.get("bike_id")
+        user_id = values.get("user_id")
+        distinct_id = values.get("distinct_id")
+        if strategy in ["rerank"] and bike_rerank_id is None:
             raise ValueError("bike_rerank_id is required for rerank strategy")
-        elif self["strategy"] in ["product_page"] and (
-            self["bike_id"] == 0 or self["bike_id"] is None or self["bike_id"] == "NA"
+        elif strategy in ["product_page"] and (
+            bike_id == 0 or bike_id is None or bike_id == "NA"
         ):
             raise ValueError("bike_id is required for product_page strategy")
         elif (
-            self["strategy"] in ["homepage", "braze", "rerank"]
-            and (self["user_id"] == 0 or self["user_id"] is None)
-            and (self["distinct_id"] == "NA" or self["distinct_id"] is None)
+            strategy in ["homepage", "braze", "rerank"]
+            and (user_id == 0 or user_id is None)
+            and (distinct_id == "NA" or distinct_id is None)
         ):
             raise ValueError(
                 "user_id or distinct_id required for homepage, rerank and braze strategy"
             )
-        return self
+        return values
 
 
 @app.post("/recommendation")
