@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 # periodical data read-in
 from threading import Thread
@@ -30,13 +30,6 @@ from buycycle.data import (
 # sql queries and feature selection
 from src.driver_content import prefilter_features
 from src.content import get_mask_continent, get_user_preference_mask
-from src.driver_collaborative import (
-    bike_id,
-    features,
-    item_features,
-    user_features,
-    implicit_feedback,
-)
 
 # import functions from src folder
 from src.data_content import DataStoreContent
@@ -53,7 +46,6 @@ from src.strategies import (
 from src.strategies import strategy_dict
 
 # custom json encoder of the response
-import numpy as np
 import json
 
 config_paths = "config/config.ini"
@@ -146,7 +138,7 @@ class RecommendationRequest(BaseModel):
     distinct_id: Optional[str] = "NA"
     continent_id: Optional[int] = 1
     bike_id: Optional[int] = 0
-    bike_rerank_id: Optional[list[int]] = None
+    bike_rerank_id: Optional[List[int]] = None
     n: Optional[int] = 12
     strategy: Optional[str] = "product_page"
     # for quality filtering

@@ -23,7 +23,7 @@ def create_payload(inputs, strategy, bike_id=None, user_id=None, bike_rerank_id=
     return {
         "bike_id": bike_id or inputs["bike_id"],
         "user_id": user_id or inputs["user_id"],
-        "bike_rerank_id": bike_rerank_id,
+        "bike_rerank_id": bike_rerank_id or inputs["bike_rerank_id"],
         "n": inputs["n"],
         "strategy": strategy,
     }
