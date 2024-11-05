@@ -163,11 +163,9 @@ class RecommendationRequest(BaseModel):
     is_frameset: Optional[int] = 0
     brand: Optional[str] = "null"
 
+    # first remove, then test if validaiton works, locally with test
 
-    #first remove, then test if validaiton works, locally with test
-
-    #I might need to remove this and add a check for Fallback to have family_id and so on
-
+    # I might need to remove this and add a check for Fallback to have family_id and so on
 
     @field_validator("user_id", mode="before")
     def validate_user_id(cls, value):
@@ -184,16 +182,11 @@ class RecommendationRequest(BaseModel):
     @model_validator(mode="before")
     def check_required_fields_based_on_strategy(self) -> "RecommendationRequest":
         if self["strategy"] in ["rerank"] and self["bike_rerank_id"] is None:
-            raise ValueError(
-                "bike_rerank_id is required for rerank strategy"
-            )
-        elif (
-            self["strategy"] in ["product_page"]
-            and (self["bike_id"] == 0 or self["bike_id"] is None or self["bike_id"] == "NA")
+            raise ValueError("bike_rerank_id is required for rerank strategy")
+        elif self["strategy"] in ["product_page"] and (
+            self["bike_id"] == 0 or self["bike_id"] is None or self["bike_id"] == "NA"
         ):
-            raise ValueError(
-                "bike_id is required for product_page strategy"
-            )
+            raise ValueError("bike_id is required for product_page strategy")
         elif (
             self["strategy"] in ["homepage", "braze", "rerank"]
             and (self["user_id"] == 0 or self["user_id"] is None)

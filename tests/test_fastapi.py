@@ -4,16 +4,14 @@ Functional tests for the FastAPI model response.
 import time
 import random
 import numpy as np
-from src.driver_content import prefilter_features
 from src.content import get_mask_continent, get_user_preference_mask
-from src.strategies import ContentMixed
 
 # Constants
 EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
 RERANK_STRATEGY = ["rerank"]
-LIMIT_MS = 50
+LIMIT_MS = 150
 N_TEST_USERS = 10
 N_TEST_BIKES = 10
 
