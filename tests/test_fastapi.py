@@ -9,7 +9,7 @@ from src.content import get_mask_continent, get_user_preference_mask
 from src.strategies import ContentMixed
 
 # Constants
-EXCLUDED_STRATEGIES = ["braze", "bot", "rerank"]
+EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
 RERANK_STRATEGY = ["rerank"]

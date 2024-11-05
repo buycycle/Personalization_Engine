@@ -41,6 +41,7 @@ from buycycle.logger import Logger
 
 DATA_PATH = "./data/"
 BIKE_ID = 18894
+BIKE_RERANK_ID = [188941086120,1063156,1079975,1072865,1088684,800168,1096276,1124087,1018436,1056113,1111825,1100470, 123,1096276,1100470,1124087,1056113,1018436,1111825,800168,1079975,1088684,1072865,1063156,1086120,123]
 CONTINENT_ID = 1
 BIKE_TYPE = 1
 CATEGORY = "road"
@@ -80,6 +81,7 @@ def inputs(app_mock, mock_logger):
     client = TestClient(app_mock)
     return {
         "bike_id": BIKE_ID,
+        "bike_rerank_id": BIKE_RERANK_ID,
         "user_id": USER_ID,
         "n": N,
         "continent_id": CONTINENT_ID,
