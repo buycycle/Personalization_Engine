@@ -163,6 +163,12 @@ class RecommendationRequest(BaseModel):
     is_frameset: Optional[int] = 0
     brand: Optional[str] = "null"
 
+
+    #first remove, then test if validaiton works, locally with test
+
+    #I might need to remove this and add a check for Fallback to have family_id and so on
+
+
     @field_validator("user_id", mode="before")
     def validate_user_id(cls, value):
         return validate_integer_field(value, 0)
