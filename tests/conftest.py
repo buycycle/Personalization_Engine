@@ -41,6 +41,34 @@ from buycycle.logger import Logger
 
 DATA_PATH = "./data/"
 BIKE_ID = 18894
+BIKE_RERANK_ID = [
+    188941086120,
+    1063156,
+    1079975,
+    1072865,
+    1088684,
+    800168,
+    1096276,
+    1124087,
+    1018436,
+    1056113,
+    1111825,
+    1100470,
+    123,
+    1096276,
+    1100470,
+    1124087,
+    1056113,
+    1018436,
+    1111825,
+    800168,
+    1079975,
+    1088684,
+    1072865,
+    1063156,
+    1086120,
+    123,
+]
 CONTINENT_ID = 1
 BIKE_TYPE = 1
 CATEGORY = "road"
@@ -79,39 +107,20 @@ def inputs(app_mock, mock_logger):
         subprocess.run(["python", "create_data.py", DATA_PATH, "test"], check=True)
     client = TestClient(app_mock)
     return {
-        "bike_id": BIKE_ID,  # or BIKE_ID if you want to use the same for both
+        "bike_id": BIKE_ID,
+        "bike_rerank_id": BIKE_RERANK_ID,
         "user_id": USER_ID,
         "n": N,
         "continent_id": CONTINENT_ID,
         "client": client,
         "logger": mock_logger,
-        "strategy_dict": strategy_dict,  # Include this if needed for FastAPI tests
+        "strategy_dict": strategy_dict,
     }
 
 
 @pytest.fixture(scope="package")
 def testdata_content():
-    """Create and return a DataStoreContent instance for testing."""
-    os.makedirs(DATA_PATH, exist_ok=True)
-    create_data_model_content(
-        main_query + "LIMIT 1000",
-        main_query_dtype,
-        quality_query,
-        quality_query_dtype,
-        user_preference_query,
-        user_preference_query_dtype,
-        categorical_features,
-        numerical_features,
-        preference_features,
-        prefilter_features,
-        numerical_features_to_overweight,
-        numerical_features_overweight_factor,
-        categorical_features_to_overweight,
-        categorical_features_overweight_factor,
-        status=["active"],
-        metric="euclidean",
-        path=DATA_PATH,
-    )
+    """Read data for testing."""
     data_store_content = DataStoreContent(prefilter_features=prefilter_features)
     data_store_content.read_data()
     return data_store_content
@@ -119,19 +128,7 @@ def testdata_content():
 
 @pytest.fixture(scope="package")
 def testdata_collaborative():
-    """Create and return a DataStoreCollaborative instance for testing."""
-    os.makedirs(DATA_PATH, exist_ok=True)
-    create_data_model_collaborative(
-        DB="DB_EVENTS",
-        driver="snowflake",
-        query=query + "LIMIT 4000",
-        user_id=user_id,
-        bike_id=bike_id,
-        user_features=user_features,
-        item_features=item_features,
-        update_model=update_model,
-        path=DATA_PATH,
-    )
+    """Read data for testing."""
     data_store_collaborative = DataStoreCollaborative()
     data_store_collaborative.read_data()
     return data_store_collaborative

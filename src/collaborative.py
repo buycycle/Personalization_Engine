@@ -240,7 +240,15 @@ def get_model(
         random_state,
     )
 
-    precision = precision_at_k(model=model, test_interactions=test, train_interactions=train, k=k, user_features=user_features_matrix, item_features=item_features_matrix, num_threads=4).mean()
+    precision = precision_at_k(
+        model=model,
+        test_interactions=test,
+        train_interactions=train,
+        k=k,
+        user_features=user_features_matrix,
+        item_features=item_features_matrix,
+        num_threads=4,
+    ).mean()
 
     return (
         model,
@@ -329,6 +337,7 @@ def read_data_model(path="data/"):
         dataset = pickle.load(f)
     return model, dataset
 
+
 def get_top_n_collaborative_randomized(
     model,
     user_id: str,
@@ -370,6 +379,48 @@ def get_top_n_collaborative_randomized(
         return [], str(e)
 
 
+def get_top_n_collaborative_rerank(
+    model,
+    user_id: str,
+    bike_rerank_id: list,
+    dataset,
+    logger,
+) -> Tuple[List, Optional[str]]:
+    try:
+        user_mapping, _, item_mapping, _ = dataset.mapping()
+
+        if user_id not in user_mapping:
+            return bike_rerank_id, None
+
+        # map user_id to user_id in dataset
+        user_id_index = user_mapping[user_id]
+        n_items = dataset.interactions_shape()[1]
+        item_ids = np.arange(n_items)
+        scores = model.predict(user_id_index, item_ids)
+        top_items = np.argsort(-scores)
+        # Map internal item index back to external item ids
+        item_index_id_map = {v: c for c, v in item_mapping.items()}
+        # Combine masks and filter
+        top_item_ids = [item_index_id_map[item_id] for item_id in top_items]
+
+        top_item_index_map = {
+            item_id: index for index, item_id in enumerate(top_item_ids)
+        }
+
+        # Define a sorting key function
+        def sort_key(item_id):
+            # Return the index if the item is in top_item_ids, otherwise return a large number
+            return top_item_index_map.get(item_id, float("inf"))
+
+        # Sort bike_rerank_id using the custom key
+        sorted_bike_rerank_id = sorted(bike_rerank_id, key=sort_key)
+        # Randomly sample from the top_item_ids to introduce some variance
+        return sorted_bike_rerank_id, None
+
+    except Exception as e:
+        logger.error(f"Error in get_top_n_collaborative_randomized: {str(e)}")
+        return [], str(e)
+
 
 def create_data_model_collaborative(
     DB,
@@ -400,7 +451,9 @@ def create_data_model_collaborative(
     df = df.dropna()
     df = df.reset_index()
 
-    precision_at_k = update_model(df, user_id, bike_id, user_features, item_features, path)
+    precision_at_k = update_model(
+        df, user_id, bike_id, user_features, item_features, path
+    )
 
     return precision_at_k
 

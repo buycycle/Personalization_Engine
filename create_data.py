@@ -17,7 +17,13 @@ from src.driver_content import (
     categorical_features_to_overweight,
     categorical_features_overweight_factor,
 )
-from src.driver_collaborative import user_id, bike_id, item_features, user_features, query
+from src.driver_collaborative import (
+    user_id,
+    bike_id,
+    item_features,
+    user_features,
+    query,
+)
 from src.collaborative import create_data_model_collaborative, update_model
 
 # if there is a command line argument, use it as path, else use './data/'

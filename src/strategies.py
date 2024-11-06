@@ -10,6 +10,7 @@ from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import (
     get_top_n_collaborative_randomized,
+    get_top_n_collaborative_rerank,
     read_data_model,
 )
 from src.data_content import construct_dense_similarity_row
@@ -207,6 +208,28 @@ class CollaborativeRandomized(RecommendationStrategy):
         return self.strategy, recommendations, error
 
 
+class CollaborativeRerank(RecommendationStrategy):
+    """Try Collaborative filtering, fail silently and return an empty list"""
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = "CollaborativeRerank"
+        self.model = data_store_collaborative.model
+        self.dataset = data_store_collaborative.dataset
+        self.logger = logger
+
+    def get_recommendations(
+        self, user_id: str, bike_rerank_id: list
+    ) -> Tuple[str, List, Optional[str]]:
+        recommendations, error = get_top_n_collaborative_rerank(
+            self.model,
+            user_id,
+            bike_rerank_id,
+            self.dataset,
+            self.logger,
+        )
+        return self.strategy, recommendations, error
+
+
 class QualityFilter(RecommendationStrategy):
     """Apply filters and sort by quality score"""
 
@@ -253,6 +276,7 @@ strategy_dict = {
     "product_page": ContentMixed,
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
+    "rerank": CollaborativeRerank,
     "FallbackContentMixed": FallbackContentMixed,
     "bot": QualityFilter,
 }
