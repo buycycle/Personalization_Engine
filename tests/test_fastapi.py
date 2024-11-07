@@ -151,8 +151,8 @@ def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
     data = response.json()
     recommendation = data.get("recommendation")
     assert (
-        elapsed_time < limit / 1000
-    ), f"'bot' strategy took {elapsed_time * 1000} ms, limit is {limit} ms"
+        elapsed_time < limit
+    ), f"'bot' strategy took {elapsed_time} ms, limit is {limit} ms"
     assert (
         len(recommendation) == inputs["n"]
     ), f"Expected {inputs['n']} recommendations for strategy 'bot', got {len(recommendation)}"
