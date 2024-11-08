@@ -354,6 +354,8 @@ def get_top_n_collaborative_randomized(
         if user_id not in user_mapping:
             return [], None
 
+        # let this run on EC2 and find optimization potential
+
         # map user_id to user_id in dataset
         user_id_index = user_mapping[user_id]
         n_items = dataset.interactions_shape()[1]
