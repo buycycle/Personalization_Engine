@@ -136,13 +136,12 @@ FROM (
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 1 -- This applies to 8-14 days old
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 0.75 -- This applies to 15-21 days old
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 0.5 -- This applies to 22 days to 1 month old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 0.25 -- This applies to 1 month to 2 months old
-                ELSE 0.1
+                ELSE 0.25
             END) AS feedback,
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
     --- restrict the data we look at for product viewed and recom_bike_viewed to 4 month, rest 12 month
     FROM (
-        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
+        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '3 months'
         UNION ALL
         SELECT 'product_added', anonymous_id, bike_id, timestamp FROM product_added WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
@@ -176,7 +175,7 @@ FROM (
         UNION ALL
         SELECT 'show_recommendation' AS event_type, anonymous_id, CAST(value AS INTEGER) AS bike_id, timestamp FROM show_recommendations, LATERAL FLATTEN(input => SPLIT(recommendation_product_ids, ',')) WHERE timestamp >= CURRENT_DATE - INTERVAL '1 months'
         UNION ALL
-        SELECT 'engaged_bike', anonymous_id, bike_id, timestamp FROM engaged_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
+        SELECT 'engaged_bike', anonymous_id, bike_id, timestamp FROM engaged_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '3 months'
     ) AS subquery
     GROUP BY anonymous_id, bike_id HAVING feedback > 1
 ) AS implicit_feedback
