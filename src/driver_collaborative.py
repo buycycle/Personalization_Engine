@@ -16,7 +16,7 @@ features = [user_id] + [bike_id] + user_features + item_features
 
 
 implicit_feedback = {
-    "product_viewed": 1,
+    "product_viewed": 0.5,
     "product_added": 2,
     "choose_service": 5,
     "add_discount": 10,
@@ -29,10 +29,10 @@ implicit_feedback = {
     "counter_offer": 10,
     "delete_from_favourites": -5,
     "order_completed": 50,  # booking_bike_id
-    "recom_bike_view": 3,  # recommended_bike_id
+    "recom_bike_view": 2,  # recommended_bike_id
     "request_leasing": 20,
     "share_bike": 10,
-    "show_recommendation": -0.1,
+    "show_recommendation": 0,
     "engaged_bike": 2,
 }
 
