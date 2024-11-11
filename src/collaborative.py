@@ -210,7 +210,6 @@ def get_model(
 
     """
 
-    # xxxxx get the flow of data right and check where adjustments are necessary
     # make the bike_id column an integer
     df[bike_id] = df[bike_id].astype(int)
 
