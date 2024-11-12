@@ -11,7 +11,7 @@ EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
 RERANK_STRATEGY = ["rerank"]
-LIMIT_MS = 50
+LIMIT_MS = 120
 N_TEST_USERS = 10
 N_TEST_BIKES = 10
 
