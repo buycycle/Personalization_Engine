@@ -13,12 +13,9 @@ def map_branch_to_ab = [
 def image_tag = "dev-${env.BUILD_NUMBER}"
 def environment = "dev"
 def ab = "canary"
-// Check the branch name and set variables accordingly
-if (env.BRANCH_NAME == "main" || env.BRANCH_NAME == "staging") {
-    image_tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-    environment = "${map_branch_to_env[env.BRANCH_NAME]}"
-    ab = "${map_branch_to_ab[env.BRANCH_NAME]}"
-}
+image_tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+environment = "${map_branch_to_env[env.BRANCH_NAME]}"
+ab = "${map_branch_to_ab[env.BRANCH_NAME]}"
 // Simple switch to control skipping the test execution, default is false
 def skipTests = false
 pipeline {
