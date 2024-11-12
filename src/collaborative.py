@@ -210,6 +210,7 @@ def get_model(
 
     """
 
+    # xxxxx get the flow of data right and check where adjustments are necessary
     # make the bike_id column an integer
     df[bike_id] = df[bike_id].astype(int)
 
@@ -349,31 +350,34 @@ def get_top_n_collaborative_randomized(
 ) -> Tuple[List, Optional[str]]:
     try:
         user_mapping, _, item_mapping, _ = dataset.mapping()
+
         if user_id not in user_mapping:
             return [], None
-        # Map user_id to user_id in dataset
-        user_id_index = user_mapping.get(user_id)
+
+        # let this run and find optimization potential
+
+        # map user_id to user_id in dataset
+        user_id_index = user_mapping[user_id]
         n_items = dataset.interactions_shape()[1]
         item_ids = np.arange(n_items)
         scores = model.predict(user_id_index, item_ids)
-        # Use np.argpartition to get the top 'sample' items more efficiently
-        top_indices = np.argpartition(-scores, sample)[:sample]
-        top_scores = scores[top_indices]
-        sorted_top_indices = top_indices[np.argsort(-top_scores)]
+        top_items = np.argsort(-scores)
         # Map internal item index back to external item ids
         item_index_id_map = {v: c for c, v in item_mapping.items()}
         # Combine masks and filter
         combined_mask = df_status_masked_set & preference_mask
-        top_item_ids = [
-            item_index_id_map.get(item_id) for item_id in sorted_top_indices
-            if item_index_id_map.get(item_id) in combined_mask
-        ]
+        top_item_ids = [item_index_id_map[item_id] for item_id in top_items]
+
+        # filter out items that are not in df_status_masked.index
+        top_item_ids = [item_id for item_id in top_item_ids if item_id in combined_mask]
         # Randomly sample from the top_item_ids to introduce some variance
+        top_item_ids = top_item_ids[:sample]
         random.shuffle(top_item_ids)
         top_n_item_ids = top_item_ids[:n]
         return top_n_item_ids, None
+
     except Exception as e:
-        logger.error(f"Error in get_top_n_collaborative_randomized: {e}")
+        logger.error(f"Error in get_top_n_collaborative_randomized: {str(e)}")
         return [], str(e)
 
 
