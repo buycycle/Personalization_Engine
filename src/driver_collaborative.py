@@ -32,7 +32,7 @@ implicit_feedback = {
     "recom_bike_view": 2,  # recommended_bike_id
     "request_leasing": 20,
     "share_bike": 10,
-    "show_recommendation": 0,
+    "show_recommendation": 0.01,
     "engaged_bike": 2,
 }
 
