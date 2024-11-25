@@ -16,7 +16,7 @@ features = [user_id] + [bike_id] + user_features + item_features
 
 
 implicit_feedback = {
-    "product_viewed": 1,
+    "product_viewed": 0.5,
     "product_added": 2,
     "choose_service": 5,
     "add_discount": 10,
@@ -29,10 +29,10 @@ implicit_feedback = {
     "counter_offer": 10,
     "delete_from_favourites": -5,
     "order_completed": 50,  # booking_bike_id
-    "recom_bike_view": 3,  # recommended_bike_id
+    "recom_bike_view": 2,  # recommended_bike_id
     "request_leasing": 20,
     "share_bike": 10,
-    "show_recommendation": -0.1,
+    "show_recommendation": 0,
     "engaged_bike": 2,
 }
 
@@ -136,13 +136,12 @@ FROM (
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '14 days' THEN 1 -- This applies to 8-14 days old
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '21 days' THEN 0.75 -- This applies to 15-21 days old
                 WHEN timestamp >= CURRENT_DATE - INTERVAL '1 month' THEN 0.5 -- This applies to 22 days to 1 month old
-                WHEN timestamp >= CURRENT_DATE - INTERVAL '2 months' THEN 0.25 -- This applies to 1 month to 2 months old
-                ELSE 0.1
+                ELSE 0.25
             END) AS feedback,
         COUNT(*) OVER (PARTITION BY anonymous_id) AS anonymous_id_cnt
     --- restrict the data we look at for product viewed and recom_bike_viewed to 4 month, rest 12 month
     FROM (
-        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
+        SELECT 'product_viewed' AS event_type, anonymous_id, bike_id, timestamp FROM product_viewed WHERE timestamp >= CURRENT_DATE - INTERVAL '3 months'
         UNION ALL
         SELECT 'product_added', anonymous_id, bike_id, timestamp FROM product_added WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
@@ -176,9 +175,9 @@ FROM (
         UNION ALL
         SELECT 'show_recommendation' AS event_type, anonymous_id, CAST(value AS INTEGER) AS bike_id, timestamp FROM show_recommendations, LATERAL FLATTEN(input => SPLIT(recommendation_product_ids, ',')) WHERE timestamp >= CURRENT_DATE - INTERVAL '1 months'
         UNION ALL
-        SELECT 'engaged_bike', anonymous_id, bike_id, timestamp FROM engaged_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '4 months'
+        SELECT 'engaged_bike', anonymous_id, bike_id, timestamp FROM engaged_bike_view WHERE timestamp >= CURRENT_DATE - INTERVAL '3 months'
     ) AS subquery
-    GROUP BY anonymous_id, bike_id HAVING feedback > 1
+    GROUP BY anonymous_id, bike_id HAVING feedback > 6
 ) AS implicit_feedback
 LEFT JOIN user_mapping ON implicit_feedback.anonymous_id = user_mapping.anonymous_id -- Join with the mapping
 JOIN BUYCYCLE.PUBLIC.BIKES ON implicit_feedback.bike_id = BIKES.id

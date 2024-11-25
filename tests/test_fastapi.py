@@ -11,7 +11,7 @@ EXCLUDED_STRATEGIES = ["braze", "bot"]
 PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage"]
 RERANK_STRATEGY = ["rerank"]
-LIMIT_MS = 150
+LIMIT_MS = 120
 N_TEST_USERS = 10
 N_TEST_BIKES = 10
 
@@ -34,7 +34,8 @@ def post_request(client, payload):
     start_time = time.time()
     response = client.post("/recommendation", json=payload)
     end_time = time.time()
-    return response, end_time - start_time
+    elapsed_time = (end_time - start_time) * 1000
+    return response, elapsed_time
 
 
 def assert_response(response, payload, elapsed_time, limit):
@@ -51,8 +52,8 @@ def assert_response(response, payload, elapsed_time, limit):
     assert elapsed_time < limit, (
         f"Request exceeded time limit.\n"
         f"Payload: {payload}\n"
-        f"Elapsed Time: {elapsed_time * 1000:.2f} ms\n"
-        f"Time Limit: {limit * 1000:.2f} ms"
+        f"Elapsed Time: {elapsed_time:.2f} ms\n"
+        f"Time Limit: {limit:.2f} ms"
     )
 
 
@@ -98,7 +99,6 @@ def test_integration_fast_time_strats_input(inputs, limit=LIMIT_MS):
     strategies = [
         s for s in inputs["strategy_dict"].keys() if s not in EXCLUDED_STRATEGIES
     ]
-    limit /= 1000  # Convert limit to seconds
     for strategy in strategies:
         payload = create_payload(inputs, strategy)
         response, elapsed_time = post_request(inputs["client"], payload)
@@ -151,8 +151,8 @@ def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
     data = response.json()
     recommendation = data.get("recommendation")
     assert (
-        elapsed_time < limit / 1000
-    ), f"'bot' strategy took {elapsed_time * 1000} ms, limit is {limit} ms"
+        elapsed_time < limit
+    ), f"'bot' strategy took {elapsed_time} ms, limit is {limit} ms"
     assert (
         len(recommendation) == inputs["n"]
     ), f"Expected {inputs['n']} recommendations for strategy 'bot', got {len(recommendation)}"
@@ -226,12 +226,13 @@ def test_integration_fast_time_strats_collab_users(
     """Test time and length of return for all strategies and a random subsample of collaborative users."""
     strategies = COLLAB_STRATEGY
     # Filter users to include only those with IDs shorter than 10 characters
-    users = [
-        user_id
-        for user_id in testdata_collaborative.dataset.mapping()[0].keys()
-        if len(user_id) < 10
-    ]
-    for user_id in random.sample(users, n_test):
+    users = []
+    for user_id in testdata_collaborative.dataset.mapping()[0].keys():
+        if len(user_id) < 10:
+            users.append(user_id)
+            if len(users) == n_test:
+                break
+    for user_id in users:
         for strategy in strategies:
             user_id = int(user_id)
             payload = create_payload(inputs, strategy, user_id=user_id)
