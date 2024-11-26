@@ -391,8 +391,7 @@ def get_top_n_collaborative_rerank(
     try:
         user_mapping, _, item_mapping, _ = dataset.mapping()
 
-        if 1 == 1:
-        #if user_id not in user_mapping:
+        if user_id not in user_mapping:
             return bike_rerank_id, None
 
         # map user_id to user_id in dataset
