@@ -5,13 +5,7 @@ stages:
   - deploy
 
 variables:
-  AWS_REGION: eu-central-1
-  DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  IMAGE_NAME: $CI_PROJECT_NAME
-  S3_CONFIG_PATH: s3://buycycle-env-bucket/rec-api-temp/config.ini
-  AWS_ECR_REGISTRY: 930985312118.dkr.ecr.eu-central-1.amazonaws.com/recommendation-api
 
 .build:
   stage: build
