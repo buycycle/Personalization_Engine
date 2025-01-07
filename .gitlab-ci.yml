@@ -70,6 +70,7 @@ variables:
     - echo $IMAGE_TAG
     - mkdir -p $CLONE_DIR && cd $CLONE_DIR && git clone https://$GIT_USERNAME:$PERSONAL_ACCESS_TOKEN@gitlab.com/buycycle/buycycle-helm.git
     - ls -al /tmp/recommendation-api-ab-test/buycycle-helm/
+    - pip3 install pyyaml
     - python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG
     - cd /tmp/recommendation-api-ab-test/buycycle-helm/ && git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE && git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
 
