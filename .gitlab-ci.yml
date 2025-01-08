@@ -39,7 +39,7 @@ variables:
 
 .test:
   stage: test
-  image: python:3.10
+  image: python:3.9
   script:
     - mkdir -p data
     - ls -al config/
@@ -49,7 +49,7 @@ variables:
 
 .helm-update:
   stage: helm-update
-  image: python:3.10
+  image: python:3.9
   variables:
     CLONE_DIR: /tmp/recommendation-api-ab-test/
     REPO_URL: https://$GIT_USERNAME:$PERSONAL_ACCESS_TOKEN@gitlab.com/buycycle/buycycle-helm.git
