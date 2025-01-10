@@ -80,7 +80,7 @@ variables:
     - |
       if [ '$CI_COMMIT_BRANCH =~ /^ab\/*/' ]; then
           argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files ab-values.yaml
-      elif 
+      else 
           argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files values.yaml
       fi
     - echo "Syncing and waiting for ArgoCD application..."
