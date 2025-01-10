@@ -55,7 +55,6 @@ variables:
     REPO_URL: https://$GIT_USERNAME:$PERSONAL_ACCESS_TOKEN@gitlab.com/buycycle/buycycle-helm.git
     REPO_NAME: buycycle-helm
     APP_NAME: recommendation-api-ab-test
-    VALUES_FILE: values.yaml
     BRANCH: main
   script:
     - git config --global user.email "jenkins@buycycle.de"  # Set Git user
@@ -78,6 +77,12 @@ variables:
     - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
     - chmod +x /usr/local/bin/argocd
   script:
+    - |
+      if [ '$CI_COMMIT_BRANCH =~ /^ab\/*/' ]; then
+          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files ab-values.yaml
+      elif 
+          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files values.yaml
+      fi
     - echo "Syncing and waiting for ArgoCD application..."
     - argocd app sync $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --prune
     - argocd app wait $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN
@@ -86,6 +91,11 @@ build:
   extends: .build
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        ENVIRONMENT: live
+        DOCKERFILE: main.dockerfile
+        AB: stable
+    - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
       variables:
         ENVIRONMENT: live
         DOCKERFILE: main.dockerfile
@@ -108,15 +118,35 @@ helm-update:
     - if: $CI_COMMIT_BRANCH == "main"
       variables:
         ENVIRONMENT: live
+        VALUES_FILE: values.yaml
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         ENVIRONMENT: dev
-
+        VALUES_FILE: values.yaml
+    - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
+      variables:
+        ENVIRONMENT: live
+        VALUES_FILE: ab-values.yaml
+    - if: $CI_COMMIT_BRANCH == "pipeline-test"
+      variables:
+        ENVIRONMENT: live
+        VALUES_FILE: values.yaml
+      
 deploy:
   extends: .deploy
   stage: deploy
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        ARGO_APP_NAME: recommendation-api-ab-test
+        ENVIRONMENT: live
+      when: manual
+    - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
+      variables:
+        ARGO_APP_NAME: recommendation-api-ab-test
+        ENVIRONMENT: live
+      when: manual
+    - if:  $CI_COMMIT_BRANCH == "pipeline-test"
       variables:
         ARGO_APP_NAME: recommendation-api-ab-test
         ENVIRONMENT: live
