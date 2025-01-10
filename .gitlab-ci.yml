@@ -105,7 +105,12 @@ build:
         ENVIRONMENT: dev
         DOCKERFILE: dev.dockerfile
         AB: canary
-
+    - if: $CI_COMMIT_BRANCH == "pipeline-test"
+      variables:
+        ENVIRONMENT: live
+        DOCKERFILE: main.dockerfile
+        AB: stable
+    
 test:
   extends: .test
   rules:
