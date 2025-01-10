@@ -79,9 +79,9 @@ variables:
   script:
     - |
       if [ '$CI_COMMIT_BRANCH =~ /^ab\/*/' ]; then
-          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files ab-values.yaml
+          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values ab-values.yaml
       else 
-          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values-files values.yaml
+          argocd app set $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --values values.yaml
       fi
     - echo "Syncing and waiting for ArgoCD application..."
     - argocd app sync $ARGO_APP_NAME --server argocd.cube-gebraucht.com --auth-token $ARGOCD_TOKEN --prune
