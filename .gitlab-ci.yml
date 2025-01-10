@@ -66,7 +66,9 @@ variables:
     - ls -al /tmp/recommendation-api-ab-test/buycycle-helm/
     - pip3 install pyyaml
     - python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG
-    - cd /tmp/recommendation-api-ab-test/buycycle-helm/ && git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE && git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
+    - cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
+    - cp $VALUES_FILE values.yaml
+    - git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE && git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
 
 .deploy:
   stage: deploy
@@ -123,11 +125,11 @@ helm-update:
     - if: $CI_COMMIT_BRANCH == "main"
       variables:
         ENVIRONMENT: live
-        VALUES_FILE: values.yaml
+        VALUES_FILE: prod-values.yaml
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         ENVIRONMENT: dev
-        VALUES_FILE: values.yaml
+        VALUES_FILE: dev-values.yaml
     - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
       variables:
         ENVIRONMENT: live
