@@ -67,7 +67,7 @@ variables:
     - pip3 install pyyaml
     - python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG
     - cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
-    - cp $VALUES_FILE values.yaml
+    - cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE v$ENVIRONMENT/$APP_NAME/values.yaml
     - git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE && git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
 
 .deploy:
