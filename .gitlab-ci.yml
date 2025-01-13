@@ -72,12 +72,12 @@ variables:
         cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
         cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml
         git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE  $ENVIRONMENT/$APP_NAME/ab-values.yaml  $ENVIRONMENT/$APP_NAME/values.yaml 
-      fi
       else
         python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG $AB_TEST
         cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
         cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml
         git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml 
+      fi
     - git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
 
 .deploy:
