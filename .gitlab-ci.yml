@@ -157,3 +157,4 @@ deploy:
       variables:
         ARGO_APP_NAME: recommendation-api-ab-test-dev
         ENVIRONMENT: dev
+
