@@ -130,22 +130,22 @@ helm-update:
     - if: $CI_COMMIT_BRANCH == "main"
       variables:
         ENVIRONMENT: live
-        AB_TEST: false
+        AB_TEST: False
         VALUES_FILE: prod-values.yaml
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         ENVIRONMENT: dev
-        AB_TEST: false
+        AB_TEST: False
         VALUES_FILE: dev-values.yaml
     - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
       variables:
         ENVIRONMENT: live
-        AB_TEST: true
+        AB_TEST: True
         VALUES_FILE: ab-values.yaml
     - if: $CI_COMMIT_BRANCH == "pipeline-test"
       variables:
         ENVIRONMENT: live
-        AB_TEST: false
+        AB_TEST: False
         VALUES_FILE: prod-values.yaml
       
 deploy:
