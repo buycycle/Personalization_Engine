@@ -43,8 +43,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update the 'tag' value in a YAML file.")
     parser.add_argument("file_path", help="Path to the YAML file")
     parser.add_argument("image_tag", help="New image tag to set")
+    parser.add_argument("ab_test", help="Ab test")
 
     args = parser.parse_args()
 
     # Call the function with arguments
-    update_yaml_tag(args.file_path, args.image_tag)
+    update_yaml_tag(args.file_path, args.image_tag, args.ab_test)
