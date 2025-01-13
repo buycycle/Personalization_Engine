@@ -145,7 +145,7 @@ helm-update:
     - if: $CI_COMMIT_BRANCH == "pipeline-test"
       variables:
         ENVIRONMENT: live
-        AB_TEST: true
+        AB_TEST: false
         VALUES_FILE: prod-values.yaml
       
 deploy:

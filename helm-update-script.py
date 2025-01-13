@@ -16,9 +16,10 @@ def update_yaml_tag(file_path, image_tag,ab_test):
                 updated = True
                 print(f"Updated 'tag' to '{image_tag}' for 'meta_name: {version['meta_name']}'")
 
+            # ab_test = False 
             # If AB test is true, break the loop
-            if ab_test:
-                print("AB test is true; stopping further iterations.")
+            if ab_test == "True":
+                print(ab_test)
                 break
             
         if not updated:
