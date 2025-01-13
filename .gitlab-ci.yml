@@ -112,11 +112,6 @@ build:
         ENVIRONMENT: dev
         DOCKERFILE: dev.dockerfile
         AB: canary
-    - if: $CI_COMMIT_BRANCH == "pipeline-test"
-      variables:
-        ENVIRONMENT: live
-        DOCKERFILE: main.dockerfile
-        AB: stable
     
 test:
   extends: .test
@@ -127,11 +122,6 @@ test:
 helm-update:
   extends: .helm-update
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      variables:
-        ENVIRONMENT: live
-        AB_TEST: "False"
-        VALUES_FILE: prod-values.yaml
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         ENVIRONMENT: dev
@@ -142,7 +132,7 @@ helm-update:
         ENVIRONMENT: live
         AB_TEST: "True"
         VALUES_FILE: ab-values.yaml
-    - if: $CI_COMMIT_BRANCH == "pipeline-test"
+    - if: $CI_COMMIT_BRANCH == "main"
       variables:
         ENVIRONMENT: live
         AB_TEST: "False"
@@ -158,11 +148,6 @@ deploy:
         ENVIRONMENT: live
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
-      variables:
-        ARGO_APP_NAME: recommendation-api-ab-test
-        ENVIRONMENT: live
-      when: manual
-    - if:  $CI_COMMIT_BRANCH == "pipeline-test"
       variables:
         ARGO_APP_NAME: recommendation-api-ab-test
         ENVIRONMENT: live
