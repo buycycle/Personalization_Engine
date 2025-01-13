@@ -2,7 +2,7 @@ import yaml
 import argparse
 import sys
 
-def update_yaml_tag(file_path, image_tag):
+def update_yaml_tag(file_path, image_tag,ab_test):
     try:
         # Load YAML file
         with open(file_path, "r") as file:
@@ -16,6 +16,11 @@ def update_yaml_tag(file_path, image_tag):
                 updated = True
                 print(f"Updated 'tag' to '{image_tag}' for 'meta_name: {version['meta_name']}'")
 
+            # If AB test is true, break the loop
+            if ab_test:
+                print("AB test is true; stopping further iterations.")
+                break
+            
         if not updated:
             print("No 'meta_name' entries found to update.")
 

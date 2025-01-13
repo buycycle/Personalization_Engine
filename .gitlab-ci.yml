@@ -65,10 +65,20 @@ variables:
     - mkdir -p $CLONE_DIR && cd $CLONE_DIR && git clone https://$GIT_USERNAME:$PERSONAL_ACCESS_TOKEN@gitlab.com/buycycle/buycycle-helm.git
     - ls -al /tmp/recommendation-api-ab-test/buycycle-helm/
     - pip3 install pyyaml
-    - python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG
-    - cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
-    - cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml
-    - git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml && git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "pipeline-test" ]; then
+        python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG $AB_TEST
+        python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/ab-values.yaml $IMAGE_TAG $AB_TEST
+        cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
+        cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml
+        git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE  $ENVIRONMENT/$APP_NAME/ab-values.yaml  $ENVIRONMENT/$APP_NAME/values.yaml 
+      fi
+      else
+        python3 /builds/buycycle/recommendation_content/helm-update-script.py  /tmp/recommendation-api-ab-test/buycycle-helm/$ENVIRONMENT/$APP_NAME/$VALUES_FILE $IMAGE_TAG $AB_TEST
+        cd /tmp/recommendation-api-ab-test/buycycle-helm/ 
+        cp $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml
+        git add $ENVIRONMENT/$APP_NAME/$VALUES_FILE $ENVIRONMENT/$APP_NAME/values.yaml 
+    - git commit -m "updated during build $APP_NAME $IMAGE_TAG" && git pull --rebase && git push -u origin $BRANCH
 
 .deploy:
   stage: deploy
@@ -120,18 +130,22 @@ helm-update:
     - if: $CI_COMMIT_BRANCH == "main"
       variables:
         ENVIRONMENT: live
+        AB_TEST: false
         VALUES_FILE: prod-values.yaml
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         ENVIRONMENT: dev
+        AB_TEST: false
         VALUES_FILE: dev-values.yaml
     - if: '$CI_COMMIT_BRANCH =~ /^ab\/*/'
       variables:
         ENVIRONMENT: live
+        AB_TEST: true
         VALUES_FILE: ab-values.yaml
     - if: $CI_COMMIT_BRANCH == "pipeline-test"
       variables:
         ENVIRONMENT: live
+        AB_TEST: true
         VALUES_FILE: prod-values.yaml
       
 deploy:
