@@ -2,7 +2,7 @@ import yaml
 import argparse
 import sys
 
-def update_yaml_tag(file_path, image_tag):
+def update_yaml_tag(file_path, image_tag, ab_test):
     try:
         # Load YAML file
         with open(file_path, "r") as file:
@@ -16,6 +16,10 @@ def update_yaml_tag(file_path, image_tag):
                 updated = True
                 print(f"Updated 'tag' to '{image_tag}' for 'meta_name: {version['meta_name']}'")
 
+            if ab_test == "True":
+                print(ab_test)
+                break
+            
         if not updated:
             print("No 'meta_name' entries found to update.")
 
@@ -38,8 +42,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update the 'tag' value in a YAML file.")
     parser.add_argument("file_path", help="Path to the YAML file")
     parser.add_argument("image_tag", help="New image tag to set")
+    parser.add_argument("ab_test", help="Ab test")
 
     args = parser.parse_args()
 
     # Call the function with arguments
-    update_yaml_tag(args.file_path, args.image_tag)
+    update_yaml_tag(args.file_path, args.image_tag, args.ab_test)
