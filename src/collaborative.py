@@ -60,9 +60,7 @@ def construct_interactions(df, dataset, user_id, bike_id, feedback):
         interactions_weights (lightfm.SparseMatrix): lightfm interactions weights
     """
 
-    interactions, interactions_weights = dataset.build_interactions(
-        df[[user_id, bike_id, feedback]].values
-    )
+    interactions, interactions_weights = dataset.build_interactions(df[[user_id, bike_id, feedback]].values)
 
     return interactions, interactions_weights
 
@@ -216,13 +214,9 @@ def get_model(
 
     dataset = construct_dataset(df, user_id, bike_id, user_features, item_features)
 
-    interactions, interactions_weights = construct_interactions(
-        df, dataset, user_id, bike_id, feedback
-    )
+    interactions, interactions_weights = construct_interactions(df, dataset, user_id, bike_id, feedback)
 
-    train, train_weights, test, test_weights = construct_train_test(
-        interactions, interactions_weights, test_percentage
-    )
+    train, train_weights, test, test_weights = construct_train_test(interactions, interactions_weights, test_percentage)
 
     user_features_matrix = construct_user_features(df, dataset, user_id, user_features)
 
@@ -296,9 +290,7 @@ def auc(model, train, test, user_features_matrix, item_features_matrix, num_thre
     return test_auc
 
 
-def eval_model(
-    model, train, test, user_features_matrix, item_features_matrix, k=4, num_threads=4
-):
+def eval_model(model, train, test, user_features_matrix, item_features_matrix, k=4, num_threads=4):
     """calculate precision, train auc and test auc for model"""
     precision = precision_at_k(
         model=model,
@@ -405,9 +397,7 @@ def get_top_n_collaborative_rerank(
         # Combine masks and filter
         top_item_ids = [item_index_id_map[item_id] for item_id in top_items]
 
-        top_item_index_map = {
-            item_id: index for index, item_id in enumerate(top_item_ids)
-        }
+        top_item_index_map = {item_id: index for index, item_id in enumerate(top_item_ids)}
 
         # Define a sorting key function
         def sort_key(item_id):
@@ -453,9 +443,7 @@ def create_data_model_collaborative(
     df = df.dropna()
     df = df.reset_index()
 
-    precision_at_k = update_model(
-        df, user_id, bike_id, user_features, item_features, path
-    )
+    precision_at_k = update_model(df, user_id, bike_id, user_features, item_features, path)
 
     return precision_at_k
 

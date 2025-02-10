@@ -2,6 +2,7 @@ import yaml
 import argparse
 import sys
 
+
 def update_yaml_tag(file_path, image_tag, ab_test):
     try:
         # Load YAML file
@@ -19,7 +20,7 @@ def update_yaml_tag(file_path, image_tag, ab_test):
             if ab_test == "True":
                 print(ab_test)
                 break
-            
+
         if not updated:
             print("No 'meta_name' entries found to update.")
 
@@ -36,6 +37,7 @@ def update_yaml_tag(file_path, image_tag, ab_test):
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     # Set up argument parsing

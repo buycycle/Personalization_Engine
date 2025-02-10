@@ -84,25 +84,16 @@ def get_similarity_matrix_cdist_queue(
         dtype="float32",
     )
     # Create a mapping from the filtered DataFrame's indices to the column indices of the sparse matrix
-    col_index_mapping = {
-        idx: col_idx
-        for col_idx, idx in enumerate(df_feature_engineered_status_masked.index)
-    }
+    col_index_mapping = {idx: col_idx for col_idx, idx in enumerate(df_feature_engineered_status_masked.index)}
     # Compute distances for each row to the df_feature_engineered[status_mask] and use a priority queue to keep only the smallest values
     for i, row in enumerate(df_feature_engineered.itertuples(index=False)):
         distances = cdist([row], df_feature_engineered_status_masked, metric=metric)[0]
-        smallest_distances = heapq.nsmallest(
-            num_cols_to_keep, enumerate(distances), key=lambda x: x[1]
-        )
+        smallest_distances = heapq.nsmallest(num_cols_to_keep, enumerate(distances), key=lambda x: x[1])
         # Update the sparse matrix with the smallest distances
         for col_idx, dist in smallest_distances:
             # Map the col_idx to the correct column index in the sparse matrix
-            mapped_col_idx = col_index_mapping[
-                df_feature_engineered_status_masked.index[col_idx]
-            ]
-            similarity_matrix_sparse[
-                i, mapped_col_idx
-            ] = dist  # Use `i` as the row index
+            mapped_col_idx = col_index_mapping[df_feature_engineered_status_masked.index[col_idx]]
+            similarity_matrix_sparse[i, mapped_col_idx] = dist  # Use `i` as the row index
     # Convert the 'lil' matrix to 'csr' format after all insertions are done
     similarity_matrix_sparse = similarity_matrix_sparse.tocsr()
     # Return an instance of SimilarityMatrixSparse with the sparse matrix and indices
@@ -135,35 +126,23 @@ def get_similarity_matrix_cdist(
     # Determine the number of columns to keep based on the percentile
     num_cols_to_keep = max(int(len(status_mask) * (percentile / 100)), 1)
     # Create a mapping from the filtered DataFrame's indices to the column indices of the sparse matrix
-    col_index_mapping = {
-        idx: col_idx
-        for col_idx, idx in enumerate(df_feature_engineered_status_masked.index)
-    }
+    col_index_mapping = {idx: col_idx for col_idx, idx in enumerate(df_feature_engineered_status_masked.index)}
     # Initialize lists to hold the data for the sparse matrix
     similarity_matrix_data = []
     similarity_matrix_rows = []
     similarity_matrix_cols = []
     # Compute distances for each row to the df_feature_engineered[status_mask]
     for i, row in enumerate(df_feature_engineered.values):
-        distances = cdist(
-            [row], df_feature_engineered_status_masked.values, metric=metric
-        )[0]
+        distances = cdist([row], df_feature_engineered_status_masked.values, metric=metric)[0]
         # Get the indices of the smallest distances
-        smallest_indices = np.argpartition(distances, num_cols_to_keep)[
-            :num_cols_to_keep
-        ]
+        smallest_indices = np.argpartition(distances, num_cols_to_keep)[:num_cols_to_keep]
         # Get the corresponding smallest distances
         smallest_distances = distances[smallest_indices]
         # Update the lists for the sparse matrix with the smallest distances
         similarity_matrix_data.extend(smallest_distances)
         similarity_matrix_rows.extend([i] * num_cols_to_keep)
         # Map the column indices to the correct column index in the sparse matrix
-        similarity_matrix_cols.extend(
-            [
-                col_index_mapping[df_feature_engineered_status_masked.index[j]]
-                for j in smallest_indices
-            ]
-        )
+        similarity_matrix_cols.extend([col_index_mapping[df_feature_engineered_status_masked.index[j]] for j in smallest_indices])
     # Create the sparse matrix from the lists
     similarity_matrix_sparse = csr_matrix(
         (similarity_matrix_data, (similarity_matrix_rows, similarity_matrix_cols)),
@@ -178,9 +157,7 @@ def get_similarity_matrix_cdist(
     )
 
 
-def construct_dense_similarity_row(
-    similarity_data: SimilarityMatrixSparse, bike_id: int
-) -> pd.DataFrame:
+def construct_dense_similarity_row(similarity_data: SimilarityMatrixSparse, bike_id: int) -> pd.DataFrame:
     """
     Reconstruct the dense similarity matrix row for a specific bike_id from a sparse similarity matrix.
 
@@ -218,9 +195,7 @@ def construct_dense_similarity_row(
         bike_dense_vector[bike_dense_vector == 0] = np.inf
 
         # Create a DataFrame for the single row, using the column indices
-        bike_similarity_df = pd.DataFrame(
-            bike_dense_vector, index=[bike_id], columns=similarity_data.cols
-        )
+        bike_similarity_df = pd.DataFrame(bike_dense_vector, index=[bike_id], columns=similarity_data.cols)
 
         return bike_similarity_df, error
 
@@ -276,12 +251,8 @@ def get_data(
 
     df_quality = frame_size_code_to_numeric(df_quality, bike_type_id_column="bike_type")
     df_quality.dropna(inplace=True)
-    df_quality["rider_height_min"] = (
-        df_quality["rider_height_min"].fillna(150).astype("int64")
-    )
-    df_quality["rider_height_max"] = (
-        df_quality["rider_height_max"].fillna(195).astype("int64")
-    )
+    df_quality["rider_height_min"] = df_quality["rider_height_min"].fillna(150).astype("int64")
+    df_quality["rider_height_max"] = df_quality["rider_height_max"].fillna(195).astype("int64")
 
     df_preference_user = snowflake_sql_db_read(
         query=user_preference_query,
@@ -347,9 +318,7 @@ def create_data_model_content(
 
     status_mask = get_data_status_mask(df, status)
 
-    similarity_matrix = get_similarity_matrix_cdist(
-        df_feature_engineered, metric, status_mask
-    )
+    similarity_matrix = get_similarity_matrix_cdist(df_feature_engineered, metric, status_mask)
 
     df_status_masked = df.loc[status_mask]
     df = df[prefilter_features]
@@ -385,9 +354,7 @@ def read_data_content(path: str = "data/"):
     df_status_masked = pd.read_pickle(path + "df_status_masked.pkl")
     df_quality = pd.read_pickle(path + "df_quality.pkl")
 
-    similarity_matrix = SimilarityMatrixSparse.read_pickle(
-        path + "similarity_matrix.pkl"
-    )
+    similarity_matrix = SimilarityMatrixSparse.read_pickle(path + "similarity_matrix.pkl")
 
     return (
         df,

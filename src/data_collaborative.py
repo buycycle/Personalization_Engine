@@ -57,9 +57,7 @@ def map_feedback(df: pd, mapping: dict) -> pd.DataFrame:
     return df
 
 
-def clean_data(
-    df: pd.DataFrame, user_id: str, interaction_limit: int = 1000
-) -> pd.DataFrame:
+def clean_data(df: pd.DataFrame, user_id: str, interaction_limit: int = 1000) -> pd.DataFrame:
     """clean data
 
     Args:

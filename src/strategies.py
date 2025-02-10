@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from src.content import get_top_n_recommendations
 from src.content import get_top_n_recommendations_prefiltered
 from src.content import get_top_n_quality_prefiltered_bot
+from src.content import get_top_n_quality_prefiltered_index
 from src.content import get_top_n_recommendations_mix
 
 from src.collaborative import (
@@ -59,9 +60,7 @@ class FallbackContentMixed(RecommendationStrategy):
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
         # xxx do we make sure that the bike_id is in the similarity_matrix?
-        bike_similarity_df, error = construct_dense_similarity_row(
-            self.similarity_matrix, bike_id
-        )
+        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
         filter_features = (
             ("bike_type", lambda df: df["bike_type"] == bike_type),
@@ -118,9 +117,7 @@ class ContentMixed(RecommendationStrategy):
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
         # xxx do we make sure that the bike_id is in the similarity_matrix?
-        bike_similarity_df, error = construct_dense_similarity_row(
-            self.similarity_matrix, bike_id
-        )
+        bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
         filter_features = (
             ("bike_type", lambda df: df["bike_type"] == bike_type),
             (
@@ -162,9 +159,7 @@ class Collaborative(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(
-        self, user_id: str, preference_mask: set, n: int, sample: int
-    ) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(self, user_id: str, preference_mask: set, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
         df_status_masked_set = set(self.df_status_masked.index)
 
         recommendations, error = get_top_n_collaborative_randomized(
@@ -190,9 +185,7 @@ class CollaborativeRandomized(RecommendationStrategy):
         self.df_status_masked = data_store_content.df_status_masked
         self.logger = logger
 
-    def get_recommendations(
-        self, user_id: str, preference_mask: set, n: int, sample: int
-    ) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(self, user_id: str, preference_mask: set, n: int, sample: int) -> Tuple[str, List, Optional[str]]:
         df_status_masked_set = set(self.df_status_masked.index)
 
         recommendations, error = get_top_n_collaborative_randomized(
@@ -217,9 +210,7 @@ class CollaborativeRerank(RecommendationStrategy):
         self.dataset = data_store_collaborative.dataset
         self.logger = logger
 
-    def get_recommendations(
-        self, user_id: str, bike_rerank_id: list
-    ) -> Tuple[str, List, Optional[str]]:
+    def get_recommendations(self, user_id: str, bike_rerank_id: list) -> Tuple[str, List, Optional[str]]:
         recommendations, error = get_top_n_collaborative_rerank(
             self.model,
             user_id,
@@ -265,9 +256,44 @@ class QualityFilter(RecommendationStrategy):
             quality_features.append(("brand", lambda df: df["brand"] == brand))
         # Convert the list to a tuple if necessary
         quality_features = tuple(quality_features)
-        recommendations, error = get_top_n_quality_prefiltered_bot(
-            self.df_quality, preference_mask, quality_features, n
+        recommendations, error = get_top_n_quality_prefiltered_bot(self.df_quality, preference_mask, quality_features, n)
+        return self.strategy, recommendations, error
+
+
+class CollaborativeRandomizedQualityFilter(RecommendationStrategy):
+    """Collaborative filtering with randomized sampling, fallback to quality filter"""
+
+    def __init__(self, logger, data_store_collaborative, data_store_content):
+        self.strategy = "CollaborativeStrategyRandomizedQualityFilter"
+        self.model = data_store_collaborative.model
+        self.dataset = data_store_collaborative.dataset
+        self.df_status_masked = data_store_content.df_status_masked
+        self.df_quality = data_store_content.df_quality
+        self.logger = logger
+
+    def get_recommendations(
+        self,
+        user_id: str,
+        preference_mask: set,
+        n: int,
+        sample: int,
+    ) -> Tuple[str, List, Optional[str]]:
+        df_status_masked_set = set(self.df_status_masked.index)
+
+        recommendations, error = get_top_n_collaborative_randomized(
+            self.model,
+            user_id,
+            preference_mask,
+            n,
+            sample,
+            self.dataset,
+            df_status_masked_set,
+            self.logger,
         )
+        if len(recommendations) < 1:
+            quality_features = ()
+            recommendations, error = get_top_n_quality_prefiltered_index(self.df_quality, preference_mask, quality_features, n)
+
         return self.strategy, recommendations, error
 
 
@@ -276,6 +302,7 @@ strategy_dict = {
     "product_page": ContentMixed,
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
+    "valentine": CollaborativeRandomizedQualityFilter,
     "rerank": CollaborativeRerank,
     "FallbackContentMixed": FallbackContentMixed,
     "bot": QualityFilter,

@@ -213,7 +213,7 @@ user_preference_query_dtype = {
     "frame_size": pd.StringDtype(),
 }
 
-reranking_query= """
+reranking_query = """
 WITH preference_table AS (
     SELECT
         USER_BIKE_PREFERENCES.USER_ID,

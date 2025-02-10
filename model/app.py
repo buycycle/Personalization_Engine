@@ -40,6 +40,7 @@ from src.strategies import (
     ContentMixed,
     Collaborative,
     CollaborativeRandomized,
+    CollaborativeRandomizedQualityFilter,
     CollaborativeRerank,
     QualityFilter,
 )
@@ -61,9 +62,7 @@ ab = os.getenv("AB")
 app_name = "recommender-system"
 app_version = "canary-014"
 
-logger = Logger.configure_logger(
-    environment, ab, app_name, app_version, log_level=logging.ERROR
-)
+logger = Logger.configure_logger(environment, ab, app_name, app_version, log_level=logging.ERROR)
 logger.info("FastAPI app started")
 
 # create data store
@@ -79,9 +78,7 @@ while True:
         data_store_content_available = True
         break
     except Exception as e:
-        logger.error(
-            f"Content data could not initially be read, error: {e}. Trying again in 60 seconds."
-        )
+        logger.error(f"Content data could not initially be read, error: {e}. Trying again in 60 seconds.")
         time.sleep(60)
 
 while True:
@@ -90,19 +87,13 @@ while True:
         data_store_collaborative_available = True
         break
     except Exception as e:
-        logger.error(
-            f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds."
-        )
+        logger.error(f"Collaborative data could not initially be read, error: {e}. Trying again in 60 seconds.")
         time.sleep(60)
 
 read_interval = 60 + random.uniform(-5, 5)
 # read the data periodically
-data_loader_content = Thread(
-    target=data_store_content.read_data_periodically, args=(read_interval, logger)
-)
-data_loader_collaborative = Thread(
-    target=data_store_collaborative.read_data_periodically, args=(read_interval, logger)
-)
+data_loader_content = Thread(target=data_store_content.read_data_periodically, args=(read_interval, logger))
+data_loader_collaborative = Thread(target=data_store_collaborative.read_data_periodically, args=(read_interval, logger))
 
 data_loader_content.start()
 data_loader_collaborative.start()
@@ -180,18 +171,14 @@ class RecommendationRequest(BaseModel):
         distinct_id = values.get("distinct_id")
         if strategy in ["rerank"] and bike_rerank_id is None:
             raise ValueError("bike_rerank_id is required for rerank strategy")
-        elif strategy in ["product_page"] and (
-            bike_id == 0 or bike_id is None or bike_id == "NA"
-        ):
+        elif strategy in ["product_page"] and (bike_id == 0 or bike_id is None or bike_id == "NA"):
             raise ValueError("bike_id is required for product_page strategy")
         elif (
             strategy in ["homepage", "braze", "rerank"]
             and (user_id == 0 or user_id is None)
             and (distinct_id == "NA" or distinct_id is None)
         ):
-            raise ValueError(
-                "user_id or distinct_id required for homepage, rerank and braze strategy"
-            )
+            raise ValueError("user_id or distinct_id required for homepage, rerank and braze strategy")
         return values
 
 
@@ -205,9 +192,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
     bike_type = request_data.bike_type
     family_id = request_data.family_id
     price = request_data.price
-    frame_size_code = get_numeric_frame_size(
-        request_data.frame_size_code, bike_type, default_value=56
-    )
+    frame_size_code = get_numeric_frame_size(request_data.frame_size_code, bike_type, default_value=56)
     rider_height_min = request_data.rider_height_min
     rider_height_max = request_data.rider_height_max
     rider_height = request_data.rider_height
@@ -239,9 +224,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
         # Get general and user-specific preference masks
         # Get general and user-specific preference masks
         preference_mask = get_mask_continent(data_store_content, continent_id)
-        preference_mask_user = get_user_preference_mask(
-            data_store_content, user_id, strategy_name
-        )
+        preference_mask_user = get_user_preference_mask(data_store_content, user_id, strategy_name)
         # Convert lists to sets
         preference_mask = set(preference_mask)
         preference_mask_user = set(preference_mask_user)
@@ -281,17 +264,15 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 n,
             )
         elif isinstance(strategy_instance, Collaborative):
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, preference_mask, n, n
-            )
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, n)
         elif isinstance(strategy_instance, CollaborativeRandomized):
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, preference_mask, n, sample)
+        elif isinstance(strategy_instance, CollaborativeRandomizedQualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 id, preference_mask, n, sample
             )
         elif isinstance(strategy_instance, CollaborativeRerank):
-            strategy, recommendation, error = strategy_instance.get_recommendations(
-                id, bike_rerank_id
-            )
+            strategy, recommendation, error = strategy_instance.get_recommendations(id, bike_rerank_id)
         elif isinstance(strategy_instance, QualityFilter):
             strategy, recommendation, error = strategy_instance.get_recommendations(
                 category,
