@@ -23,6 +23,8 @@ implicit_feedback = {
     "payment_info_entered": 20,  # booking_bike_id
     "choose_shipping_method": 20,
     "add_to_favorite": 10,
+    "bike_matcher_favorite": 30,
+    "bike_matcher_dislike": -10,
     "ask_question": 10,
     "checkout_step_completed": 12,
     "comment_show_original": 3,
