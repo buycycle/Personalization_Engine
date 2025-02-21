@@ -24,7 +24,7 @@ implicit_feedback = {
     "choose_shipping_method": 20,
     "add_to_favorite": 10,
     "bike_matcher_favorite": 30,
-    "bike_matcher_dislike": -10,
+    "bike_matcher_dislike": -30,
     "ask_question": 10,
     "checkout_step_completed": 12,
     "comment_show_original": 3,
@@ -80,6 +80,10 @@ WITH user_mapping AS (
     UNION
     SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM delete_from_favourites
     UNION
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM bike_matcher_dislike
+    UNION
+    SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM bike_matcher_favorite
+    UNION
     SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM order_completed
     UNION
     SELECT DISTINCT anonymous_id, COALESCE(user_id, anonymous_id) FROM recom_bike_view
@@ -121,6 +125,8 @@ FROM (
                 WHEN event_type = 'checkout_step_completed' THEN 12
                 WHEN event_type = 'comment_show_original' THEN 3
                 WHEN event_type = 'counter_offer' THEN 10
+                WHEN event_type = 'bike_matcher_favorite' THEN 30
+                WHEN event_type = 'bike_matcher_dislike' THEN -30
                 WHEN event_type = 'delete_from_favourites' THEN -5
                 WHEN event_type = 'order_completed' THEN 50
                 WHEN event_type = 'recom_bike_view' THEN 5
@@ -165,6 +171,10 @@ FROM (
         SELECT 'comment_show_original', anonymous_id, bike_id, timestamp FROM comment_show_original WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
         SELECT 'counter_offer', anonymous_id, bike_id, timestamp FROM counter_offer WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
+        UNION ALL
+        SELECT 'bike_matcher_dislike', anonymous_id, bike_id, timestamp FROM bike_matcher_dislike WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
+        UNION ALL
+        SELECT 'bike_matcher_favorite', anonymous_id, bike_id, timestamp FROM bike_matcher_favorite WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
         SELECT 'delete_from_favourites', anonymous_id, bike_id, timestamp FROM delete_from_favourites WHERE timestamp >= CURRENT_DATE - INTERVAL '12 months'
         UNION ALL
