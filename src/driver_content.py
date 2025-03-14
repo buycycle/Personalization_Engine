@@ -90,6 +90,7 @@ main_query = """SELECT bikes.id as id,
                 WHERE
                     (status = 'active') OR
                     (status NOT IN ('new', 'deleted', 'deleted_by_admin', 'rejected', 'deleted_draft', 'inactive', 'blocked') AND TIMESTAMPDIFF(WEEK, bikes.updated_at, NOW()) <= 2)
+                    AND bike_template_id != 79204
 
              """
 
