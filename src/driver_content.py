@@ -45,7 +45,7 @@ categorical_features_overweight_factor = 8
 # main query, needs to include at least the id and the features defined above
 
 main_query = """SELECT bikes.id as id,
-                       bikes.bike_template_id as template_id
+                       bikes.bike_template_id as template_id,
 
                        bikes.status as status,
                        -- categorizing

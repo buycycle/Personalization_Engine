@@ -318,8 +318,8 @@ def create_data_model_content(
 
     #filter for template_id and specific non desirable bikes, do not recommend them
     df_filtered = df[
-        (df['bike_template_id'] != 79204) &
-        (df['id'] != 1283355)
+        (df['template_id'] != 79204) &
+        (df.index != 1283355)
     ]
 
     status_mask = get_data_status_mask(df_filtered, status)
