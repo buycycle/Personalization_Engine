@@ -46,6 +46,7 @@ categorical_features_overweight_factor = 8
 
 main_query = """SELECT bikes.id as id,
                        bikes.bike_template_id as template_id,
+                       quality_scores.score as quality_score,
 
                        bikes.status as status,
                        -- categorizing
@@ -85,12 +86,16 @@ main_query = """SELECT bikes.id as id,
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
                 left join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
                 left join countries on bikes.country_id = countries.id
+                join quality_scores on bikes.id = quality_scores.bike_id
 
 
                 -- for non active bikes we set a one year cap for updated_at
                 WHERE
                     (status = 'active') OR
-                    (status NOT IN ('new', 'deleted', 'deleted_by_admin', 'rejected', 'deleted_draft', 'inactive', 'blocked') AND TIMESTAMPDIFF(WEEK, bikes.updated_at, NOW()) <= 2)
+                    (status NOT IN ('new', 'deleted', 'deleted_by_admin', 'rejected', 'deleted_draft', 'inactive', 'blocked') AND TIMESTAMPDIFF(WEEK, bikes.updated_at, NOW()) <= 2) AND
+                    (bikes.bike_template_id != 79204) AND
+                    (quality_scores.score > 30)
+
 
              """
 

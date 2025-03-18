@@ -302,7 +302,6 @@ strategy_dict = {
     "product_page": ContentMixed,
     "braze": Collaborative,
     "homepage": CollaborativeRandomized,
-    "valentine": CollaborativeRandomizedQualityFilter,
     "rerank": CollaborativeRerank,
     "FallbackContentMixed": FallbackContentMixed,
     "bot": QualityFilter,

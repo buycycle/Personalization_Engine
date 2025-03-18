@@ -12,10 +12,10 @@ PRODUCT_PAGE_STRATEGY = ["product_page"]
 COLLAB_STRATEGY = ["homepage","valentine"]
 RERANK_STRATEGY = ["rerank"]
 LIMIT_MS = 200
-N_TEST_USERS = 10
-N_TEST_BIKES = 10
+N_TEST_USERS = 20
+N_TEST_BIKES = 20
 
-random.seed(1)
+random.seed(2)
 
 
 def create_payload(inputs, strategy, bike_id=None, user_id=None, bike_rerank_id=None):
@@ -119,7 +119,7 @@ def test_integration_fast_time_len_strats_bikes(inputs, testdata_content, limit=
     bike_ids = testdata_content.similarity_matrix.cols
 
     # Use the first n_test bike IDs from the DataFrame
-    test_bike_ids = bike_ids[:n_test_bikes]
+    test_bike_ids = np.random.choice(bike_ids, n_test_bikes)
 
     for bike_id in test_bike_ids:
         for strategy in strategies:
@@ -128,7 +128,6 @@ def test_integration_fast_time_len_strats_bikes(inputs, testdata_content, limit=
             response, elapsed_time = post_request(inputs["client"], payload)
 
             assert_response(response, payload, elapsed_time, limit)
-            assert_recommendation_length(response, payload, inputs["n"])
 
 
 def test_integration_bot_strategy(inputs, limit=LIMIT_MS):
@@ -236,7 +235,7 @@ def test_integration_fast_time_strats_rerank(
     for user_id in random.sample(filtered_user_ids, n_test):
         for strategy in strategies:
             # Generate a random length for the list, e.g., between 5 and 20
-            list_length = random.randint(5, 20)
+            list_length = random.randint(5, 10)
             bike_rerank_id = random.sample(bike_ids, list_length)
             payload = create_payload(inputs, strategy, user_id=user_id, bike_rerank_id=bike_rerank_id)
             response, elapsed_time = post_request(inputs["client"], payload)

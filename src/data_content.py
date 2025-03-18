@@ -316,13 +316,7 @@ def create_data_model_content(
         numerical_features_overweight_factor,
     )
 
-    #filter for template_id and specific non desirable bikes, do not recommend them
-    df_filtered = df[
-        (df['template_id'] != 79204) &
-        (df.index != 1283355)
-    ]
-
-    status_mask = get_data_status_mask(df_filtered, status)
+    status_mask = get_data_status_mask(df, status)
 
     similarity_matrix = get_similarity_matrix_cdist(df_feature_engineered, metric, status_mask)
 
