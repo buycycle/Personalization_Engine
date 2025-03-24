@@ -1,12 +1,12 @@
 # Local and Development
 
 setup:
-	conda create --name recommendation --file requirements.txt python=3.9
+	conda create  --name recommendation --file requirements.txt python=3.9
 
 activate:
 	conda activate .env/recommendation
 
-jupyter:
+juypter:
 	@cd notebook; PYTHONPATH=".." jupyter notebook notebook.ipynb
 
 test_data:
@@ -23,7 +23,7 @@ lint:
 
 
 
-# check style with flake8
+	# check style with flake8
 	mypy .
 	flake8 .
 
@@ -34,8 +34,10 @@ format:
 
 
 build-docker:
-## Run Docker locally
+	## Run Docker locally
+
 	docker compose build
+
 	docker compose up app
 
 
