@@ -9,13 +9,14 @@ activate:
 juypter:
 	@cd notebook; PYTHONPATH=".." jupyter notebook notebook.ipynb
 
-test:
-	## run integration test
+test_data:
 	python create_data.py './data/' test
-	pytest -v -s tests/test_fastapi.py
 integration:
 	## run integration tests
 	pytest tests/test_fastapi.py
+test:
+	test_data
+	integration
 lint:
 	pylint --disable=R,C,W1203,W1202 src/
 	pylint --disable=R,C,W1203,W1202 model/app.py
