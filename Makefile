@@ -11,7 +11,7 @@ juypter:
 
 test:
 	## run integration test
-    python 'create_data.py './data/' test'
+	python create_data.py './data/' test
 	pytest -v -s tests/test_fastapi.py
 integration:
 	## run integration tests
