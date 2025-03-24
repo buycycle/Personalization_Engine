@@ -1,7 +1,53 @@
 
 # Buycycle Pre-Owned Bike Market Recommendation System
+
 ## Overview
-Buycycle's recommendation system is designed to enhance the user experience in the pre-owned bike market by providing personalized bike suggestions. The system uses machine learning to tailor recommendations based on user preferences and behavior, addressing the challenges of information inefficiencies and high transaction costs in the used bike market.
+Buycycle's recommendation system enhances the user experience in the pre-owned bike market by providing personalized bike suggestions. It leverages machine learning to tailor recommendations based on user preferences and behavior, addressing challenges like information inefficiencies and high transaction costs in the used bike market.
+
+## System Architecture
+The system is divided into two main components: Content-Based Filtering and Collaborative Filtering. Each component periodically processes data to update models and generate recommendations.
+
+## Content-Based Filtering
+This component processes bike data from the database, applies feature engineering, and constructs a similarity matrix. It supports several recommendation strategies:
+
+1. **get_top_n_quality_prefiltered**: Returns top recommendations based on quality, filtered by price, frame size, and family ID.
+2. **get_top_n_recommendations**: Provides recommendations for a specific bike ID using a similarity matrix.
+3. **get_top_n_recommendations_prefiltered**: Similar to the above but allows prefiltering by features like model and brand.
+
+### Features
+- **Categorical Features**: Motor, bike component ID, bike category ID, etc.
+- **Numerical Features**: Price, frame size code, year.
+- **Feature Overweighting**: Certain features are given more weight to reflect their importance.
+
+## Collaborative Filtering
+This component aggregates user interaction data to update models. It uses implicit feedback to generate recommendations and supports strategies like CollaborativeRandomized and CollaborativeRerank.
+
+### Features
+- **User and Item Features**: Includes user ID, bike ID, family ID, rider height, and price.
+- **Implicit Feedback**: Weights interactions like views, purchases, and favorites to calculate user preferences.
+
+## Recommendation Strategies
+The system supports various strategies to ensure robust recommendations:
+
+1. **FallbackContentMixed**: Combines content-based and quality-based recommendations.
+2. **ContentMixed**: Similar to FallbackContentMixed but focuses more on quality.
+3. **Collaborative**: Uses collaborative filtering to predict user preferences.
+4. **CollaborativeRandomized**: Adds randomness to collaborative filtering for diversity.
+5. **QualityFilter**: Filters bikes by quality score and user preferences.
+
+## AB Testing
+Implemented with Istio on Kubernetes, allowing for controlled testing of different recommendation models.
+
+## Usage
+The system is configured via driver files and a config.ini for database credentials. It supports REST API endpoints for health checks and generating recommendations.
+
+## Setup and Deployment
+- **Development Environment**: Set up with `make setup` and `make install`.
+- **Docker**: Build and run the application using Docker Compose.
+- **Linting and Formatting**: Ensure code quality with `make lint` and `make format`.
+
+## To-do
+- Merge `get_top_n_quality_prefiltered_bot` and `get_top_n_quality_prefiltered`.
 
 ## Content Based
 Create_data.py implements reads in the DB of bikes periodically and saves the queried data to disc.
