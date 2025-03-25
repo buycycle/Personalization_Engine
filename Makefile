@@ -15,7 +15,6 @@ integration:
 	## run integration tests
 	pytest tests/test_fastapi.py
 test:
-	python create_data.py './data/' test
 	pytest tests/test_fastapi.py
 lint:
 	pylint --disable=R,C,W1203,W1202 src/
