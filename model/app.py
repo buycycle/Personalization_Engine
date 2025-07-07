@@ -261,6 +261,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 family_id,
                 price,
                 frame_size_code,
+                brand,
                 n,
             )
         elif isinstance(strategy_instance, Collaborative):
@@ -314,6 +315,7 @@ def recommendation(request_data: RecommendationRequest = Body(...)):
                 family_id,
                 price,
                 frame_size_code,
+                brand,
                 n,
             )
         # Check if strategy_instance is not an instance of QualityFilter and recommendation is not empty

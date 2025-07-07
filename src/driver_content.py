@@ -13,7 +13,7 @@ preference_features = [
     "bike_category_id",
 ]
 # for content based
-prefilter_features = ["family_id", "bike_type"]
+prefilter_features = ["family_id", "bike_type", "brand"]
 
 # for the content based recommendation we disregard prefilter_features and use generic features that represent the qualities of the bike
 # categorical_features and numerical_features features to consider in the generic recommendations
@@ -29,6 +29,7 @@ categorical_features = [
     "color",
     "suspension",
     "continent_id",
+    "brand",
 ]
 numerical_features = ["price", "frame_size_code", "year"]
 
@@ -39,6 +40,7 @@ categorical_features_to_overweight = [
     "bike_component_id",
     "bike_category_id",
     "bike_type",
+    "brand",
 ]
 categorical_features_overweight_factor = 8
 
@@ -80,13 +82,17 @@ main_query = """SELECT bikes.id as id,
                        COALESCE(bike_template_additional_infos.suspension, 'NULL') as suspension,
 
                        -- quite specific
-                       family_id
+                       family_id,
+                       
+                       -- brand information
+                       brands.slug as brand
 
                 FROM bikes
                 join bike_additional_infos on bikes.id = bike_additional_infos.bike_id
                 left join bike_template_additional_infos on bikes.bike_template_id = bike_template_additional_infos.id
                 left join countries on bikes.country_id = countries.id
                 join quality_scores on bikes.id = quality_scores.bike_id
+                join brands on bikes.brand_id = brands.id
 
 
                 -- for non active bikes we set a one year cap for updated_at
@@ -101,11 +107,14 @@ main_query = """SELECT bikes.id as id,
 
 main_query_dtype = {
     "id": pd.Int64Dtype(),
+    "template_id": pd.Int64Dtype(),
+    "quality_score": pd.Int64Dtype(),
     "status": pd.StringDtype(),
     "bike_type": pd.Int64Dtype(),
     "bike_category_id": pd.Int64Dtype(),
     "motor": pd.Int64Dtype(),
     "continent_id": pd.Int64Dtype(),
+    # frame_size_code as string, we convert it in frame_size_code_to_numeric
     "frame_size_code": pd.StringDtype(),
     "price": pd.Float64Dtype(),
     "brake_type_code": pd.StringDtype(),
@@ -116,6 +125,7 @@ main_query_dtype = {
     "color": pd.StringDtype(),
     "suspension": pd.StringDtype(),
     "family_id": pd.Int64Dtype(),
+    "brand": pd.StringDtype(),
 }
 
 # not used, just to make sure what feautures are necessary

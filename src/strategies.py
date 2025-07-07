@@ -57,12 +57,23 @@ class FallbackContentMixed(RecommendationStrategy):
         family_id: int,
         price: int,
         frame_size_code: str,
+        brand: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
         # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
-        filter_features = (
+        # Auto-detect brand from bike_id if not explicitly provided
+        if (not brand or brand == "null") and bike_id in self.df_quality.index:
+            try:
+                detected_brand = self.df_quality.loc[bike_id, 'brand'] if 'brand' in self.df_quality.columns else None
+                if detected_brand:
+                    brand = detected_brand
+                    self.logger.info(f"Auto-detected brand '{brand}' from bike_id {bike_id}")
+            except Exception as e:
+                self.logger.warning(f"Could not auto-detect brand for bike_id {bike_id}: {e}")
+
+        filter_features = [
             ("bike_type", lambda df: df["bike_type"] == bike_type),
             (
                 "price",
@@ -70,7 +81,14 @@ class FallbackContentMixed(RecommendationStrategy):
             ),
             ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
             ("family_id", lambda df: df["family_id"] == family_id),
-        )
+        ]
+        
+        # Only add the brand filter if brand is not "null" and not empty
+        if brand and brand != "null":
+            filter_features.append(("brand", lambda df: df["brand"] == brand))
+        
+        # Convert to tuple
+        filter_features = tuple(filter_features)
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,
@@ -114,11 +132,23 @@ class ContentMixed(RecommendationStrategy):
         family_id: int,
         price: int,
         frame_size_code: str,
+        brand: str,
         n: int,
     ) -> Tuple[str, List, Optional[str]]:
         # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
-        filter_features = (
+        
+        # Auto-detect brand from bike_id if not explicitly provided
+        if (not brand or brand == "null") and bike_id in self.df_quality.index:
+            try:
+                detected_brand = self.df_quality.loc[bike_id, 'brand'] if 'brand' in self.df_quality.columns else None
+                if detected_brand:
+                    brand = detected_brand
+                    self.logger.info(f"Auto-detected brand '{brand}' from bike_id {bike_id}")
+            except Exception as e:
+                self.logger.warning(f"Could not auto-detect brand for bike_id {bike_id}: {e}")
+        
+        filter_features = [
             ("bike_type", lambda df: df["bike_type"] == bike_type),
             (
                 "price",
@@ -126,7 +156,14 @@ class ContentMixed(RecommendationStrategy):
             ),
             ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
             ("family_id", lambda df: df["family_id"] == family_id),
-        )
+        ]
+        
+        # Only add the brand filter if brand is not "null" and not empty
+        if brand and brand != "null":
+            filter_features.append(("brand", lambda df: df["brand"] == brand))
+        
+        # Convert to tuple
+        filter_features = tuple(filter_features)
 
         recommendations, error = get_top_n_recommendations_mix(
             bike_id,

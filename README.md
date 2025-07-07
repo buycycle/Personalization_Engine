@@ -1,4 +1,3 @@
-
 # Buycycle Pre-Owned Bike Market Recommendation System
 
 ## Overview
@@ -15,9 +14,9 @@ This component processes bike data from the database, applies feature engineerin
 3. **get_top_n_recommendations_prefiltered**: Similar to the above but allows prefiltering by features like model and brand.
 
 ### Features
-- **Categorical Features**: Motor, bike component ID, bike category ID, etc.
+- **Categorical Features**: Motor, bike component ID, bike category ID, brand, etc.
 - **Numerical Features**: Price, frame size code, year.
-- **Feature Overweighting**: Certain features are given more weight to reflect their importance.
+- **Feature Overweighting**: Certain features are given more weight to reflect their importance, including brand.
 
 ## Collaborative Filtering
 This component aggregates user interaction data to update models. It uses implicit feedback to generate recommendations and supports strategies like CollaborativeRandomized and CollaborativeRerank.
@@ -29,11 +28,22 @@ This component aggregates user interaction data to update models. It uses implic
 ## Recommendation Strategies
 The system supports various strategies to ensure robust recommendations:
 
-1. **FallbackContentMixed**: Combines content-based and quality-based recommendations.
-2. **ContentMixed**: Similar to FallbackContentMixed but focuses more on quality.
-3. **Collaborative**: Uses collaborative filtering to predict user preferences.
-4. **CollaborativeRandomized**: Adds randomness to collaborative filtering for diversity.
-5. **QualityFilter**: Filters bikes by quality score and user preferences.
+1. **FallbackContentMixed**: Similar to ContentMixed but used as a fallback when primary strategies fail
+2. **ContentMixed**: Content-based filtering with support for bike type, price, frame size, family, and brand filtering
+3. **QualityFilter**: Filters by quality score with support for category, price, rider height, e-bike status, frameset status, and brand
+4. **Collaborative**: User-based collaborative filtering
+5. **CollaborativeRandomized**: Randomized collaborative filtering for diversity
+6. **CollaborativeRerank**: Re-ranks a given list of bikes based on user preferences
+
+### Brand Filtering
+All content-based strategies (ContentMixed, FallbackContentMixed, and QualityFilter) support brand filtering. When a brand is specified (and not "null"), the system will prioritize bikes from that brand in the recommendations while still maintaining diversity through the similarity matrix and quality scores.
+
+**Auto-detection for Product Pages**: When using the `product_page` strategy (ContentMixed/FallbackContentMixed), if no brand is explicitly provided in the request, the system will automatically detect and use the brand of the viewed bike (bike_id). This ensures that product page recommendations naturally favor the same brand without requiring the client to pass the brand parameter.
+
+**API Usage**:
+- Explicit brand filtering: Pass `"brand": "specialized"` to filter by a specific brand
+- No brand filtering: Pass `"brand": "null"` or omit the parameter entirely
+- Auto-detection: For product_page strategy, omit brand to auto-detect from bike_id
 
 ## AB Testing
 Implemented with Istio on Kubernetes, allowing for controlled testing of different recommendation models.
