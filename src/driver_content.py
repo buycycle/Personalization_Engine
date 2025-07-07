@@ -30,6 +30,7 @@ categorical_features = [
     "suspension",
     "continent_id",
     "brand",
+    "family_id",
 ]
 numerical_features = ["price", "frame_size_code", "year"]
 
@@ -37,12 +38,13 @@ numerical_features = ["price", "frame_size_code", "year"]
 numerical_features_to_overweight = ["price", "frame_size_code"]
 numerical_features_overweight_factor = 4
 categorical_features_to_overweight = [
+    "family_id",
     "bike_component_id",
     "bike_category_id",
     "bike_type",
     "brand",
 ]
-categorical_features_overweight_factor = 8
+categorical_features_overweight_factor = 20
 
 # main query, needs to include at least the id and the features defined above
 

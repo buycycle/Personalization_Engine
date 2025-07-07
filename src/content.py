@@ -406,3 +406,53 @@ def get_user_preference_mask(data_store_content, user_id, strategy_name):
         preference_mask_user = get_preference_mask_condition_list(data_store_content.df_preference, preference_user)
         return preference_mask_user
     return []
+
+
+def get_family_first_recommendations(
+    bike_id: int,
+    family_id: int, 
+    df_quality: pd.DataFrame,
+    bike_similarity_df: pd.DataFrame,
+    preference_mask: set,
+    n: int = 16,
+) -> Tuple[List[int], int]:
+    """
+    Get recommendations prioritizing same-family bikes first.
+    Returns all available same-family bikes (up to n), then fills remaining slots with similar bikes.
+    
+    Args:
+        bike_id: Current bike ID
+        family_id: Family ID of the current bike
+        df_quality: Quality dataframe with bike information
+        bike_similarity_df: Similarity matrix row for the bike
+        preference_mask: Set of valid bike IDs based on user preferences
+        n: Number of recommendations to return
+        
+    Returns:
+        Tuple of (recommendations list, number of family bikes found)
+    """
+    recommendations = []
+    
+    # First, get all bikes from the same family (excluding current bike)
+    family_mask = (
+        (df_quality["family_id"] == family_id) & 
+        (df_quality.index != bike_id) &
+        (df_quality.index.isin(preference_mask))
+    )
+    family_bikes = df_quality[family_mask].index.tolist()
+    
+    # Add family bikes to recommendations (up to n)
+    recommendations.extend(family_bikes[:n])
+    family_count = len(recommendations)
+    
+    # If we need more recommendations, get similar bikes
+    if len(recommendations) < n:
+        # Get similar bikes, excluding those already in recommendations
+        similar_candidates = bike_similarity_df.loc[bike_id].squeeze().nsmallest(n * 3).index.tolist()
+        for candidate in similar_candidates:
+            if candidate not in recommendations and candidate != bike_id and candidate in preference_mask:
+                recommendations.append(candidate)
+                if len(recommendations) >= n:
+                    break
+    
+    return recommendations[:n], family_count

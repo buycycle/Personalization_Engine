@@ -8,6 +8,7 @@ from src.content import get_top_n_recommendations_prefiltered
 from src.content import get_top_n_quality_prefiltered_bot
 from src.content import get_top_n_quality_prefiltered_index
 from src.content import get_top_n_recommendations_mix
+from src.content import get_family_first_recommendations
 
 from src.collaborative import (
     get_top_n_collaborative_randomized,
@@ -63,6 +64,9 @@ class FallbackContentMixed(RecommendationStrategy):
         # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
 
+        if error:
+            return self.strategy, [], error
+
         # Auto-detect brand from bike_id if not explicitly provided
         if (not brand or brand == "null") and bike_id in self.df_quality.index:
             try:
@@ -73,41 +77,81 @@ class FallbackContentMixed(RecommendationStrategy):
             except Exception as e:
                 self.logger.warning(f"Could not auto-detect brand for bike_id {bike_id}: {e}")
 
-        filter_features = [
-            ("bike_type", lambda df: df["bike_type"] == bike_type),
-            (
-                "price",
-                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
-            ),
-            ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-            ("family_id", lambda df: df["family_id"] == family_id),
-        ]
-        
-        # Only add the brand filter if brand is not "null" and not empty
-        if brand and brand != "null":
-            filter_features.append(("brand", lambda df: df["brand"] == brand))
-        
-        # Convert to tuple
-        filter_features = tuple(filter_features)
+        # Convert preference_mask to set if it's a list
+        if isinstance(preference_mask, list):
+            preference_mask = set(preference_mask)
 
-        recommendations, error = get_top_n_recommendations_mix(
-            bike_id,
-            preference_mask,
-            filter_features,
-            bike_type,
-            family_id,
-            price,
-            frame_size_code,
-            self.df,
-            self.df_status_masked,
-            self.df_quality,
-            bike_similarity_df,
-            self.prefilter_features,
-            self.logger,
-            n,
-            ratio=0.5,
-            interveave_prefilter_general=False,
-        )
+        # Use family-first approach
+        try:
+            recommendations, family_count = get_family_first_recommendations(
+                bike_id,
+                family_id,
+                self.df_quality,
+                bike_similarity_df,
+                preference_mask,
+                n
+            )
+            
+            # Apply additional filters to the recommendations if needed
+            if brand and brand != "null":
+                # Filter recommendations to prioritize brand after family
+                brand_filtered = []
+                non_brand = []
+                for rec_id in recommendations:
+                    if rec_id in self.df_quality.index:
+                        try:
+                            rec_brand = self.df_quality.loc[rec_id, 'brand']
+                            if rec_brand == brand:
+                                brand_filtered.append(rec_id)
+                            else:
+                                non_brand.append(rec_id)
+                        except:
+                            non_brand.append(rec_id)
+                    else:
+                        non_brand.append(rec_id)
+                
+                # Reorder: family+brand first, then others
+                recommendations = brand_filtered + non_brand
+            
+            self.logger.info(f"Found {family_count} same-family bikes out of {len(recommendations)} total recommendations")
+            
+        except Exception as e:
+            self.logger.error(f"Error in family-first recommendations: {e}")
+            # Fallback to original approach
+            filter_features = [
+                ("bike_type", lambda df: df["bike_type"] == bike_type),
+                (
+                    "price",
+                    lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+                ),
+                ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
+                ("family_id", lambda df: df["family_id"] == family_id),
+            ]
+            
+            if brand and brand != "null":
+                filter_features.append(("brand", lambda df: df["brand"] == brand))
+            
+            filter_features = tuple(filter_features)
+
+            recommendations, error = get_top_n_recommendations_mix(
+                bike_id,
+                preference_mask,
+                filter_features,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                self.df,
+                self.df_status_masked,
+                self.df_quality,
+                bike_similarity_df,
+                self.prefilter_features,
+                self.logger,
+                n,
+                ratio=0.9,
+                interveave_prefilter_general=False,
+            )
+            
         return self.strategy, recommendations, error
 
 
@@ -138,6 +182,9 @@ class ContentMixed(RecommendationStrategy):
         # xxx do we make sure that the bike_id is in the similarity_matrix?
         bike_similarity_df, error = construct_dense_similarity_row(self.similarity_matrix, bike_id)
         
+        if error:
+            return self.strategy, [], error
+        
         # Auto-detect brand from bike_id if not explicitly provided
         if (not brand or brand == "null") and bike_id in self.df_quality.index:
             try:
@@ -148,41 +195,77 @@ class ContentMixed(RecommendationStrategy):
             except Exception as e:
                 self.logger.warning(f"Could not auto-detect brand for bike_id {bike_id}: {e}")
         
-        filter_features = [
-            ("bike_type", lambda df: df["bike_type"] == bike_type),
-            (
-                "price",
-                lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
-            ),
-            ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
-            ("family_id", lambda df: df["family_id"] == family_id),
-        ]
-        
-        # Only add the brand filter if brand is not "null" and not empty
-        if brand and brand != "null":
-            filter_features.append(("brand", lambda df: df["brand"] == brand))
-        
-        # Convert to tuple
-        filter_features = tuple(filter_features)
+        # Use family-first approach
+        try:
+            recommendations, family_count = get_family_first_recommendations(
+                bike_id,
+                family_id,
+                self.df_quality,
+                bike_similarity_df,
+                preference_mask,
+                n
+            )
+            
+            # Apply additional filters to the recommendations if needed
+            if brand and brand != "null":
+                # Filter recommendations to prioritize brand after family
+                brand_filtered = []
+                non_brand = []
+                for rec_id in recommendations:
+                    if rec_id in self.df_quality.index:
+                        try:
+                            rec_brand = self.df_quality.loc[rec_id, 'brand']
+                            if rec_brand == brand:
+                                brand_filtered.append(rec_id)
+                            else:
+                                non_brand.append(rec_id)
+                        except:
+                            non_brand.append(rec_id)
+                    else:
+                        non_brand.append(rec_id)
+                
+                # Reorder: family+brand first, then others
+                recommendations = brand_filtered + non_brand
+            
+            self.logger.info(f"Found {family_count} same-family bikes out of {len(recommendations)} total recommendations")
+            
+        except Exception as e:
+            self.logger.error(f"Error in family-first recommendations: {e}")
+            # Fallback to original approach
+            filter_features = [
+                ("bike_type", lambda df: df["bike_type"] == bike_type),
+                (
+                    "price",
+                    lambda df: (df["price"] >= price * 0.8) & (df["price"] <= price * 1.2),
+                ),
+                ("frame_size_code", lambda df: df["frame_size_code"] == frame_size_code),
+                ("family_id", lambda df: df["family_id"] == family_id),
+            ]
+            
+            if brand and brand != "null":
+                filter_features.append(("brand", lambda df: df["brand"] == brand))
+            
+            filter_features = tuple(filter_features)
 
-        recommendations, error = get_top_n_recommendations_mix(
-            bike_id,
-            preference_mask,
-            filter_features,
-            bike_type,
-            family_id,
-            price,
-            frame_size_code,
-            self.df,
-            self.df_status_masked,
-            self.df_quality,
-            bike_similarity_df,
-            self.prefilter_features,
-            self.logger,
-            n,
-            ratio=0.5,
-            interveave_prefilter_general=False,
-        )
+            recommendations, error = get_top_n_recommendations_mix(
+                bike_id,
+                preference_mask,
+                filter_features,
+                bike_type,
+                family_id,
+                price,
+                frame_size_code,
+                self.df,
+                self.df_status_masked,
+                self.df_quality,
+                bike_similarity_df,
+                self.prefilter_features,
+                self.logger,
+                n,
+                ratio=0.9,
+                interveave_prefilter_general=False,
+            )
+            
         return self.strategy, recommendations, error
 
 

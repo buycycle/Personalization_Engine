@@ -14,9 +14,9 @@ This component processes bike data from the database, applies feature engineerin
 3. **get_top_n_recommendations_prefiltered**: Similar to the above but allows prefiltering by features like model and brand.
 
 ### Features
-- **Categorical Features**: Motor, bike component ID, bike category ID, brand, etc.
+- **Categorical Features**: Motor, bike component ID, bike category ID, brand, family ID, etc.
 - **Numerical Features**: Price, frame size code, year.
-- **Feature Overweighting**: Certain features are given more weight to reflect their importance, including brand.
+- **Feature Overweighting**: Certain features are given more weight to reflect their importance. Family ID has the highest weight (20x) to ensure same-family bikes are strongly prioritized.
 
 ## Collaborative Filtering
 This component aggregates user interaction data to update models. It uses implicit feedback to generate recommendations and supports strategies like CollaborativeRandomized and CollaborativeRerank.
@@ -28,12 +28,19 @@ This component aggregates user interaction data to update models. It uses implic
 ## Recommendation Strategies
 The system supports various strategies to ensure robust recommendations:
 
-1. **FallbackContentMixed**: Similar to ContentMixed but used as a fallback when primary strategies fail
-2. **ContentMixed**: Content-based filtering with support for bike type, price, frame size, family, and brand filtering
+1. **ContentMixed**: Content-based filtering with family-first prioritization, followed by brand and similarity-based recommendations
+2. **FallbackContentMixed**: Similar to ContentMixed but used as a fallback when primary strategies fail
 3. **QualityFilter**: Filters by quality score with support for category, price, rider height, e-bike status, frameset status, and brand
 4. **Collaborative**: User-based collaborative filtering
 5. **CollaborativeRandomized**: Randomized collaborative filtering for diversity
 6. **CollaborativeRerank**: Re-ranks a given list of bikes based on user preferences
+
+### Family-First Prioritization
+The ContentMixed and FallbackContentMixed strategies implement a "family-first" approach:
+- **Same-family bikes are always shown first** when available
+- If there are 5 bikes from the same family and you request 10 recommendations, those 5 will appear first
+- Remaining slots are filled with similar bikes based on the similarity matrix
+- Family ID has 20x overweighting in similarity calculations to ensure strong family grouping
 
 ### Brand Filtering
 All content-based strategies (ContentMixed, FallbackContentMixed, and QualityFilter) support brand filtering. When a brand is specified (and not "null"), the system will prioritize bikes from that brand in the recommendations while still maintaining diversity through the similarity matrix and quality scores.
